@@ -25,9 +25,9 @@ class pricingCalculate(generics.ListCreateAPIView):
     
     def perform_create(self, serializer):
         cameras = serializer.validated_data['cammera']
-        ai_features = serializer.validated_data.get(ai_features, [])
+        ai_features = serializer.validated_data.get('ai_features', [])
         
-        pricing_range = Cammera_Pricing.objects.filter(min_cameras__lte = cameras ).filter(Q(max_cammera__gte = cameras) | Q(max_cammera__isnull=True)).first()
+        pricing_range = Cammera_Pricing.objects.filter(min_cammera__lte = cameras ).filter(Q(max_cammera__gte = cameras) | Q(max_cammera__isnull=True)).first()
         
         camera_cost = pricing_range.total_costing
         ai_cost = sum(ai.costing for ai in ai_features)

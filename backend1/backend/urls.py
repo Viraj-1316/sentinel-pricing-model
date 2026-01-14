@@ -21,6 +21,7 @@ urlpatterns = [
     
     path('admin/', admin.site.urls),
     path('accounts/', include('User.api.urls')),
+    path('pricing-Model/', include('pricingModel.api.urls'))
     
 ]
     
