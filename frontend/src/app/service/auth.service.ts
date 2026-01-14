@@ -24,7 +24,7 @@ export class AuthService {
     // Django endpoint example:
     // POST http://127.0.0.1:8000/api/v1/auth/login/
     return this.http.post<LoginResponse>(
-      `${this.apiBase}/api/token`,
+      `${this.apiBase}accounts/api/token`,
       payload
     ).pipe(
       tap((res) => {
