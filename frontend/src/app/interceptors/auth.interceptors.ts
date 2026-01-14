@@ -12,15 +12,20 @@ export class AuthInterceptor implements HttpInterceptor {
 
   intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
 
+    // ✅ don't attach token on login endpoint
+    if (req.url.includes('/api/login/')) {
+      return next.handle(req);
+    }
+
     const token = localStorage.getItem('access_token');
 
-    // if token exists attach it
     if (token) {
       const clonedReq = req.clone({
         setHeaders: {
           Authorization: `Bearer ${token}`
         }
       });
+
       return next.handle(clonedReq);
     }
 

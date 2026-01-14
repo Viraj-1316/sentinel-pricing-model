@@ -1,4 +1,3 @@
-import { Injectable } from '@angular/core';
 import { CanActivateFn, Router } from '@angular/router';
 import { inject } from '@angular/core';
 
@@ -8,6 +7,6 @@ export const authGuard: CanActivateFn = () => {
 
   if (token) return true;
 
-  router.navigateByUrl('/login');
+  router.navigateByUrl('/login', { replaceUrl: true });
   return false;
 };
