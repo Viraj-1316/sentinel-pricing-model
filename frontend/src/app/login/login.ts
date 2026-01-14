@@ -15,7 +15,6 @@ export class Login {
   loading = false;
   errorMsg: string | null = null;
   showPassword = false;
-  currentYear = new Date().getFullYear();
 
   constructor(
     private fb: FormBuilder,
@@ -38,11 +37,8 @@ export class Login {
     this.showPassword = !this.showPassword;
   }
 
-  forgotPassword(): void {
-    alert('Ask Admin to reset password. (You can implement forgot-password API later.)');
-  }
-
   onSubmit(): void {
+      console.log("✅ Login submit clicked");
     this.errorMsg = null;
 
     if (this.loginForm.invalid) {
@@ -58,18 +54,26 @@ export class Login {
     };
 
     this.auth.login(payload).subscribe({
-      next: () => {
+      next: (res) => {
         this.loading = false;
+
+        // ✅ Save token after login
+        if (res?.access) {
+          this.auth.saveToken(res.access);
+        }
+        if (res?.refresh) {
+          this.auth.saveRefreshToken(res.refresh);
+        }
+
         this.router.navigateByUrl('/dashboard');
       },
       error: (err) => {
         this.loading = false;
 
-        // Django usually returns 401 if invalid
         if (err?.status === 401) {
           this.errorMsg = 'Invalid username or password';
         } else {
-          this.errorMsg = 'Something went wrong. Please try again.';
+          this.errorMsg = err?.error?.detail || 'Something went wrong. Please try again.';
         }
       },
     });
