@@ -28,6 +28,7 @@ def user_registration(request):
             data['response'] = 'Registration Successfull'
             data['Username'] = account.username
             data['email'] = account.email
+            data['phone_number']= account.phone_number
 
             
             # token = Token.objects.get(user = account).key
