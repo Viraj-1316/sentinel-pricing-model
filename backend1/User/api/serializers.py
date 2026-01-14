@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
 from rest_framework.exceptions import ValidationError
-from User.api.models import UserProfile
+from ..models import UserProfile
 
 class registration_serializer(serializers.ModelSerializer):
     password2 = serializers.CharField(write_only=True)
@@ -30,7 +30,6 @@ class registration_serializer(serializers.ModelSerializer):
         if User.objects.filter(email=self.validated_data['email']).exists():
             raise ValidationError({"email": "Email already exists."})
 
-        # create user
         user = User(
             email=self.validated_data['email'],
             username=self.validated_data['username']
@@ -38,7 +37,5 @@ class registration_serializer(serializers.ModelSerializer):
         user.set_password(password)
         user.save()
 
-        # create profile
         UserProfile.objects.create(user=user, phone_number=phone_number)
-
         return user
