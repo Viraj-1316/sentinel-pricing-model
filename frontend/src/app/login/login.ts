@@ -3,11 +3,11 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '../service/auth.service';
-
+import { RouterLink } from '@angular/router';
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule,RouterLink],
   templateUrl: './login.html',
 })
 export class Login {
@@ -35,6 +35,9 @@ export class Login {
 
   togglePassword(): void {
     this.showPassword = !this.showPassword;
+  }
+  onregister(){
+    this.router.navigateByUrl('/registration')
   }
 
   onSubmit(): void {
