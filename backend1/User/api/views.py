@@ -1,47 +1,36 @@
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from User.api.serializers import registration_serializer
-from User import models
-from rest_framework.authtoken.models import Token
 from rest_framework import status
 from rest_framework_simplejwt.tokens import RefreshToken
 
-@api_view(['POST',])
-def user_logout(request):
-    
-    if request.method == 'POST':
-        
-        request.user.auth_token.delete()
-        return Response(status=status.HTTP_200_OK)
-    
-    
-@api_view(['POST',])
-def user_registration(request):
-    
-    if request.method == 'POST':
-        serializer = registration_serializer(data=request.data)
-        
-        data = {}
-        if serializer.is_valid():
-            account = serializer.save()
-            
-            data['response'] = 'Registration Successfull'
-            data['Username'] = account.username
-            data['email'] = account.email
-            data['phone_number']= account.phone_number
+from User.api.serializers import registration_serializer
+from User.models import UserProfile   # ✅ import profile
 
-            
-            # token = Token.objects.get(user = account).key
-            # data['token'] = token
-            refresh = RefreshToken.for_user(account)
-            data['token'] = {
-                                'refresh': str(refresh),
-                                'access': str(refresh.access_token),
-                            }
-        
-        else:
-            data = serializer.errors
-        
-        
-        return Response(data, status=status.HTTP_201_CREATED)       
-            
+
+@api_view(['POST'])
+def user_registration(request):
+
+    serializer = registration_serializer(data=request.data)
+
+    if serializer.is_valid():
+        account = serializer.save()
+
+        # ✅ fetch phone_number from UserProfile
+        phone_number = UserProfile.objects.get(user=account).phone_number
+
+        refresh = RefreshToken.for_user(account)
+
+        data = {
+            "response": "Registration Successful",
+            "username": account.username,
+            "email": account.email,
+            "phone_number": phone_number,
+            "token": {
+                "refresh": str(refresh),
+                "access": str(refresh.access_token),
+            }
+        }
+
+        return Response(data, status=status.HTTP_201_CREATED)
+
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
