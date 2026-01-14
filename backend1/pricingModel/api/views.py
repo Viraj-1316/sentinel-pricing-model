@@ -5,10 +5,7 @@ from rest_framework import response
 from rest_framework.validators import ValidationError
 from django.db.models import Q
 
-def cameraRange(cameras, ai_features):
     
-    pricing_range = Cammera_Pricing.objects.filter(min_cammera = )
-
 class defaultPricing(generics.ListAPIView):
     
     queryset = Cammera_Pricing.objects.all()
@@ -30,5 +27,14 @@ class pricingCalculate(generics.ListCreateAPIView):
         cameras = serializer.validated_data['cammera']
         ai_features = serializer.validated_data.get(ai_features, [])
         
+        pricing_range = Cammera_Pricing.objects.filter(min_cameras__lte = cameras ).filter(Q(max_cammera__gte = cameras) | Q(max_cammera__isnull=True)).first()
+        
+        camera_cost = pricing_range.total_costing
+        ai_cost = sum(ai.costing for ai in ai_features)
+        
+        total_cost = int(camera_cost + ai_cost)
+        
+        serializer.save(user_name = self.request.user, total_costing = total_cost)
+    
         
             
