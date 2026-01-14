@@ -1,12 +1,20 @@
 from rest_framework import generics
-from pricingModel.models import Pricing, UserPricing, AI_ENABLED
-from pricingModel.api.serializers import userPricingSerializer,pricingSerializer, AI_ENABLEDserializer
+from pricingModel.models import Cammera_Pricing, UserPricing, AI_ENABLED
+from pricingModel.api.serializers import userPricingSerializer,Cammera_PricingSerializer, AI_ENABLEDserializer
 from rest_framework import response
 from rest_framework.validators import ValidationError
+from django.db.models import Q
+
+
 class defaultPricing(generics.ListAPIView):
     
-    queryset = Pricing.objects.all()
-    serializer_class = pricingSerializer
+    queryset = Cammera_Pricing.objects.all()
+    serializer_class = Cammera_PricingSerializer
+    
+class aiFeatures(generics.ListAPIView):
+    
+    queryset = AI_ENABLED.objects.all()
+    serializer_class =  AI_ENABLEDserializer   
 
 class pricingCalculate(generics.ListCreateAPIView):
     
@@ -16,27 +24,7 @@ class pricingCalculate(generics.ListCreateAPIView):
         return UserPricing.objects.all()
     
     def perform_create(self, serializer):
+        cameras = serializer.validated_data['cammera']
+        ai_features = serializer.validated_data.get(ai_features, [])
         
-        cammera = serializer.validated_data.get('cammera')
-        ai_features = serializer.validated_data.get('ai_features')
-        
-        pricing = Pricing.objects.filter(
-            ai_features = ai_features
-            ).first()
-        
-        ai_enabled = AI_ENABLED.objects.all()
-        
-        if not pricing:
-            raise ValidationError("Pricing not configured by admin")
-        
-        camera_ratio = cammera / pricing.cammera
-        ai_enable_count = ai_features.count()
-        
-        Camera_costing = int(pricing.total_costing * camera_ratio)
-        ai_costing = int(ai_enable_count * ai_enabled.costPerUnit)
-        total_cost = int(Camera_costing + ai_costing)
-        
-        serializer.save(
-            user_name=self.request.user,
-            total_costing = total_cost
-        )
+        def cameraRange()

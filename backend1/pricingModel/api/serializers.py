@@ -1,9 +1,10 @@
-from pricingModel.models import Pricing, UserPricing, AI_ENABLED
+from pricingModel.models import Cammera_Pricing, UserPricing, AI_ENABLED
 from rest_framework import serializers
 
-class pricingSerializer(serializers.ModelSerializer):
+class Cammera_PricingSerializer(serializers.ModelSerializer):
+    
     class Meta:
-        model : Pricing
+        model : Cammera_Pricing
         fields = "__all__"
 
 
