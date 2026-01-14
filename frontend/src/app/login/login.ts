@@ -2,6 +2,7 @@ import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
+import { AuthService } from '../service/auth.service';
 
 @Component({
   selector: 'app-login',
@@ -18,7 +19,8 @@ export class Login {
 
   constructor(
     private fb: FormBuilder,
-    private router: Router
+    private router: Router,
+    private auth: AuthService
   ) {
     this.loginForm = this.fb.group({
       username: ['', [Validators.required]],
@@ -48,20 +50,28 @@ export class Login {
       return;
     }
 
-    // UI loading simulation
     this.loading = true;
 
-    // ✅ For now: simulate login success
-    // Later you’ll connect Django API: POST /api/v1/auth/login/
-    setTimeout(() => {
-      this.loading = false;
+    const payload = {
+      username: this.loginForm.value.username,
+      password: this.loginForm.value.password,
+    };
 
-      // Store dummy tokens (for UI testing)
-      localStorage.setItem('access_token', 'demo_access_token');
-      localStorage.setItem('refresh_token', 'demo_refresh_token');
+    this.auth.login(payload).subscribe({
+      next: () => {
+        this.loading = false;
+        this.router.navigateByUrl('/dashboard');
+      },
+      error: (err) => {
+        this.loading = false;
 
-      // Redirect to dashboard (or calculator)
-      this.router.navigateByUrl('/dashboard');
-    }, 1200);
+        // Django usually returns 401 if invalid
+        if (err?.status === 401) {
+          this.errorMsg = 'Invalid username or password';
+        } else {
+          this.errorMsg = 'Something went wrong. Please try again.';
+        }
+      },
+    });
   }
 }
