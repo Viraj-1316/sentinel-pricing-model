@@ -10,7 +10,7 @@ class AI_ENABLED(models.Model):
         
 class Pricing(models.Model):
     cammera = models.IntegerField()
-    procesorer = models.IntegerField()
+    processor = models.IntegerField()
     server = models.IntegerField()
     ai_features = models.ForeignKey(AI_ENABLED, on_delete=models.CASCADE, name="AI_enabled")
     total_costing = models.IntegerField()
