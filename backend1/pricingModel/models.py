@@ -10,7 +10,7 @@ class Cammera_Pricing(models.Model):
     total_costing = models.IntegerField()
     
     class Meta:
-        ordering = ["min_cameras"]
+        ordering = ["min_cammera"]
 
     def __str__(self):
         if self.max_cammera:
@@ -30,7 +30,6 @@ class UserPricing(models.Model):
     user_name = models.ForeignKey(User, on_delete=models.CASCADE)
     cammera = models.IntegerField()
     ai_features = models.ManyToManyField(AI_ENABLED, blank=True)
-    total_costing = models.IntegerField()
     created_at = models.DateTimeField(auto_now_add=True)
     
     def __str__(self):
