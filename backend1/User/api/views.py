@@ -4,7 +4,7 @@ from rest_framework import status
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from User.api.serializers import registration_serializer
-from User.models import UserProfile   # ✅ import profile
+from User.models import UserProfile
 
 
 @api_view(['POST'])
@@ -15,8 +15,8 @@ def user_registration(request):
     if serializer.is_valid():
         account = serializer.save()
 
-        # ✅ fetch phone_number from UserProfile
-        phone_number = UserProfile.objects.get(user=account).phone_number
+        profile = UserProfile.objects.filter(user=account).first()
+        phone_number = profile.phone_number if profile else None
 
         refresh = RefreshToken.for_user(account)
 
