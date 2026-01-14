@@ -1,19 +1,16 @@
-# Python cache
+# Secrets
+.env
+*.env
+
+# Accidental files
+Untitled*
+*.txt
+
+# Python
 __pycache__/
 *.pyc
 
-# Virtual environment
+# Virtual env
 venv/
 backend/venv/
 
-# Environment variables
-.env
-
-# OS junk
-.DS_Store
-Thumbs.db
-
-# IDE
-.vscode/
-.idea/
-Untitled*
