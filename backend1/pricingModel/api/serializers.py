@@ -12,7 +12,7 @@ class Cammera_PricingSerializer(serializers.ModelSerializer):
 
 class userPricingSerializer(serializers.ModelSerializer):
     total_costing = serializers.IntegerField(read_only=True)
-    # user_name = serializers.HiddenField(default=serializers.CurrentUserDefault())
+    user_name = serializers.HiddenField(default=serializers.CurrentUserDefault())
     class Meta:
         model = UserPricing
         fields = [

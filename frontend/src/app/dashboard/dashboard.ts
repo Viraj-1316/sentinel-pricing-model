@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { AuthService } from '../service/auth.service';
-
+import {RouterLink} from '@angular/router';
 export interface CameraPricing {
   id: number;
   min_cammera: number;
@@ -21,7 +21,7 @@ export interface AIEnabled {
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, HttpClientModule],
+  imports: [CommonModule, ReactiveFormsModule, HttpClientModule,RouterLink],
   templateUrl: './dashboard.html',
 })
 export class Dashboard implements OnInit {
