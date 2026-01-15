@@ -162,7 +162,7 @@
                 <!-- Password -->
                 <div class="mb-3">
                   <label class="form-label fw-semibold">Password</label>
-                  <div class="input-group input-group-lg">
+                  <div class="input-group input-group-lg">register
                     <span class="input-group-text bg-white">
                       <i class="bi bi-lock"></i>
                     </span>
@@ -198,8 +198,8 @@
                       [type]="showConfirmPassword ? 'text' : 'password'"
                       class="form-control"
                       placeholder="Re-enter password"
-                      formControlName="confirm_password"
-                      [class.is-invalid]="isInvalid('confirm_password') || passwordMismatch"
+                      formControlName="password2"
+                      [class.is-invalid]="isInvalid('password2') || passwordMismatch"
                       autocomplete="new-password"
                     />
 

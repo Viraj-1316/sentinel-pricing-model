@@ -10,6 +10,12 @@ from rest_framework.permissions import IsAuthenticated, IsAdminUser
     
 from rest_framework import generics
 
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+
+
+
 class defaultPricingListCreate(generics.ListCreateAPIView):
     queryset = Cammera_Pricing.objects.all()
     serializer_class = Cammera_PricingSerializer
@@ -27,6 +33,10 @@ class defaultPricingDetail(generics.RetrieveUpdateDestroyAPIView):
     
     
 class aiFeatures(generics.ListCreateAPIView):
+    
+    queryset = AI_ENABLED.objects.all()
+    serializer_class =  AI_ENABLEDserializer   
+class aiFeaturesDetail(generics.RetrieveUpdateDestroyAPIView):
     
     queryset = AI_ENABLED.objects.all()
     serializer_class =  AI_ENABLEDserializer   

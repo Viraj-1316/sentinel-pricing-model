@@ -4,6 +4,7 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../service/auth.service';
+
 export interface CameraPricing {
   id: number;
   min_cammera: number;
@@ -28,6 +29,9 @@ export class Dashboard implements OnInit {
   loading = false;
   errorMsg: string | null = null;
 
+  // ✅ permission flag
+  canManage = false; // staff OR superuser can manage
+
   // tables
   cameraList: CameraPricing[] = [];
   aiList: AIEnabled[] = [];
@@ -37,11 +41,16 @@ export class Dashboard implements OnInit {
   aiForm: FormGroup;
 
   private CAMERA_API = 'http://127.0.0.1:8001/pricing-Model/cameraPricing/';
-  private AI_API = 'http://127.0.0.1:8001/api/ai-enabled/';
+  private AI_API = 'http://127.0.0.1:8001/pricing-Model/ai-feature/';
 
-  constructor(private http: HttpClient, private fb: FormBuilder,private auth: AuthService) {
+  // ✅ add this endpoint in backend
+  private ME_API = 'http://127.0.0.1:8001/accounts/api/me/';
 
-    // ✅ Camera Pricing form (min-max range)
+  constructor(
+    private http: HttpClient,
+    private fb: FormBuilder,
+    private auth: AuthService
+  ) {
     this.cameraForm = this.fb.group({
       min_cammera: ['', [Validators.required, Validators.min(1)]],
       max_cammera: [''], // optional
@@ -49,21 +58,33 @@ export class Dashboard implements OnInit {
       total_costing: ['', [Validators.required, Validators.min(0)]],
     });
 
-    // ✅ AI feature form
     this.aiForm = this.fb.group({
       AI_feature: ['', [Validators.required, Validators.minLength(2)]],
       costing: ['', [Validators.required, Validators.min(0)]],
     });
   }
 
-
   onLogout(): void {
-    console.log("✅ Logout clicked");
+    console.log('✅ Logout clicked');
     this.auth.logout();
   }
 
   ngOnInit(): void {
-    this.fetchAll();
+    this.fetchMe();     // ✅ permission first
+    this.fetchAll();    // ✅ table data
+  }
+
+  // ✅ permission API
+  fetchMe(): void {
+    this.http.get<any>(this.ME_API).subscribe({
+      next: (res) => {
+        // ✅ staff OR superuser => can manage
+        this.canManage = !!(res?.is_staff || res?.is_superuser);
+      },
+      error: () => {
+        this.canManage = false;
+      },
+    });
   }
 
   // ---------- shared ----------
@@ -95,6 +116,12 @@ export class Dashboard implements OnInit {
   onAddCameraPricing(): void {
     this.errorMsg = null;
 
+    // ✅ frontend protection
+    if (!this.canManage) {
+      this.errorMsg = 'You have view-only access.';
+      return;
+    }
+
     if (this.cameraForm.invalid) {
       this.cameraForm.markAllAsTouched();
       return;
@@ -123,6 +150,12 @@ export class Dashboard implements OnInit {
   }
 
   onDeleteCamera(id: number): void {
+    // ✅ frontend protection
+    if (!this.canManage) {
+      this.errorMsg = 'You have view-only access.';
+      return;
+    }
+
     if (!confirm('Delete this camera pricing record?')) return;
 
     this.loading = true;
@@ -153,6 +186,12 @@ export class Dashboard implements OnInit {
   onAddAI(): void {
     this.errorMsg = null;
 
+    // ✅ frontend protection
+    if (!this.canManage) {
+      this.errorMsg = 'You have view-only access.';
+      return;
+    }
+
     if (this.aiForm.invalid) {
       this.aiForm.markAllAsTouched();
       return;
@@ -177,6 +216,12 @@ export class Dashboard implements OnInit {
   }
 
   onDeleteAI(id: number): void {
+    // ✅ frontend protection
+    if (!this.canManage) {
+      this.errorMsg = 'You have view-only access.';
+      return;
+    }
+
     if (!confirm('Delete this AI feature record?')) return;
 
     this.loading = true;

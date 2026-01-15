@@ -5,6 +5,19 @@ from rest_framework_simplejwt.tokens import RefreshToken
 
 from .serializers import registration_serializer
 from ..models import UserProfile
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def me(request):
+    user = request.user
+    return Response({
+        "username": user.username,
+        "is_staff": user.is_staff,
+        "is_superuser": user.is_superuser,
+    })
 
 @api_view(['POST'])
 def user_registration(request):
