@@ -1,5 +1,7 @@
 from pricingModel.models import Cammera_Pricing, UserPricing, AI_ENABLED
 from rest_framework import serializers
+from django.db.models import Q
+
 
 class Cammera_PricingSerializer(serializers.ModelSerializer):
     
@@ -26,9 +28,6 @@ class AIFeatureQuotationSerializer(serializers.ModelSerializer):
     class Meta:
         model = AI_ENABLED
         fields = ['AI_feature', 'costing']
-
-
-from django.db.models import Q
 
 class QuotationSerializer(serializers.ModelSerializer):
     ai_features = AIFeatureQuotationSerializer(many=True)

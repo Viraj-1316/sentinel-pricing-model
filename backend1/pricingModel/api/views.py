@@ -35,15 +35,7 @@ class defaultPricingDetail(generics.RetrieveUpdateDestroyAPIView):
     
 class aiFeatures(generics.ListCreateAPIView):
     queryset = AI_ENABLED.objects.all()
-<<<<<<< HEAD
-    serializer_class =  AI_ENABLEDserializer   
-class aiFeaturesDetail(generics.RetrieveUpdateDestroyAPIView):
-    
-    queryset = AI_ENABLED.objects.all()
-    serializer_class =  AI_ENABLEDserializer   
-=======
     serializer_class = AI_ENABLEDserializer
->>>>>>> 4c0277b (quatation logic added)
 
     def get_permissions(self):
         if self.request.method == "GET":
