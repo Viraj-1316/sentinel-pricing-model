@@ -9,17 +9,46 @@ class Cammera_PricingSerializer(serializers.ModelSerializer):
 
 
 class userPricingSerializer(serializers.ModelSerializer):
-        total_costing = serializers.IntegerField(read_only=True)
 
-        class Meta:
-            model = UserPricing
-            # fields = "__all__"
-            read_only_fields = ["user_name"]
-            exclude = ["user_name"]
+    class Meta:
+        model = UserPricing
+        fields = ['cammera', 'ai_features', 'total_costing']
+        read_only_fields = ['total_costing']
 
                 
 class AI_ENABLEDserializer(serializers.ModelSerializer):
     
         class Meta:
             model = AI_ENABLED
-            fields = "__all__"           
+            fields = ['id', 'AI_feature', 'costing']          
+            
+class AIFeatureQuotationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = AI_ENABLED
+        fields = ['AI_feature', 'costing']
+
+
+from django.db.models import Q
+
+class QuotationSerializer(serializers.ModelSerializer):
+    ai_features = AIFeatureQuotationSerializer(many=True)
+    camera_cost = serializers.SerializerMethodField()
+
+    class Meta:
+        model = UserPricing
+        fields = [
+            'cammera',
+            'camera_cost',
+            'ai_features',
+            'total_costing',
+            'created_at'
+        ]
+
+    def get_camera_cost(self, obj):
+        pricing_range = Cammera_Pricing.objects.filter(
+            min_cammera__lte=obj.cammera
+        ).filter(
+            Q(max_cammera__gte=obj.cammera) | Q(max_cammera__isnull=True)
+        ).first()
+
+        return pricing_range.total_costing if pricing_range else 0

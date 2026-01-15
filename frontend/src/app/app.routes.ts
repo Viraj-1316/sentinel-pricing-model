@@ -25,5 +25,13 @@ export const routes: Routes = [
   },
 
   // fallback
+  
+
+   {
+    path: 'user-requirements',
+    loadComponent: () => import('./dashboard/dashboard').then((m) => m.Dashboard),
+    
+  },
+
   { path: '**', redirectTo: 'login' },
 ];

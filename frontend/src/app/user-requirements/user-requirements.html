@@ -1,0 +1,47 @@
+<form [formGroup]="form" (ngSubmit)="submit()" class="card p-4">
+
+  <h3>User Requirements</h3>
+
+  <!-- Camera Count -->
+  <label>No. of Cameras</label>
+  <input
+    type="number"
+    class="form-control"
+    formControlName="cammera"
+  />
+
+  <!-- AI Features -->
+  <label class="mt-3">AI Features</label>
+  <select multiple class="form-control" formControlName="ai_features">
+    <option *ngFor="let ai of aiFeatures" [value]="ai.id">
+      {{ ai.AI_feature }} (₹{{ ai.costing }})
+    </option>
+  </select>
+
+  <button class="btn btn-primary mt-3" [disabled]="loading">
+    {{ loading ? 'Calculating...' : 'Get Quotation' }}
+  </button>
+</form>
+
+---
+
+<!-- Quotation Display -->
+<div *ngIf="quotation" class="card p-4 mt-4">
+
+  <h3>Quotation</h3>
+
+  <p><b>Cameras:</b> {{ quotation.cammera }}</p>
+  <p><b>Camera Cost:</b> ₹{{ quotation.camera_cost }}</p>
+
+  <h5>AI Features</h5>
+  <ul>
+    <li *ngFor="let ai of quotation.ai_features">
+      {{ ai.AI_feature }} – ₹{{ ai.costing }}
+    </li>
+  </ul>
+
+  <hr>
+  <h4>Total Cost: ₹{{ quotation.total_costing }}</h4>
+  <small>{{ quotation.created_at | date }}</small>
+
+</div>
