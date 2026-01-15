@@ -1,10 +1,24 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { PricingService } from '../service/pricing.service';
+import { CommonModule, DatePipe } from '@angular/common';
+import {
+  ReactiveFormsModule,
+  FormBuilder,
+  FormGroup,
+  Validators
+} from '@angular/forms';
+import { HttpClientModule } from '@angular/common/http';
 
+import { PricingService } from '../service/pricing.service';
 
 @Component({
   selector: 'app-user-requirements',
+  standalone: true,
+  imports: [
+    CommonModule,          // ngIf, ngFor, pipes
+    ReactiveFormsModule,   // formGroup, formControl
+    HttpClientModule,
+    DatePipe               // date pipe
+  ],
   templateUrl: './user-requirements.html'
 })
 export class UserRequirements implements OnInit {
@@ -28,26 +42,26 @@ export class UserRequirements implements OnInit {
     this.loadAIFeatures();
   }
 
-  loadAIFeatures() {
+  loadAIFeatures(): void {
     this.pricingService.getAIFeatures().subscribe(res => {
       this.aiFeatures = res;
     });
   }
 
-  submit() {
+  submit(): void {
     if (this.form.invalid) return;
 
     this.loading = true;
     this.quotation = null;
 
     this.pricingService.calculatePricing(this.form.value)
-      .subscribe(res => {
+      .subscribe(() => {
         this.loading = false;
         this.loadLatestQuotation();
       });
   }
 
-  loadLatestQuotation() {
+  loadLatestQuotation(): void {
     this.pricingService.getUserQuotations()
       .subscribe(res => {
         this.quotation = res[0]; // latest quotation
