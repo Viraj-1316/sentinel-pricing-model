@@ -4,14 +4,27 @@ from pricingModel.api.serializers import userPricingSerializer,Cammera_PricingSe
 from rest_framework import response
 from rest_framework.validators import ValidationError
 from django.db.models import Q
+from rest_framework.permissions import IsAuthenticated, IsAdminUser
+    
+from rest_framework import generics
 
-    
-class defaultPricing(generics.ListAPIView):
-    
+class defaultPricingListCreate(generics.ListCreateAPIView):
     queryset = Cammera_Pricing.objects.all()
     serializer_class = Cammera_PricingSerializer
+    def get_permissions(self):
+        # Everyone logged in can view list
+        if self.request.method in ["GET"]:
+            return [IsAuthenticated()]
+
+        # Only superuser/staff can add/update/delete
+        return [IsAuthenticated(), IsAdminUser()]
+class defaultPricingDetail(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Cammera_Pricing.objects.all()
+    serializer_class = Cammera_PricingSerializer
+
     
-class aiFeatures(generics.ListAPIView):
+    
+class aiFeatures(generics.ListCreateAPIView):
     
     queryset = AI_ENABLED.objects.all()
     serializer_class =  AI_ENABLEDserializer   

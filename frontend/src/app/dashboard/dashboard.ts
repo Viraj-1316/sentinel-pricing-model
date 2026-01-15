@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { RouterLink } from '@angular/router';
-
+import { AuthService } from '../service/auth.service';
 export interface CameraPricing {
   id: number;
-  cameras: number;
-  processor: string;
+  min_cammera: number;
+  max_cammera: number | null;
+  Processor: string;
   total_costing: number;
 }
 
@@ -35,28 +36,36 @@ export class Dashboard implements OnInit {
   cameraForm: FormGroup;
   aiForm: FormGroup;
 
-  private CAMERA_API = 'http://192.168.65.89:8001/api/camera-pricing/';
-  private AI_API = 'http://192.168.65.89:8001/api/ai-enabled/';
+  private CAMERA_API = 'http://127.0.0.1:8001/pricing-Model/cameraPricing/';
+  private AI_API = 'http://127.0.0.1:8001/api/ai-enabled/';
 
-  constructor(private http: HttpClient, private fb: FormBuilder) {
-    // Camera form
+  constructor(private http: HttpClient, private fb: FormBuilder,private auth: AuthService) {
+
+    // ✅ Camera Pricing form (min-max range)
     this.cameraForm = this.fb.group({
-      cameras: ['', [Validators.required, Validators.min(1)]],
-      processor: ['', [Validators.required, Validators.minLength(2)]],
+      min_cammera: ['', [Validators.required, Validators.min(1)]],
+      max_cammera: [''], // optional
+      Processor: ['', [Validators.required, Validators.minLength(2)]],
       total_costing: ['', [Validators.required, Validators.min(0)]],
     });
 
-    // AI feature form
+    // ✅ AI feature form
     this.aiForm = this.fb.group({
       AI_feature: ['', [Validators.required, Validators.minLength(2)]],
       costing: ['', [Validators.required, Validators.min(0)]],
     });
   }
 
+
+  onLogout(): void {
+    console.log("✅ Logout clicked");
+    this.auth.logout();
+  }
+
   ngOnInit(): void {
     this.fetchAll();
   }
- 
+
   // ---------- shared ----------
   fetchAll(): void {
     this.fetchCameraPricing();
@@ -92,8 +101,11 @@ export class Dashboard implements OnInit {
     }
 
     const payload = {
-      cameras: Number(this.cameraForm.value.cameras),
-      processor: this.cameraForm.value.processor,
+      min_cammera: Number(this.cameraForm.value.min_cammera),
+      max_cammera: this.cameraForm.value.max_cammera
+        ? Number(this.cameraForm.value.max_cammera)
+        : null,
+      Processor: this.cameraForm.value.Processor,
       total_costing: Number(this.cameraForm.value.total_costing),
     };
 
