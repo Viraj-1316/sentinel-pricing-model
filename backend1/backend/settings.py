@@ -104,7 +104,18 @@ WSGI_APPLICATION = 'backend.wsgi.application'
 #         'HOST': 'localhost',
 #         'PORT': '5432',
 #     }
- 
+# }
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'sentinel_db',
+        'USER': 'sentinel_user',
+        'PASSWORD': 'Sentinel@123',
+        'HOST': 'localhost',
+        'PORT': '5432',
+    }
+}
+
 
 
 

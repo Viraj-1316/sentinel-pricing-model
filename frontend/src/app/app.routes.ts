@@ -29,8 +29,8 @@ export const routes: Routes = [
 
    {
     path: 'user-requirements',
-    loadComponent: () => import('./dashboard/dashboard').then((m) => m.Dashboard),
-    
+    loadComponent: () => import('./user-requirements/user-requirements').then((m) => m.UserRequirements),
+    canActivate: [authGuard],
   },
 
   { path: '**', redirectTo: 'login' },

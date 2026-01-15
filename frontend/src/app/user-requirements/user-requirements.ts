@@ -17,17 +17,19 @@ export interface AIEnabled {
   imports: [CommonModule, ReactiveFormsModule, HttpClientModule, RouterLink],
   templateUrl: './user-requirements.html',
 })
-export class Requirements implements OnInit {
+export class UserRequirements implements OnInit {
   form: FormGroup;
   loading = false;
   errorMsg: string | null = null;
 
   aiFeatures: AIEnabled[] = [];
-
   quotation: any = null;
 
+  // ✅ NEW: Total AI cost (below dropdown)
+  totalAiCost = 0;
+
   private AI_API = 'http://127.0.0.1:8001/pricing-Model/ai-feature/';
-  private QUOTE_API = 'http://127.0.0.1:8001/pricing-Model/quotation/'; // ✅ create this backend endpoint
+  private QUOTE_API = 'http://127.0.0.1:8001/pricing-Model/Pricingcalculation/';
 
   constructor(
     private fb: FormBuilder,
@@ -36,12 +38,17 @@ export class Requirements implements OnInit {
   ) {
     this.form = this.fb.group({
       cammera: ['', [Validators.required, Validators.min(1)]],
-      ai_features: [[]],
+      ai_features: [[]], // multiple selected ids
     });
   }
 
   ngOnInit(): void {
     this.fetchAIFeatures();
+
+    // ✅ Calculate total cost live when user selects features
+    this.form.get('ai_features')?.valueChanges.subscribe((selectedIds: number[]) => {
+      this.totalAiCost = this.calculateAiCost(selectedIds || []);
+    });
   }
 
   onLogout(): void {
@@ -55,9 +62,22 @@ export class Requirements implements OnInit {
 
   fetchAIFeatures(): void {
     this.http.get<AIEnabled[]>(this.AI_API).subscribe({
-      next: (data) => (this.aiFeatures = data || []),
+      next: (data) => {
+        this.aiFeatures = data || [];
+
+        // ✅ when AI features load, recalc total based on already selected values
+        const selected = this.form.value.ai_features || [];
+        this.totalAiCost = this.calculateAiCost(selected);
+      },
       error: () => (this.errorMsg = 'Failed to load AI features.'),
     });
+  }
+
+  // ✅ helper function
+  private calculateAiCost(selectedIds: number[]): number {
+    return this.aiFeatures
+      .filter(ai => selectedIds.includes(ai.id))
+      .reduce((sum, ai) => sum + Number(ai.costing || 0), 0);
   }
 
   submit(): void {
@@ -88,6 +108,10 @@ export class Requirements implements OnInit {
 
   clearQuotation(): void {
     this.quotation = null;
+
+    // ✅ optional: also reset form + cost
+    this.form.reset({ cammera: '', ai_features: [] });
+    this.totalAiCost = 0;
   }
 
   downloadPdf(): void {
