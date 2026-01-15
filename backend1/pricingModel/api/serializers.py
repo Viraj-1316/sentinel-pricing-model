@@ -13,8 +13,10 @@ class userPricingSerializer(serializers.ModelSerializer):
 
         class Meta:
             model = UserPricing
-            fields = "__all__"
+            # fields = "__all__"
             read_only_fields = ["user_name"]
+            exclude = ["user_name"]
+
                 
 class AI_ENABLEDserializer(serializers.ModelSerializer):
     

@@ -5,7 +5,7 @@ from django.contrib.auth.models import User
         
 class Cammera_Pricing(models.Model):
     min_cammera = models.IntegerField()
-    max_cammera = models.IntegerField()
+    max_cammera = models.IntegerField(null=True, blank=True)
     Processor = models.CharField(max_length=50)
     total_costing = models.IntegerField()
     
@@ -29,6 +29,7 @@ class AI_ENABLED(models.Model):
 class UserPricing(models.Model):
     user_name = models.ForeignKey(User, on_delete=models.CASCADE)
     cammera = models.IntegerField()
+    total_costing = models.IntegerField()
     ai_features = models.ManyToManyField(AI_ENABLED, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     

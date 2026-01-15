@@ -5,6 +5,8 @@ from rest_framework import response
 from rest_framework.validators import ValidationError
 from django.db.models import Q
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
+# from rest_framework.permissions import IsAuthenticated
+# from rest_framework_simplejwt.authentication import JWTAuthentication
     
 from rest_framework import generics
 
@@ -47,7 +49,13 @@ class pricingCalculate(generics.ListCreateAPIView):
         
         total_cost = int(camera_cost + ai_cost)
         
-        serializer.save(user_name = self.request.user, total_costing = total_cost)
+        print("AUTH USER:", self.request.user)
+        print("IS AUTH:", self.request.user.is_authenticated)
+        
+        serializer.save(
+             user_name=self.request.user,
+            total_costing=total_cost
+        )
     
         
             
