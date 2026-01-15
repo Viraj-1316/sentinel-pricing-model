@@ -4,6 +4,7 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../service/auth.service';
+import { HttpHeaders } from '@angular/common/http';
 
 export interface AIEnabled {
   id: number;
@@ -26,12 +27,13 @@ export class UserRequirements implements OnInit {
   aiFeatures: AIEnabled[] = [];
   quotation: any = null;
 
-  // ✅ Total AI cost (frontend live)
+  // ✅ Total AI cost live (frontend)
   totalAiCost = 0;
 
-  // ✅ Total cost from backend
+  // ✅ Total cost returned by backend
   totalCost: number | null = null;
 
+  // ✅ API endpoints
   private AI_API = 'http://127.0.0.1:8001/pricing-Model/ai-feature/';
   private QUOTE_API = 'http://127.0.0.1:8001/pricing-Model/Pricingcalculation/';
   private QUOTATION_API = 'http://127.0.0.1:8001/pricing-Model/user-quotations/';
@@ -43,53 +45,47 @@ export class UserRequirements implements OnInit {
   ) {
     this.form = this.fb.group({
       cammera: ['', [Validators.required, Validators.min(1)]],
-      ai_features: [[]], // ✅ checkbox selected ids stored here
+      ai_features: [[]], // ✅ selected feature ids
     });
   }
 
   ngOnInit(): void {
     this.fetchAIFeatures();
 
-    // ✅ Live AI cost calculation when user selects checkboxes
+    // ✅ Update total AI cost when checkbox selection changes
     this.form.get('ai_features')?.valueChanges.subscribe((selectedIds: number[]) => {
       this.totalAiCost = this.calculateAiCost(selectedIds || []);
     });
   }
 
-  // ============================================
-  // ✅ LOGOUT
-  // ============================================
+  // ✅ Logout
   onLogout(): void {
     this.auth.logout();
   }
 
-  // ============================================
-  // ✅ VALIDATION HELPERS
-  // ============================================
+  // ✅ Validation helper
   isInvalid(controlName: string): boolean {
     const c = this.form.get(controlName);
     return !!(c && c.invalid && (c.dirty || c.touched));
   }
 
-  // ============================================
-  // ✅ FETCH AI FEATURES FOR DROPDOWN
-  // ============================================
+  // ✅ Load AI features for dropdown list
   fetchAIFeatures(): void {
     this.http.get<AIEnabled[]>(this.AI_API).subscribe({
       next: (data) => {
         this.aiFeatures = data || [];
 
-        // recalc total after load
-        const selected = this.form.value.ai_features || [];
+        // recalc total AI cost after data load
+        const selected: number[] = this.form.value.ai_features || [];
         this.totalAiCost = this.calculateAiCost(selected);
       },
-      error: () => (this.errorMsg = 'Failed to load AI features.'),
+      error: () => {
+        this.errorMsg = 'Failed to load AI features.';
+      },
     });
   }
 
-  // ============================================
-  // ✅ CHECKBOX MULTISELECT TOGGLE FUNCTION
-  // ============================================
+  // ✅ Checkbox toggle handler
   onToggleFeature(id: number, event: Event): void {
     const checked = (event.target as HTMLInputElement).checked;
     const current: number[] = this.form.value.ai_features || [];
@@ -97,30 +93,25 @@ export class UserRequirements implements OnInit {
     let updated: number[];
 
     if (checked) {
-      // add id if not already present
       updated = current.includes(id) ? current : [...current, id];
     } else {
-      // remove id
-      updated = current.filter(x => x !== id);
+      updated = current.filter((x) => x !== id);
     }
 
     this.form.patchValue({ ai_features: updated });
   }
 
-  // ============================================
-  // ✅ CALCULATE AI COST (Frontend)
-  // ============================================
+  // ✅ Calculate AI total cost in frontend
   private calculateAiCost(selectedIds: number[]): number {
     return this.aiFeatures
-      .filter(ai => selectedIds.includes(ai.id))
+      .filter((ai) => selectedIds.includes(ai.id))
       .reduce((sum, ai) => sum + Number(ai.costing || 0), 0);
   }
 
-  // ============================================
-  // ✅ CALCULATE COST (POST Pricingcalculation)
-  // ============================================
+  // ✅ Calculate Cost (POST Pricingcalculation API)
   calculateCost(): void {
     this.errorMsg = null;
+    this.totalCost = null;
 
     if (this.form.invalid) {
       this.form.markAllAsTouched();
@@ -138,16 +129,16 @@ export class UserRequirements implements OnInit {
       next: (res: any) => {
         this.loading = false;
 
-        // ✅ only show total cost below calculate cost
+        // ✅ show total cost below calculate cost
         this.totalCost = res?.total_costing ?? null;
 
-        // ❌ do not render quotation preview here
+        // ❌ don't render preview here
         // this.quotation = res;
       },
       error: (err) => {
         this.loading = false;
-        this.totalCost = null;
 
+        // ✅ show useful message
         if (err?.error?.cammera) {
           this.errorMsg = err.error.cammera;
         } else {
@@ -157,13 +148,10 @@ export class UserRequirements implements OnInit {
     });
   }
 
-  // ============================================
-  // ✅ GENERATE QUOTATION PREVIEW (ONLY PERSONAL API)
-  // ============================================
+  // ✅ Generate Quotation Preview (GET quotations API)
   generateQuotation(): void {
     this.errorMsg = null;
 
-    // enforce calculate first
     if (this.totalCost === null) {
       this.errorMsg = 'Please calculate cost first.';
       return;
@@ -171,7 +159,6 @@ export class UserRequirements implements OnInit {
 
     this.loading = true;
 
-    // ✅ only personal API call allowed for preview
     this.http.get<any[]>(this.QUOTATION_API).subscribe({
       next: (res: any[]) => {
         this.loading = false;
@@ -182,12 +169,12 @@ export class UserRequirements implements OnInit {
           return;
         }
 
-        // ✅ latest quotation
-        const latest = res[res.length - 1];
+        // ✅ backend returns latest first (order_by -created_at)
+        const latest = res[0];
 
         this.quotation = latest;
 
-        // update totalCost
+        // ✅ update totalCost in UI also
         this.totalCost = latest?.total_costing ?? this.totalCost;
       },
       error: (err) => {
@@ -196,19 +183,59 @@ export class UserRequirements implements OnInit {
       },
     });
   }
+  sendEmail(): void {
+  if (!this.quotation?.id) return;
 
-  // ============================================
-  // ✅ CLEAR PREVIEW
-  // ============================================
-  clearQuotation(): void {
-    this.quotation = null;
-    this.totalCost = null;
+  this.http.post(
+    `http://127.0.0.1:8001/pricing-Model/quotation/${this.quotation.id}/send-email/`,
+    {}
+  ).subscribe({
+    next: () => alert("Email is sent ✅"),
+    error: () => alert("Failed to send email ❌"),
+  });
+}
+
+
+downloadPdf(): void {
+  if (!this.quotation?.id) {
+    this.errorMsg = 'Please generate quotation first.';
+    return;
   }
 
-  // ============================================
-  // ✅ PDF DOWNLOAD PLACEHOLDER
-  // ============================================
-  downloadPdf(): void {
-    alert('PDF download will be implemented from backend /quotation/{id}/pdf/');
-  }
+  const url = `http://127.0.0.1:8001/pricing-Model/quotation/${this.quotation.id}/pdf/`;
+
+  this.loading = true;
+
+  this.http.get(url, { responseType: 'blob' }).subscribe({
+    next: (blob) => {
+      this.loading = false;
+
+      // ✅ create pdf file
+      const file = new Blob([blob], { type: 'application/pdf' });
+
+      // ✅ download link
+      const downloadURL = window.URL.createObjectURL(file);
+      const a = document.createElement('a');
+
+      a.href = downloadURL;
+      a.download = `quotation_${this.quotation.id}.pdf`;
+      a.click();
+
+      window.URL.revokeObjectURL(downloadURL);
+    },
+    error: () => {
+      this.loading = false;
+      this.errorMsg = 'Failed to download PDF.';
+    },
+  });
+}
+clearQuotation(): void {
+  this.quotation = null;
+  this.totalCost = null;
+  this.errorMsg = null;
+}
+
+
+
+ 
 }

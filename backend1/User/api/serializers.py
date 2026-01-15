@@ -2,6 +2,9 @@ from rest_framework import serializers
 from django.contrib.auth.models import User
 from rest_framework.exceptions import ValidationError
 from ..models import UserProfile
+from django.contrib.auth import get_user_model
+User = get_user_model()
+
 
 class registration_serializer(serializers.ModelSerializer):
     password2 = serializers.CharField(write_only=True)
@@ -11,6 +14,32 @@ class registration_serializer(serializers.ModelSerializer):
         model = User
         fields = ['username', 'email', 'phone_number', 'password', 'password2']
         extra_kwargs = {'password': {'write_only': True}}
+
+    # ✅ 1) Validate password matching
+    def validate(self, attrs):
+        if attrs.get("password") != attrs.get("password2"):
+            raise serializers.ValidationError({"password": "Passwords do not match"})
+        return attrs
+
+    # ✅ 2) Create user + save email + save phone in UserProfile
+    def create(self, validated_data):
+        phone_number = validated_data.pop("phone_number", None)
+        validated_data.pop("password2", None)
+
+        # ✅ Create user using create_user (hashes password properly)
+        user = User.objects.create_user(
+            username=validated_data["username"],
+            email=validated_data.get("email", ""),   # ✅ store email in User table
+            password=validated_data["password"]
+        )
+
+        # ✅ Save phone in UserProfile
+        UserProfile.objects.update_or_create(
+            user=user,
+            defaults={"phone_number": phone_number}
+        )
+
+        return user
 
     def validate_phone_number(self, value):
         if not value.isdigit():

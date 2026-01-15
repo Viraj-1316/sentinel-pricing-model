@@ -12,18 +12,21 @@ class Cammera_PricingSerializer(serializers.ModelSerializer):
 
 class userPricingSerializer(serializers.ModelSerializer):
     total_costing = serializers.IntegerField(read_only=True)
-    user_name = serializers.HiddenField(default=serializers.CurrentUserDefault())
+    camera_cost = serializers.IntegerField(read_only=True)
+    ai_cost = serializers.IntegerField(read_only=True)
+
     class Meta:
         model = UserPricing
         fields = [
             'id',
-            'user_name',      
             'cammera',
             'ai_features',
+            'camera_cost',
+            'ai_cost',
             'total_costing',
             'created_at'
         ]
-        read_only_fields = ['total_costing', 'created_at']
+        read_only_fields = ['camera_cost', 'ai_cost', 'total_costing', 'created_at']
 
                 
 class AI_ENABLEDserializer(serializers.ModelSerializer):
@@ -38,22 +41,24 @@ class AIFeatureQuotationSerializer(serializers.ModelSerializer):
         fields = ['AI_feature', 'costing']
 
 class QuotationSerializer(serializers.ModelSerializer):
-    ai_features = AIFeatureQuotationSerializer(many=True)
-    camera_cost = serializers.SerializerMethodField()
+    ai_features = AIFeatureQuotationSerializer(many=True, read_only=True)
 
     class Meta:
         model = UserPricing
         fields = [
+            'id',
             'cammera',
             'camera_cost',
+            'ai_cost',
             'ai_features',
             'total_costing',
             'created_at'
         ]
 
+
     def get_camera_cost(self, obj):
         pricing_range = Cammera_Pricing.objects.filter(
-            min_cammera__lte=obj.cammera
+            min_cammera__lte=obj.camera
         ).filter(
             Q(max_cammera__gte=obj.cammera) | Q(max_cammera__isnull=True)
         ).first()
