@@ -11,10 +11,11 @@ class Cammera_PricingSerializer(serializers.ModelSerializer):
 
 
 class userPricingSerializer(serializers.ModelSerializer):
-
+    total_costing = serializers.IntegerField(read_only=True)
+    user_name = serializers.HiddenField(default=serializers.CurrentUserDefault())
     class Meta:
         model = UserPricing
-        fields = ['cammera', 'ai_features', 'total_costing']
+        fields = ['id', 'cammera', 'ai_features', 'total_costing', 'created_at']
         read_only_fields = ['total_costing']
 
                 
@@ -50,4 +51,4 @@ class QuotationSerializer(serializers.ModelSerializer):
             Q(max_cammera__gte=obj.cammera) | Q(max_cammera__isnull=True)
         ).first()
 
-        return pricing_range.total_costing if pricing_range else 0
+        return pricing_range.total_costing
