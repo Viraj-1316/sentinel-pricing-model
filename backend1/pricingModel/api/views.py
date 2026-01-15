@@ -57,6 +57,14 @@ class pricingCalculate(generics.CreateAPIView):
         
         pricing_range = Cammera_Pricing.objects.filter(min_cammera__lte = cameras ).filter(Q(max_cammera__gte = cameras) | Q(max_cammera__isnull=True)).first()
         
+      
+        if pricing_range is None:
+            pricing_range = Cammera_Pricing.objects.order_by('-min_cammera').first()
+
+        
+        if pricing_range is None:
+            raise ValidationError("No camera pricing configured by admin")
+
         camera_cost = pricing_range.total_costing
         ai_cost = sum(ai.costing for ai in ai_features)
         

@@ -1,120 +1,108 @@
-import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { HttpClient, HttpClientModule } from '@angular/common/http';
-import { RouterLink } from '@angular/router';
+import { Component, OnInit, HostListener, ElementRef } from '@angular/core';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { Router } from '@angular/router';
+import { PricingService } from '../service/pricing.service';
 import { AuthService } from '../service/auth.service';
-
-export interface AIEnabled {
-  id: number;
-  AI_feature: string;
-  costing: number;
-}
 
 @Component({
   selector: 'app-user-requirements',
-  standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, HttpClientModule, RouterLink],
   templateUrl: './user-requirements.html',
+  styleUrls: ['./user-requirements.css'] // Add styling here or in global styles
 })
-export class UserRequirements implements OnInit {
-  form: FormGroup;
-  loading = false;
-  errorMsg: string | null = null;
-
-  aiFeatures: AIEnabled[] = [];
+export class UserRequirementsComponent implements OnInit {
+  form!: FormGroup;
+  aiFeatures: any[] = [];
+  selectedAIFeatures: any[] = [];
+  
   quotation: any = null;
-
-  // ✅ NEW: Total AI cost (below dropdown)
-  totalAiCost = 0;
-
-  private AI_API = 'http://127.0.0.1:8001/pricing-Model/ai-feature/';
-  private QUOTE_API = 'http://127.0.0.1:8001/pricing-Model/Pricingcalculation/';
+  showDropdown = false;
+  loading = false;
+  errorMsg = '';
+  totalAICost = 0;
 
   constructor(
     private fb: FormBuilder,
-    private http: HttpClient,
-    private auth: AuthService
-  ) {
-    this.form = this.fb.group({
-      cammera: ['', [Validators.required, Validators.min(1)]],
-      ai_features: [[]], // multiple selected ids
-    });
-  }
+    private pricingService: PricingService,
+    private authService: AuthService,
+    private router: Router,
+    private eRef: ElementRef
+  ) {}
 
   ngOnInit(): void {
-    this.fetchAIFeatures();
-
-    // ✅ Calculate total cost live when user selects features
-    this.form.get('ai_features')?.valueChanges.subscribe((selectedIds: number[]) => {
-      this.totalAiCost = this.calculateAiCost(selectedIds || []);
+    this.form = this.fb.group({
+      camera: ['', [Validators.required, Validators.min(1)]],
+      ai_features: [[]]
     });
+
+    this.loadAIFeatures();
   }
 
-  onLogout(): void {
-    this.auth.logout();
-  }
-
-  isInvalid(controlName: string): boolean {
-    const c = this.form.get(controlName);
-    return !!(c && c.invalid && (c.dirty || c.touched));
-  }
-
-  fetchAIFeatures(): void {
-    this.http.get<AIEnabled[]>(this.AI_API).subscribe({
-      next: (data) => {
-        this.aiFeatures = data || [];
-
-        // ✅ when AI features load, recalc total based on already selected values
-        const selected = this.form.value.ai_features || [];
-        this.totalAiCost = this.calculateAiCost(selected);
+  loadAIFeatures() {
+    this.pricingService.getAIFeatures().subscribe({
+      next: (res) => {
+        this.aiFeatures = res;
       },
-      error: () => (this.errorMsg = 'Failed to load AI features.'),
+      error: () => this.errorMsg = 'Could not load AI features.'
     });
   }
 
-  // ✅ helper function
-  private calculateAiCost(selectedIds: number[]): number {
-    return this.aiFeatures
-      .filter(ai => selectedIds.includes(ai.id))
-      .reduce((sum, ai) => sum + Number(ai.costing || 0), 0);
+  toggleDropdown() {
+    this.showDropdown = !this.showDropdown;
   }
 
-  submit(): void {
-    this.errorMsg = null;
-
-    if (this.form.invalid) {
-      this.form.markAllAsTouched();
-      return;
+  // Handle checking/unchecking a feature
+  toggleFeature(ai: any) {
+    const index = this.selectedAIFeatures.findIndex(f => f.id === ai.id);
+    
+    if (index > -1) {
+      // Remove if already selected
+      this.selectedAIFeatures.splice(index, 1);
+      this.totalAICost -= ai.costing;
+    } else {
+      // Add if not selected
+      this.selectedAIFeatures.push(ai);
+      this.totalAICost += ai.costing;
     }
 
-    const payload = {
-      cammera: Number(this.form.value.cammera),
-      ai_features: this.form.value.ai_features || [],
-    };
-
-    this.loading = true;
-    this.http.post(this.QUOTE_API, payload).subscribe({
-      next: (res: any) => {
-        this.loading = false;
-        this.quotation = res;
-      },
-      error: (err) => {
-        this.loading = false;
-        this.errorMsg = err?.error?.detail || 'Failed to generate quotation.';
-      },
+    // Sync with Reactive Form
+    this.form.patchValue({
+      ai_features: this.selectedAIFeatures.map(f => f.id)
     });
   }
 
-  clearQuotation(): void {
-    this.quotation = null;
-
-    // ✅ optional: also reset form + cost
-    this.form.reset({ cammera: '', ai_features: [] });
-    this.totalAiCost = 0;
+  isSelected(ai: any): boolean {
+    return this.selectedAIFeatures.some(f => f.id === ai.id);
   }
 
-  downloadPdf(): void {
-    alert('PDF download will be implemented from backend /quotation/{id}/pdf/');
+  // Close dropdown when clicking outside
+  @HostListener('document:click', ['$event'])
+  clickout(event: any) {
+    if (!this.eRef.nativeElement.contains(event.target)) {
+      this.showDropdown = false;
+    }
+  }
+
+  submit() {
+    if (this.form.invalid) return;
+
+    this.loading = true;
+    this.errorMsg = '';
+    this.quotation = null;
+
+    this.pricingService.calculatePricing(this.form.value).subscribe({
+      next: res => {
+        this.quotation = res;
+        this.loading = false;
+      },
+      error: err => {
+        this.errorMsg = 'Failed to generate quotation';
+        this.loading = false;
+      }
+    });
+  }
+
+  onLogout() {
+    this.authService.logout();
+    this.router.navigate(['/login']);
   }
 }

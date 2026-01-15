@@ -13,10 +13,18 @@ class Cammera_PricingSerializer(serializers.ModelSerializer):
 class userPricingSerializer(serializers.ModelSerializer):
     total_costing = serializers.IntegerField(read_only=True)
     user_name = serializers.HiddenField(default=serializers.CurrentUserDefault())
+
     class Meta:
         model = UserPricing
-        fields = ['id', 'cammera', 'ai_features', 'total_costing', 'created_at']
-        read_only_fields = ['total_costing']
+        fields = [
+            'id',
+            'user_name',      
+            'cammera',
+            'ai_features',
+            'total_costing',
+            'created_at'
+        ]
+        read_only_fields = ['total_costing', 'created_at']
 
                 
 class AI_ENABLEDserializer(serializers.ModelSerializer):
