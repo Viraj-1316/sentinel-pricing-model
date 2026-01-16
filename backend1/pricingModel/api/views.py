@@ -57,9 +57,7 @@ def download_quotation_pdf(request, pk):
     response.write(pdf)
     return response
 
-# =========================================
-# ✅ CAMERA PRICING API
-# =========================================
+
 class defaultPricingListCreate(generics.ListCreateAPIView):
     queryset = Cammera_Pricing.objects.all()
     serializer_class = Cammera_PricingSerializer
@@ -83,9 +81,6 @@ class defaultPricingDetail(generics.RetrieveUpdateDestroyAPIView):
         return [IsAuthenticated(), IsAdminUser()]
 
 
-# =========================================
-# ✅ AI FEATURES API
-# =========================================
 class aiFeatures(generics.ListCreateAPIView):
     queryset = AI_ENABLED.objects.all()
     serializer_class = AI_ENABLEDserializer
@@ -96,10 +91,6 @@ class aiFeatures(generics.ListCreateAPIView):
         return [IsAuthenticated(), IsAdminUser()]
 
 
-# =========================================
-# ✅ PRICING CALCULATION API (POST)
-# Stores quotation in UserPricing
-# =========================================
 class pricingCalculate(generics.ListCreateAPIView):
     serializer_class = userPricingSerializer
     permission_classes = [IsAuthenticated]
@@ -122,28 +113,19 @@ class pricingCalculate(generics.ListCreateAPIView):
         if not pricing_range:
             raise ValidationError({"cammera": "No camera pricing slab found for this camera count"})
 
+        if pricing_range is None:
+          pricing = Cammera_Pricing.objects.order_by('-min_cammera').first()
+          
         camera_cost = int(pricing_range.total_costing)
         ai_cost = sum(int(ai.costing) for ai in ai_features)
 
         total_cost = camera_cost + ai_cost
 
-        # ✅ Save quotation in UserPricing table
-        instance = serializer.save(
-            user_name=self.request.user,
-            cammera=cameras,
-            camera_cost=camera_cost,
-            ai_cost=ai_cost,
-            total_costing=total_cost
+        serializer.save(
+            user_name = self.request.user,
+            total_cost = total_cost
         )
 
-        # ✅ Save ManyToMany selected features
-        instance.ai_features.set(ai_features)
-
-
-# =========================================
-# ✅ QUOTATION API (GET)
-# Shows saved quotations
-# =========================================
 class UserQuotationList(generics.ListAPIView):
     serializer_class = QuotationSerializer
     permission_classes = [IsAuthenticated]

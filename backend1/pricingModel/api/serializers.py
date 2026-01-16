@@ -42,7 +42,7 @@ class AIFeatureQuotationSerializer(serializers.ModelSerializer):
 
 class QuotationSerializer(serializers.ModelSerializer):
     ai_features = AIFeatureQuotationSerializer(many=True, read_only=True)
-
+    camera_cost = serializers.SerializerMethodField()
     class Meta:
         model = UserPricing
         fields = [
@@ -58,9 +58,12 @@ class QuotationSerializer(serializers.ModelSerializer):
 
     def get_camera_cost(self, obj):
         pricing_range = Cammera_Pricing.objects.filter(
-            min_cammera__lte=obj.camera
+            min_cammera__lte=obj.cammera
         ).filter(
             Q(max_cammera__gte=obj.cammera) | Q(max_cammera__isnull=True)
         ).first()
 
+        if pricing_range is None:
+          pricing_range = Cammera_Pricing.objects.order_by('-min_cammera').first()
+          
         return pricing_range.total_costing
