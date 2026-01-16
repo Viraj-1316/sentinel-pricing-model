@@ -30,8 +30,6 @@ class UserPricing(models.Model):
     user_name = models.ForeignKey(User, on_delete=models.CASCADE)
     cammera = models.IntegerField()
     ai_features = models.ManyToManyField(AI_ENABLED, blank=True)
-
-    # ✅ ADD THESE FIELDS
     camera_cost = models.IntegerField(default=0)
     ai_cost = models.IntegerField(default=0)
     total_costing = models.IntegerField(default=0)

@@ -63,11 +63,9 @@ class defaultPricingListCreate(generics.ListCreateAPIView):
     serializer_class = Cammera_PricingSerializer
 
     def get_permissions(self):
-        # ✅ All logged in users can view pricing list
         if self.request.method == "GET":
             return [IsAuthenticated()]
 
-        # ✅ Only admin can create
         return [IsAuthenticated(), IsAdminUser()]
 
 
@@ -110,11 +108,8 @@ class pricingCalculate(generics.ListCreateAPIView):
             Q(max_cammera__gte=cameras) | Q(max_cammera__isnull=True)
         ).first()
 
-        if not pricing_range:
-            raise ValidationError({"cammera": "No camera pricing slab found for this camera count"})
-
         if pricing_range is None:
-          pricing = Cammera_Pricing.objects.order_by('-min_cammera').first()
+          pricing_range = Cammera_Pricing.objects.order_by('-min_cammera').first()
           
         camera_cost = int(pricing_range.total_costing)
         ai_cost = sum(int(ai.costing) for ai in ai_features)
