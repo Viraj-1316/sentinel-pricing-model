@@ -1,11 +1,11 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { HttpClient, HttpClientModule } from '@angular/common/http';
-import { RouterModule } from '@angular/router';
+import { RouterLink } from '@angular/router';
 import { AuthService } from '../service/auth.service';
+import { HttpHeaders } from '@angular/common/http';
 
-/* ✅ Interface exactly matching backend response */
 export interface AIEnabled {
   id: number;
   AI_feature: string;
@@ -15,29 +15,25 @@ export interface AIEnabled {
 @Component({
   selector: 'app-user-requirements',
   standalone: true,
+  imports: [CommonModule, ReactiveFormsModule, HttpClientModule, RouterLink],
   templateUrl: './user-requirements.html',
-  styleUrls: ['./user-requirements.css'],
-  imports: [
-    CommonModule,
-    ReactiveFormsModule,
-    HttpClientModule,
-    RouterModule
-  ]
 })
 export class UserRequirements implements OnInit {
-
-  form!: FormGroup;
-
-  aiFeatures: AIEnabled[] = [];
-  quotation: any = null;
+  form: FormGroup;
 
   loading = false;
   errorMsg: string | null = null;
 
+  aiFeatures: AIEnabled[] = [];
+  quotation: any = null;
+
+  // ✅ Total AI cost live (frontend)
   totalAiCost = 0;
+
+  // ✅ Total cost returned by backend
   totalCost: number | null = null;
 
-  /* ✅ API endpoints */
+  // ✅ API endpoints
   private AI_API = 'http://127.0.0.1:8001/pricing-Model/ai-feature/';
   private QUOTE_API = 'http://127.0.0.1:8001/pricing-Model/Pricingcalculation/';
   private QUOTATION_API = 'http://127.0.0.1:8001/pricing-Model/user-quotations/';
@@ -46,126 +42,200 @@ export class UserRequirements implements OnInit {
     private fb: FormBuilder,
     private http: HttpClient,
     private auth: AuthService
-  ) {}
+  ) {
+    this.form = this.fb.group({
+      cammera: ['', [Validators.required, Validators.min(1)]],
+      ai_features: [[]], // ✅ selected feature ids
+    });
+  }
 
   ngOnInit(): void {
-    this.form = this.fb.group({
-      camera: ['', [Validators.required, Validators.min(1)]],
-      ai_features: [[]]
-    });
-
     this.fetchAIFeatures();
 
-    this.form.get('ai_features')?.valueChanges.subscribe((ids: number[]) => {
-      this.totalAiCost = this.calculateAiCost(ids || []);
+    // ✅ Update total AI cost when checkbox selection changes
+    this.form.get('ai_features')?.valueChanges.subscribe((selectedIds: number[]) => {
+      this.totalAiCost = this.calculateAiCost(selectedIds || []);
     });
   }
 
-  /* =========================
-     TEMPLATE REQUIRED METHODS
-     ========================= */
-
-  submit(): void {
-    this.calculateCost();
-  }
-
+  // ✅ Logout
   onLogout(): void {
-    this.logout();
-  }
-
-  clearQuotation(): void {
-    this.quotation = null;
-    this.totalCost = null;
-    this.errorMsg = null;
-  }
-
-  logout(): void {
     this.auth.logout();
   }
 
-  /* =========================
-     DATA FETCHING
-     ========================= */
+  // ✅ Validation helper
+  isInvalid(controlName: string): boolean {
+    const c = this.form.get(controlName);
+    return !!(c && c.invalid && (c.dirty || c.touched));
+  }
 
+  // ✅ Load AI features for dropdown list
   fetchAIFeatures(): void {
     this.http.get<AIEnabled[]>(this.AI_API).subscribe({
-      next: (data: AIEnabled[]) => {
-        this.aiFeatures = data;
+      next: (data) => {
+        this.aiFeatures = data || [];
+
+        // recalc total AI cost after data load
+        const selected: number[] = this.form.value.ai_features || [];
+        this.totalAiCost = this.calculateAiCost(selected);
       },
       error: () => {
-        this.errorMsg = 'Failed to load AI features';
-      }
+        this.errorMsg = 'Failed to load AI features.';
+      },
     });
   }
 
-  /* =========================
-     CALCULATIONS
-     ========================= */
+  // ✅ Checkbox toggle handler
+  onToggleFeature(id: number, event: Event): void {
+    const checked = (event.target as HTMLInputElement).checked;
+    const current: number[] = this.form.value.ai_features || [];
 
-  private calculateAiCost(ids: number[]): number {
-    return this.aiFeatures
-      .filter(ai => ids.includes(ai.id))
-      .reduce((sum, ai) => sum + ai.costing, 0);
+    let updated: number[];
+
+    if (checked) {
+      updated = current.includes(id) ? current : [...current, id];
+    } else {
+      updated = current.filter((x) => x !== id);
+    }
+
+    this.form.patchValue({ ai_features: updated });
   }
 
+  // ✅ Calculate AI total cost in frontend
+  private calculateAiCost(selectedIds: number[]): number {
+    return this.aiFeatures
+      .filter((ai) => selectedIds.includes(ai.id))
+      .reduce((sum, ai) => sum + Number(ai.costing || 0), 0);
+  }
+
+  // ✅ Calculate Cost (POST Pricingcalculation API)
   calculateCost(): void {
+    this.errorMsg = null;
+    this.totalCost = null;
+
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       return;
     }
 
-    this.loading = true;
-    this.errorMsg = null;
+    const payload = {
+      cammera: Number(this.form.value.cammera),
+      ai_features: this.form.value.ai_features || [],
+    };
 
-    this.http.post<any>(this.QUOTE_API, this.form.value).subscribe({
-      next: (res) => {
+    this.loading = true;
+
+    this.http.post(this.QUOTE_API, payload).subscribe({
+      next: (res: any) => {
+        this.loading = false;
+
+        // ✅ show total cost below calculate cost
         this.totalCost = res?.total_costing ?? null;
-        this.loading = false;
+
+        // ❌ don't render preview here
+        // this.quotation = res;
       },
-      error: (err: any) => {
-        this.errorMsg = err?.error?.detail || 'Failed to calculate cost';
+      error: (err) => {
         this.loading = false;
-      }
+
+        // ✅ show useful message
+        if (err?.error?.cammera) {
+          this.errorMsg = err.error.cammera;
+        } else {
+          this.errorMsg = err?.error?.detail || 'Failed to calculate cost.';
+        }
+      },
     });
   }
 
-  /* =========================
-     QUOTATION
-     ========================= */
-
+  // ✅ Generate Quotation Preview (GET quotations API)
   generateQuotation(): void {
+    this.errorMsg = null;
+
+    if (this.totalCost === null) {
+      this.errorMsg = 'Please calculate cost first.';
+      return;
+    }
+
     this.loading = true;
 
     this.http.get<any[]>(this.QUOTATION_API).subscribe({
-      next: (res) => {
-        this.quotation = res?.[0] ?? null;
+      next: (res: any[]) => {
         this.loading = false;
+
+        if (!res || res.length === 0) {
+          this.errorMsg = 'No quotation found. Please calculate cost first.';
+          this.quotation = null;
+          return;
+        }
+
+        // ✅ backend returns latest first (order_by -created_at)
+        const latest = res[0];
+
+        this.quotation = latest;
+
+        // ✅ update totalCost in UI also
+        this.totalCost = latest?.total_costing ?? this.totalCost;
       },
-      error: () => {
-        this.errorMsg = 'Failed to load quotation';
+      error: (err) => {
         this.loading = false;
-      }
+        this.errorMsg = err?.error?.detail || 'Failed to load quotation preview.';
+      },
     });
   }
+  sendEmail(): void {
+  if (!this.quotation?.id) return;
 
-  downloadPdf(): void {
-    if (!this.quotation?.id) return;
+  this.http.post(
+    `http://127.0.0.1:8001/pricing-Model/quotation/${this.quotation.id}/send-email/`,
+    {}
+  ).subscribe({
+    next: () => alert("Email is sent ✅"),
+    error: () => alert("Failed to send email ❌"),
+  });
+}
 
-    this.http.get(
-      `http://127.0.0.1:8001/pricing-Model/quotation/${this.quotation.id}/pdf/`,
-      { responseType: 'blob' }
-    ).subscribe({
-      next: (blob: Blob) => {
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `quotation_${this.quotation.id}.pdf`;
-        a.click();
-        window.URL.revokeObjectURL(url);
-      },
-      error: () => {
-        this.errorMsg = 'Failed to download PDF';
-      }
-    });
+
+downloadPdf(): void {
+  if (!this.quotation?.id) {
+    this.errorMsg = 'Please generate quotation first.';
+    return;
   }
+
+  const url = `http://127.0.0.1:8001/pricing-Model/quotation/${this.quotation.id}/pdf/`;
+
+  this.loading = true;
+
+  this.http.get(url, { responseType: 'blob' }).subscribe({
+    next: (blob) => {
+      this.loading = false;
+
+      // ✅ create pdf file
+      const file = new Blob([blob], { type: 'application/pdf' });
+
+      // ✅ download link
+      const downloadURL = window.URL.createObjectURL(file);
+      const a = document.createElement('a');
+
+      a.href = downloadURL;
+      a.download = `quotation_${this.quotation.id}.pdf`;
+      a.click();
+
+      window.URL.revokeObjectURL(downloadURL);
+    },
+    error: () => {
+      this.loading = false;
+      this.errorMsg = 'Failed to download PDF.';
+    },
+  });
+}
+clearQuotation(): void {
+  this.quotation = null;
+  this.totalCost = null;
+  this.errorMsg = null;
+}
+
+
+
+ 
 }

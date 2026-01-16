@@ -37,6 +37,7 @@ def send_quotation_email(request, pk):
     if not to_email:
         return Response({"detail": "Email is required"}, status=400)
 
+    # ✅ Celery Task Trigger (async)
     send_quotation_email_task.delay(quotation.id, request.user.username, to_email)
 
     return Response({"detail": "Email sending started ✅"})
@@ -56,16 +57,19 @@ def download_quotation_pdf(request, pk):
     response.write(pdf)
     return response
 
-
+# =========================================
+# ✅ CAMERA PRICING API
+# =========================================
 class defaultPricingListCreate(generics.ListCreateAPIView):
     queryset = Cammera_Pricing.objects.all()
     serializer_class = Cammera_PricingSerializer
 
     def get_permissions(self):
-        
+        # ✅ All logged in users can view pricing list
         if self.request.method == "GET":
             return [IsAuthenticated()]
 
+        # ✅ Only admin can create
         return [IsAuthenticated(), IsAdminUser()]
 
 
@@ -79,6 +83,9 @@ class defaultPricingDetail(generics.RetrieveUpdateDestroyAPIView):
         return [IsAuthenticated(), IsAdminUser()]
 
 
+# =========================================
+# ✅ AI FEATURES API
+# =========================================
 class aiFeatures(generics.ListCreateAPIView):
     queryset = AI_ENABLED.objects.all()
     serializer_class = AI_ENABLEDserializer
@@ -89,38 +96,54 @@ class aiFeatures(generics.ListCreateAPIView):
         return [IsAuthenticated(), IsAdminUser()]
 
 
-
+# =========================================
+# ✅ PRICING CALCULATION API (POST)
+# Stores quotation in UserPricing
+# =========================================
 class pricingCalculate(generics.ListCreateAPIView):
     serializer_class = userPricingSerializer
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
+        # ✅ Each user sees only their own pricing calculations
         return UserPricing.objects.filter(user_name=self.request.user).order_by('-created_at')
 
     def perform_create(self, serializer):
         cameras = serializer.validated_data['cammera']
         ai_features = serializer.validated_data.get('ai_features', [])
 
+        # ✅ Find correct camera slab
         pricing_range = Cammera_Pricing.objects.filter(
             min_cammera__lte=cameras
         ).filter(
             Q(max_cammera__gte=cameras) | Q(max_cammera__isnull=True)
         ).first()
 
-        if pricing_range is None:
-            pricing_range = Cammera_Pricing.objects.order_by('-min_cammera').first()
+        if not pricing_range:
+            raise ValidationError({"cammera": "No camera pricing slab found for this camera count"})
 
         camera_cost = int(pricing_range.total_costing)
         ai_cost = sum(int(ai.costing) for ai in ai_features)
 
         total_cost = camera_cost + ai_cost
 
-        serializer.save(
-                        user_name = self.request.user,
-                        total_cost = total_cost
-                        )
+        # ✅ Save quotation in UserPricing table
+        instance = serializer.save(
+            user_name=self.request.user,
+            cammera=cameras,
+            camera_cost=camera_cost,
+            ai_cost=ai_cost,
+            total_costing=total_cost
+        )
+
+        # ✅ Save ManyToMany selected features
+        instance.ai_features.set(ai_features)
 
 
+# =========================================
+# ✅ QUOTATION API (GET)
+# Shows saved quotations
+# =========================================
 class UserQuotationList(generics.ListAPIView):
     serializer_class = QuotationSerializer
     permission_classes = [IsAuthenticated]
