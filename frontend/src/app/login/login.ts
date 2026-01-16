@@ -4,6 +4,8 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { Router } from '@angular/router';
 import { AuthService } from '../service/auth.service';
 import { RouterLink } from '@angular/router';
+import { ConfirmdialogService } from '../service/confirmdialog.service';
+import { ToasterService } from '../service/toaster.service';
 @Component({
   selector: 'app-login',
   standalone: true,
@@ -19,7 +21,9 @@ export class Login {
   constructor(
     private fb: FormBuilder,
     private router: Router,
-    private auth: AuthService
+    private auth: AuthService,
+    private confirm: ConfirmdialogService,
+    private toaster: ToasterService
   ) {
     this.loginForm = this.fb.group({
       username: ['', [Validators.required]],
@@ -67,7 +71,7 @@ export class Login {
         if (res?.refresh) {
           this.auth.saveRefreshToken(res.refresh);
         }
-
+        this.toaster.success("Login Successful");
         this.router.navigateByUrl('/dashboard');
       },
       error: (err) => {

@@ -14,7 +14,7 @@
         <i class="bi bi-arrow-clockwise me-1"></i> Refresh
       </button>
 
-      <button type="button" (click)="onLogout()" class="btn btn-outline-danger btn-sm rounded-3">
+      <button type="button" (click)="PromiseLogout()" class="btn btn-outline-danger btn-sm rounded-3">
         <i class="bi bi-box-arrow-right me-1"></i> Logout
       </button>
     </div>
@@ -331,7 +331,7 @@
 
   </div>
   <!-- ✅ Bottom Center Action Button -->
-<div class="d-flex justify-content-center mt-4">
+<div *ngIf="!canManage" class="d-flex justify-content-center mt-4">
   <a
     routerLink="/user-requirements"
     class="btn btn-lg btn-primary rounded-pill px-5 shadow-sm"

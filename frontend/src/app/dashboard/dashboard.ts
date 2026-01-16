@@ -4,6 +4,8 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { AuthService } from '../service/auth.service';
 import {RouterLink} from '@angular/router';
+import { ConfirmdialogService } from '../service/confirmdialog.service';
+import { ToasterService } from '../service/toaster.service';
 export interface CameraPricing {
   id: number;
   min_cammera: number;
@@ -48,7 +50,9 @@ export class Dashboard implements OnInit {
   constructor(
     private http: HttpClient,
     private fb: FormBuilder,
-    private auth: AuthService
+    private auth: AuthService,
+    private confirm: ConfirmdialogService,
+    private toaster: ToasterService
   ) {
     this.cameraForm = this.fb.group({
       min_cammera: ['', [Validators.required, Validators.min(1)]],
@@ -63,15 +67,27 @@ export class Dashboard implements OnInit {
     });
   }
 
-  onLogout(): void {
-    console.log('✅ Logout clicked');
-    this.auth.logout();
+  async PromiseLogout() {
+    const ok = await this.confirm.open(
+      "Confirmation",
+      "Are you sure you want to logout?"
+    );
+    if (ok){
+      this.toaster.success("Logged out successfully");
+   this.auth.logout();
+    }
   }
+  isAdmin = false;
 
-  ngOnInit(): void {
+ngOnInit() {
+  const role = localStorage.getItem('role'); // ex: "admin" or "user"
+  this.isAdmin = role === 'admin';
     this.fetchMe();     // ✅ permission first
-    this.fetchAll();    // ✅ table data
-  }
+    this.fetchAll(); 
+}
+
+
+
 
   // ✅ permission API
   fetchMe(): void {

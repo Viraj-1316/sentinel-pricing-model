@@ -1,0 +1,33 @@
+/* ✅ Green toaster for Angular Material Snackbar */
+.mat-mdc-snack-bar-container {
+  border-radius: 14px !important;
+  padding: 0 !important;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.18) !important;
+  overflow: hidden !important;
+}
+
+/* Snackbar surface */
+.mat-mdc-snack-bar-container .mdc-snackbar__surface {
+  border-radius: 14px !important;
+}
+
+/* Message text */
+.mat-mdc-snack-bar-container .mdc-snackbar__label {
+  font-size: 14px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.2px !important;
+  padding: 14px 16px !important;
+}
+
+/* Close button */
+.mat-mdc-snack-bar-container .mdc-button__label {
+  font-weight: 800 !important;
+  text-transform: none !important;
+}
+
+/* ✅ GREEN THEME */
+.green-snack {
+  --mdc-snackbar-container-color: #198754; /* ✅ Bootstrap green */
+  --mdc-snackbar-supporting-text-color: #ffffff;
+  --mat-snack-bar-button-color: #ffffff;
+}

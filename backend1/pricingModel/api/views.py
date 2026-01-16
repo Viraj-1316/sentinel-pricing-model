@@ -123,7 +123,7 @@ class pricingCalculate(generics.ListCreateAPIView):
 
         serializer.save(
             user_name = self.request.user,
-            total_cost = total_cost
+            total_costing = total_cost
         )
 
 class UserQuotationList(generics.ListAPIView):

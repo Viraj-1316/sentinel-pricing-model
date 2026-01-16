@@ -1,0 +1,19 @@
+ <div class="overlay" (click)="cancel()">
+      <div class="modal-box" (click)="$event.stopPropagation()">
+        <div class="close-btn" (click)="cancel()">
+        <!-- Header -->
+        <h2 class="dialog-title">{{ title }}</h2>
+
+        <!-- Message -->
+        <p class="dialog-message">{{ message }}</p>
+
+        <div class="divider"></div>
+
+        <!-- Buttons -->
+        <div class="actions">
+          <button class="btn cancel-btn" (click)="cancel()">Cancel</button>
+          <button class="btn confirm-btn" (click)="confirm()">Confirm</button>
+        </div>
+
+      </div>
+    </div>

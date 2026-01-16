@@ -6,18 +6,25 @@ import {
   HttpEvent,
   HttpErrorResponse
 } from '@angular/common/http';
-import { Observable, throwError, switchMap, catchError } from 'rxjs';
+
+import { Observable, throwError } from 'rxjs';
+import { catchError, switchMap } from 'rxjs/operators';
 import { AuthService } from '../service/auth.service';
 
 @Injectable()
 export class AuthInterceptor implements HttpInterceptor {
 
+  private isRefreshing = false;
+
   constructor(private auth: AuthService) {}
 
   intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
 
-    // ✅ don't attach token on auth endpoints
-    if (req.url.includes('/api/token/')) {
+    // ✅ Skip token endpoints to avoid infinite loop
+    if (
+      req.url.includes('/api/token/') ||
+      req.url.includes('/api/token/refresh/')
+    ) {
       return next.handle(req);
     }
 
@@ -25,26 +32,32 @@ export class AuthInterceptor implements HttpInterceptor {
       localStorage.getItem('access_token') ||
       sessionStorage.getItem('access_token');
 
-    let authReq = req;
-
-    if (token) {
-      authReq = req.clone({
-        setHeaders: { Authorization: `Bearer ${token}` }
-      });
-    }
+    const authReq = token
+      ? req.clone({ setHeaders: { Authorization: `Bearer ${token}` } })
+      : req;
 
     return next.handle(authReq).pipe(
       catchError((err: any) => {
-        if (err instanceof HttpErrorResponse && err.status === 401) {
-          // ✅ Access token expired → try refresh
+
+        if (err instanceof HttpErrorResponse && err.status === 401 && !this.isRefreshing) {
+
+          this.isRefreshing = true;
+
           return this.auth.refreshToken().pipe(
-            switchMap((res) => {
-              const newAccess = res.access;
+            switchMap((res: any) => {
+              this.isRefreshing = false;
 
-              // save refreshed access token
-              this.auth.saveToken(newAccess, true);
+              const newAccess = res?.access; // ✅ adjust if your key name differs
 
-              // retry original request with new token
+              if (!newAccess) {
+                this.auth.logout();
+                return throwError(() => err);
+              }
+
+              // ✅ Save token
+              this.auth.saveToken(newAccess);  // ✅ removed 2nd arg
+
+              // ✅ Retry original request with new token
               const retryReq = req.clone({
                 setHeaders: { Authorization: `Bearer ${newAccess}` }
               });
@@ -52,7 +65,7 @@ export class AuthInterceptor implements HttpInterceptor {
               return next.handle(retryReq);
             }),
             catchError((refreshErr) => {
-              // refresh also failed → logout
+              this.isRefreshing = false;
               this.auth.logout();
               return throwError(() => refreshErr);
             })

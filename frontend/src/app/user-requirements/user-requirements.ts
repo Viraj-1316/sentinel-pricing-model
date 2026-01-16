@@ -2,10 +2,12 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { HttpClient, HttpClientModule } from '@angular/common/http';
-import { RouterLink } from '@angular/router';
+import { Router } from '@angular/router';
 import { AuthService } from '../service/auth.service';
 import { HttpHeaders } from '@angular/common/http';
-
+import { ToasterService } from '../service/toaster.service';
+import { ConfirmdialogService } from '../service/confirmdialog.service';
+import { RouterLink } from '@angular/router';
 export interface AIEnabled {
   id: number;
   AI_feature: string;
@@ -41,7 +43,10 @@ export class UserRequirements implements OnInit {
   constructor(
     private fb: FormBuilder,
     private http: HttpClient,
-    private auth: AuthService
+    private auth: AuthService,
+    private confirm: ConfirmdialogService,
+    private toaster: ToasterService,
+    private router: Router
   ) {
     this.form = this.fb.group({
       cammera: ['', [Validators.required, Validators.min(1)]],
@@ -57,10 +62,30 @@ export class UserRequirements implements OnInit {
       this.totalAiCost = this.calculateAiCost(selectedIds || []);
     });
   }
+back(): void {
+  this.router.navigateByUrl('/dashboard');
+}
 
   // ✅ Logout
-  onLogout(): void {
-    this.auth.logout();
+  async PromiseLogout() {
+    const ok = await this.confirm.open(
+      "Confirmation",
+      "Are you sure you want to logout?"
+    );
+    if (ok){
+      this.toaster.success("Logged out successfully");
+   this.auth.logout();
+    }
+  }
+  async onback() {
+    const ok = await this.confirm.open(
+      "Confirmation",
+      "Want to see PriceList again?"
+    );
+    if (ok){
+      this.toaster.success("PriceList opened successfully");
+   this.back();
+    }
   }
 
   // ✅ Validation helper
@@ -128,6 +153,7 @@ export class UserRequirements implements OnInit {
     this.http.post(this.QUOTE_API, payload).subscribe({
       next: (res: any) => {
         this.loading = false;
+        this.toaster.info("Cost calculated successfully");
 
         // ✅ show total cost below calculate cost
         this.totalCost = res?.total_costing ?? null;
@@ -173,7 +199,7 @@ export class UserRequirements implements OnInit {
         const latest = res[0];
 
         this.quotation = latest;
-
+        this.toaster.info("Quotation generated successfully");
         // ✅ update totalCost in UI also
         this.totalCost = latest?.total_costing ?? this.totalCost;
       },
@@ -220,7 +246,7 @@ downloadPdf(): void {
       a.href = downloadURL;
       a.download = `quotation_${this.quotation.id}.pdf`;
       a.click();
-
+      this.toaster.success("PDF downloaded successfully");
       window.URL.revokeObjectURL(downloadURL);
     },
     error: () => {
