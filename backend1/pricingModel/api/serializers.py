@@ -1,7 +1,7 @@
 from pricingModel.models import Cammera_Pricing, UserPricing, AI_ENABLED
 from rest_framework import serializers
 from django.db.models import Q
-
+from rest_framework.validators import ValidationError
 
 class Cammera_PricingSerializer(serializers.ModelSerializer):
     
@@ -62,5 +62,12 @@ class QuotationSerializer(serializers.ModelSerializer):
         ).filter(
             Q(max_cammera__gte=obj.cammera) | Q(max_cammera__isnull=True)
         ).first()
+        
+        if pricing_range is None:
+            pricing_range = Cammera_Pricing.objects.order_by('-min_cammera').first()
+
+        
+        if pricing_range is None:
+            raise ValidationError("No camera pricing configured by admin")
 
         return pricing_range.total_costing

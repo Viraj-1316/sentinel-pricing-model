@@ -24,10 +24,7 @@ export const routes: Routes = [
     canActivate: [authGuard],
   },
 
-  // fallback
-  
-
-   {
+  {
     path: 'user-requirements',
     loadComponent: () => import('./user-requirements/user-requirements').then((m) => m.UserRequirements),
     canActivate: [authGuard],
