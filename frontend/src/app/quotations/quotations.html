@@ -1,0 +1,297 @@
+<div class="min-vh-100 bg-light position-relative overflow-hidden">
+
+  <!-- Premium gradient background -->
+  <div class="position-absolute top-0 start-0 w-100 h-100"
+       style="background:
+       radial-gradient(circle at 15% 20%, rgba(13,110,253,.20), transparent 40%),
+       radial-gradient(circle at 85% 30%, rgba(32,201,151,.20), transparent 40%),
+       radial-gradient(circle at 50% 90%, rgba(255,193,7,.15), transparent 45%);">
+  </div>
+
+  <div class="container-fluid position-relative py-4 px-3 px-lg-4" style="z-index:5;">
+
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
+      <div>
+        <h4 class="fw-bold mb-0">
+          Quotations
+          <span *ngIf="isAdmin" class="badge rounded-pill text-bg-danger ms-2">ADMIN</span>
+        </h4>
+        <div class="text-muted small">
+          {{ isAdmin ? 'All user quotations (admin panel)' : 'Your generated quotations' }}
+        </div>
+      </div>
+
+      <div class="d-flex gap-2">
+        <a routerLink="/user-requirements" class="btn btn-primary rounded-3">
+          <i class="bi bi-file-earmark-plus me-1"></i>
+          Generate New
+        </a>
+
+        <button class="btn btn-outline-secondary rounded-3" (click)="refresh()">
+          <i class="bi bi-arrow-clockwise me-1"></i>
+          Refresh
+        </button>
+      </div>
+    </div>
+
+    <!-- Error -->
+    <div *ngIf="errorMsg" class="alert alert-danger rounded-3">
+      <i class="bi bi-exclamation-triangle me-2"></i>
+      {{ errorMsg }}
+    </div>
+
+    <!-- Loading -->
+    <div *ngIf="loading" class="text-muted d-flex align-items-center gap-2 mb-3">
+      <span class="spinner-border spinner-border-sm"></span>
+      Loading quotations...
+    </div>
+
+    <!-- KPIs -->
+    <div class="row g-3 mb-4" *ngIf="!loading">
+
+      <div class="col-12 col-md-6 col-xl-3">
+        <div class="card border-0 shadow-sm rounded-4">
+          <div class="card-body p-4">
+            <div class="d-flex justify-content-between align-items-start">
+              <div>
+                <div class="text-muted small">Total Quotations</div>
+                <div class="fw-bold fs-3">{{ totalQuotations }}</div>
+              </div>
+              <div class="bg-primary bg-opacity-10 text-primary rounded-3 px-2 py-2">
+                <i class="bi bi-receipt fs-5"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-12 col-md-6 col-xl-3">
+        <div class="card border-0 shadow-sm rounded-4">
+          <div class="card-body p-4">
+            <div class="d-flex justify-content-between align-items-start">
+              <div>
+                <div class="text-muted small">Latest Total</div>
+                <div class="fw-bold fs-3 text-success">₹ {{ latestTotal ?? '-' }}</div>
+              </div>
+              <div class="bg-success bg-opacity-10 text-success rounded-3 px-2 py-2">
+                <i class="bi bi-currency-rupee fs-5"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-12 col-md-6 col-xl-6">
+        <div class="card border-0 shadow-sm rounded-4">
+          <div class="card-body p-4 d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <div>
+              <div class="text-muted small">Logged In</div>
+              <div class="fw-semibold">{{ username || 'User' }}</div>
+            </div>
+
+            <span class="badge rounded-pill text-bg-light border px-3 py-2">
+              {{ isAdmin ? 'Admin Access Enabled' : 'User Mode Enabled' }}
+            </span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Filters -->
+    <div class="card border-0 shadow-sm rounded-4 mb-4" *ngIf="!loading">
+      <div class="card-body p-4">
+
+        <div class="row g-3 align-items-center">
+          <div class="col-12 col-md-6 col-xl-4">
+            <label class="text-muted small fw-semibold mb-1">Search quotation by ID</label>
+            <div class="input-group">
+              <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
+              <input
+                type="text"
+                class="form-control"
+                placeholder="ex: 42"
+                [value]="search"
+                (input)="onSearchChange($any($event.target).value)"
+              />
+            </div>
+          </div>
+
+          <div class="col-12 col-md-6 col-xl-4">
+            <label class="text-muted small fw-semibold mb-1">Sort</label>
+            <select class="form-select" (change)="onSortChange($any($event.target).value)">
+              <option value="latest" [selected]="sortBy === 'latest'">Latest First</option>
+              <option value="oldest" [selected]="sortBy === 'oldest'">Oldest First</option>
+              <option value="high" [selected]="sortBy === 'high'">Highest Total</option>
+              <option value="low" [selected]="sortBy === 'low'">Lowest Total</option>
+            </select>
+          </div>
+
+          <div class="col-12 col-xl-4 d-flex justify-content-xl-end">
+            <span class="badge rounded-pill text-bg-primary px-4 py-2">
+              Showing {{ filtered.length }} quotations
+            </span>
+          </div>
+
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Table -->
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden" *ngIf="!loading">
+
+      <div class="card-body p-0">
+
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+
+            <thead class="table-light">
+              <tr>
+                <th style="width:90px;">ID</th>
+
+                <!-- ✅ Admin extra column -->
+                <th *ngIf="isAdmin">User</th>
+
+                <th>Cameras</th>
+                <th class="text-end">AI Cost</th>
+                <th class="text-end">Total</th>
+                <th>Date</th>
+                <th style="width:260px;" class="text-center">Actions</th>
+              </tr>
+            </thead>
+
+            <tbody>
+
+              <tr *ngFor="let q of pageRows">
+                <td class="fw-semibold">#{{ q.id }}</td>
+
+                <td *ngIf="isAdmin" class="text-muted">
+                  {{ q.user_name || '-' }}
+                </td>
+
+                <td>{{ q.cammera }}</td>
+                <td class="text-end">₹ {{ q.ai_cost || 0 }}</td>
+                <td class="text-end fw-bold text-success">₹ {{ q.total_costing }}</td>
+                <td class="text-muted">{{ q.created_at | date:'medium' }}</td>
+
+                <td class="text-center">
+                  <div class="d-flex justify-content-center gap-2 flex-wrap">
+
+                    <button class="btn btn-outline-secondary btn-sm rounded-3" (click)="openPreview(q)">
+                      <i class="bi bi-eye me-1"></i> View
+                    </button>
+
+                    <button class="btn btn-success btn-sm rounded-3" (click)="downloadPdf(q)">
+                      <i class="bi bi-download me-1"></i> PDF
+                    </button>
+
+                    <button class="btn btn-primary btn-sm rounded-3" (click)="sendEmail(q)">
+                      <i class="bi bi-envelope me-1"></i> Email
+                    </button>
+
+                    <!-- ✅ ADMIN ONLY -->
+                    <button *ngIf="isAdmin"
+                            class="btn btn-outline-danger btn-sm rounded-3"
+                            (click)="deleteQuotation(q)">
+                      <i class="bi bi-trash me-1"></i> Delete
+                    </button>
+
+                  </div>
+                </td>
+              </tr>
+
+              <!-- empty state -->
+              <tr *ngIf="filtered.length === 0">
+                <td colspan="7" class="text-center text-muted py-5">
+                  <div class="display-6 mb-2"><i class="bi bi-inbox"></i></div>
+                  <div class="fw-semibold">No quotations found</div>
+                  <div class="small">Generate your first quotation to see it here.</div>
+                </td>
+              </tr>
+
+            </tbody>
+
+          </table>
+        </div>
+
+      </div>
+
+      <!-- Pagination -->
+      <div class="border-top bg-white p-3 d-flex justify-content-between align-items-center flex-wrap gap-2"
+           *ngIf="filtered.length > 0">
+
+        <div class="text-muted small">
+          Page {{ page }} / {{ totalPages }}
+        </div>
+
+        <div class="d-flex gap-2">
+          <button class="btn btn-outline-secondary btn-sm rounded-3"
+                  [disabled]="page === 1"
+                  (click)="goPage(page - 1)">
+            <i class="bi bi-chevron-left"></i>
+          </button>
+
+          <button class="btn btn-outline-secondary btn-sm rounded-3"
+                  [disabled]="page === totalPages"
+                  (click)="goPage(page + 1)">
+            <i class="bi bi-chevron-right"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ✅ Preview Modal -->
+    <div *ngIf="showPreview" class="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center"
+         style="background: rgba(0,0,0,.55); z-index: 9999;">
+      <div class="bg-white rounded-4 shadow-lg p-4" style="width: min(900px, 95vw);">
+
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <div>
+            <h5 class="fw-bold mb-0">Quotation Preview</h5>
+            <div class="text-muted small">Quotation #{{ previewQuotation?.id }}</div>
+          </div>
+          <button class="btn btn-outline-secondary rounded-3" (click)="closePreview()">
+            <i class="bi bi-x-lg"></i>
+          </button>
+        </div>
+
+        <div class="row g-3">
+          <div class="col-md-4">
+            <div class="border rounded-4 p-3 bg-light">
+              <div class="text-muted small">Cameras</div>
+              <div class="fw-bold fs-4">{{ previewQuotation?.cammera }}</div>
+            </div>
+          </div>
+
+          <div class="col-md-4">
+            <div class="border rounded-4 p-3 bg-light">
+              <div class="text-muted small">AI Cost</div>
+              <div class="fw-bold fs-4">₹ {{ previewQuotation?.ai_cost || 0 }}</div>
+            </div>
+          </div>
+
+          <div class="col-md-4">
+            <div class="border rounded-4 p-3 bg-success bg-opacity-10">
+              <div class="text-muted small">Grand Total</div>
+              <div class="fw-bold fs-4 text-success">₹ {{ previewQuotation?.total_costing }}</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="d-flex justify-content-end gap-2 mt-4">
+          <button class="btn btn-success rounded-3" (click)="downloadPdf(previewQuotation)">
+            <i class="bi bi-download me-1"></i> Download PDF
+          </button>
+
+          <button class="btn btn-primary rounded-3" (click)="sendEmail(previewQuotation)">
+            <i class="bi bi-envelope me-1"></i> Send Email
+          </button>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</div>

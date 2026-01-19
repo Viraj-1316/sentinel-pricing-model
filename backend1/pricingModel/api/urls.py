@@ -49,4 +49,5 @@ urlpatterns = [
         send_quotation_email,
         name='quotation-pdf'
     ),
+
 ]

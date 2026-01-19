@@ -16,6 +16,13 @@ class userPricingSerializer(serializers.ModelSerializer):
     camera_cost = serializers.IntegerField(read_only=True)
     ai_cost = serializers.IntegerField(read_only=True)
 
+    # ✅ important for ManyToMany write
+    ai_features = serializers.PrimaryKeyRelatedField(
+        queryset=AI_ENABLED.objects.all(),
+        many=True,
+        required=False
+    )
+
     class Meta:
         model = UserPricing
         fields = [
@@ -35,6 +42,7 @@ class AI_ENABLEDserializer(serializers.ModelSerializer):
         class Meta:
             model = Component
             fields = ['AI_feature', 'costing']          
+
 
 class QuotationSerializer(serializers.ModelSerializer):
     ai_features = AI_ENABLEDserializer(many=True, read_only=True)
