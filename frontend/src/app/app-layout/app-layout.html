@@ -1,0 +1,21 @@
+<div class="d-flex min-vh-100 bg-light">
+
+  <!-- Sidebar -->
+  <app-sidebar [collapsed]="collapsed"></app-sidebar>
+
+  <!-- Main -->
+  <div class="flex-grow-1 d-flex flex-column">
+
+    <!-- Topbar -->
+    <app-topbar (toggleSidebar)="toggleSidebar()"></app-topbar>
+
+    <!-- Page content -->
+    <main class="flex-grow-1 p-4">
+      <router-outlet></router-outlet>
+    </main>
+
+    <!-- Footer -->
+    <app-footer></app-footer>
+
+  </div>
+</div>

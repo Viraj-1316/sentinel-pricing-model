@@ -1,33 +1,36 @@
 import { Injectable } from '@angular/core';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { Toast, ToastData, ToastType } from '../toast/toast';
 
 @Injectable({ providedIn: 'root' })
 export class ToasterService {
   constructor(private snackBar: MatSnackBar) {}
 
-  success(message: string) {
-    this.show(message, 'success-snack');
+  private show(type: ToastType, message: string, title?: string) {
+    const data: ToastData = { type, message, title };
+
+    this.snackBar.openFromComponent(Toast, {
+      data,
+      duration: 3200,
+      horizontalPosition: 'right',
+      verticalPosition: 'top',
+      panelClass: ['premium-toast-panel'],
+    });
   }
 
-  error(message: string) {
-    this.show(message, 'error-snack');
+  success(message: string, title = 'Success') {
+    this.show('success', message, title);
   }
 
-  warning(message: string) {
-    this.show(message, 'warning-snack');
+  error(message: string, title = 'Error') {
+    this.show('error', message, title);
   }
 
-  info(message: string) {
-    this.show(message, 'info-snack');
+  warning(message: string, title = 'Warning') {
+    this.show('warning', message, title);
   }
 
-  private show(message: string, panelClass: string) {
-    this.snackBar.open(message, 'Close', {
-  duration: 3000,
-  horizontalPosition: 'right',
-  verticalPosition: 'top',
-  panelClass: ['green-snack'],
-});
-
+  info(message: string, title = 'Info') {
+    this.show('info', message, title);
   }
 }

@@ -1,0 +1,12 @@
+<div class="toast-shell" [ngClass]="data.type">
+  <div class="toast-left">
+    <div class="toast-icon">{{ icon }}</div>
+  </div>
+
+  <div class="toast-body">
+    <div class="toast-title">{{ data.title || (data.type | uppercase) }}</div>
+    <div class="toast-message">{{ data.message }}</div>
+  </div>
+
+  <button class="toast-close" (click)="close()">✕</button>
+</div>

@@ -1,0 +1,190 @@
+<div class="container-fluid py-4">
+
+  <!-- Top header -->
+  <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-4">
+    <div>
+      <h4 class="mb-1 fw-bold">My Profile</h4>
+      <div class="text-muted small">Manage your account info and settings</div>
+    </div>
+
+    <div class="d-flex gap-2">
+      <button class="btn btn-outline-secondary rounded-pill px-4" (click)="goDashboard()">
+        <i class="bi bi-arrow-left me-2"></i>Dashboard
+      </button>
+
+      <button class="btn btn-danger rounded-pill px-4" (click)="logout()">
+        <i class="bi bi-box-arrow-right me-2"></i>Logout
+      </button>
+    </div>
+  </div>
+
+  <!-- Alerts -->
+  <div *ngIf="successMsg" class="alert alert-success rounded-3 shadow-sm">
+    <i class="bi bi-check-circle me-2"></i>{{ successMsg }}
+  </div>
+
+  <div *ngIf="errorMsg" class="alert alert-warning rounded-3 shadow-sm">
+    <i class="bi bi-exclamation-triangle me-2"></i>{{ errorMsg }}
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="loading" class="text-center py-5">
+    <div class="spinner-border"></div>
+    <div class="text-muted small mt-2">Loading profile...</div>
+  </div>
+
+  <!-- Profile card -->
+  <div *ngIf="!loading" class="row g-4">
+
+    <!-- Left: user card -->
+    <div class="col-12 col-lg-4">
+      <div class="card shadow-sm border-0 rounded-4">
+        <div class="card-body p-4 text-center">
+
+          <div class="mx-auto mb-3 d-flex justify-content-center align-items-center rounded-circle text-white fw-bold"
+               style="width: 88px; height: 88px; font-size: 34px; background: linear-gradient(135deg,#0d6efd,#6610f2);">
+            {{ initials }}
+          </div>
+
+          <h5 class="fw-bold mb-1">{{ profile.username }}</h5>
+          <div class="text-muted">{{ profile.email || 'No email' }}</div>
+
+          <!-- Role badge -->
+          <div class="mt-3">
+            <span class="badge rounded-pill px-3 py-2"
+              [ngClass]="isAdmin ? 'bg-danger' : 'bg-primary'">
+              <i class="bi me-2" [ngClass]="isAdmin ? 'bi-shield-lock' : 'bi-person'"></i>
+              {{ isAdmin ? 'Admin Account' : 'User Account' }}
+            </span>
+          </div>
+
+          <hr class="my-4">
+
+          <!-- Admin section -->
+          <div *ngIf="isAdmin" class="text-start">
+            <div class="fw-semibold mb-2">Admin Access</div>
+            <ul class="small text-muted mb-0 ps-3">
+              <li>Manage camera pricing</li>
+              <li>Manage AI features</li>
+              <li>View all quotations</li>
+              <li>System settings access</li>
+            </ul>
+          </div>
+
+          <!-- User section -->
+          <div *ngIf="!isAdmin" class="text-start">
+            <div class="fw-semibold mb-2">User Access</div>
+            <ul class="small text-muted mb-0 ps-3">
+              <li>Calculate quotation pricing</li>
+              <li>Download quotation PDFs</li>
+              <li>Email quotations</li>
+              <li>Track quotation history</li>
+            </ul>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- Right: details -->
+    <div class="col-12 col-lg-8">
+      <div class="card shadow-sm border-0 rounded-4">
+        <div class="card-body p-4">
+
+          <div class="d-flex justify-content-between align-items-center mb-4">
+            <h5 class="fw-bold mb-0">Account Details</h5>
+
+            <button class="btn btn-outline-primary rounded-pill px-4"
+                    (click)="toggleEdit()">
+              <i class="bi me-2" [ngClass]="editMode ? 'bi-x-circle' : 'bi-pencil-square'"></i>
+              {{ editMode ? 'Cancel' : 'Edit Profile' }}
+            </button>
+          </div>
+
+          <div class="row g-3">
+            <!-- Username -->
+            <div class="col-12 col-md-6">
+              <label class="form-label small text-muted">Username</label>
+              <input class="form-control rounded-3"
+                     [value]="profile.username"
+                     disabled>
+            </div>
+
+            <!-- Role -->
+            <div class="col-12 col-md-6">
+              <label class="form-label small text-muted">Role</label>
+              <input class="form-control rounded-3"
+                     [value]="isAdmin ? 'Admin' : 'User'"
+                     disabled>
+            </div>
+
+            <!-- First name -->
+            <div class="col-12 col-md-6">
+              <label class="form-label small text-muted">First Name</label>
+              <input class="form-control rounded-3"
+                     [(ngModel)]="profile.first_name"
+                     [disabled]="!editMode"
+                     placeholder="Enter first name">
+            </div>
+
+            <!-- Last name -->
+            <div class="col-12 col-md-6">
+              <label class="form-label small text-muted">Last Name</label>
+              <input class="form-control rounded-3"
+                     [(ngModel)]="profile.last_name"
+                     [disabled]="!editMode"
+                     placeholder="Enter last name">
+            </div>
+
+            <!-- Email -->
+            <div class="col-12">
+              <label class="form-label small text-muted">Email Address</label>
+              <input class="form-control rounded-3"
+                     [(ngModel)]="profile.email"
+                     [disabled]="!editMode"
+                     placeholder="Enter email">
+            </div>
+          </div>
+
+          <!-- Save button -->
+          <div class="d-flex justify-content-end mt-4" *ngIf="editMode">
+            <button class="btn btn-primary btn-lg rounded-pill px-5"
+                    [disabled]="saving"
+                    (click)="saveProfile()">
+              <span *ngIf="!saving">
+                <i class="bi bi-check2-circle me-2"></i>Save Changes
+              </span>
+              <span *ngIf="saving">
+                <span class="spinner-border spinner-border-sm me-2"></span>
+                Saving...
+              </span>
+            </button>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Admin quick section -->
+      <div *ngIf="isAdmin" class="card shadow-sm border-0 rounded-4 mt-4">
+        <div class="card-body p-4">
+          <h6 class="fw-bold mb-3"><i class="bi bi-lightning-charge me-2"></i>Admin Quick Actions</h6>
+          <div class="d-flex flex-wrap gap-2">
+            <a routerLink="/pricing" class="btn btn-outline-dark rounded-pill px-4">
+              <i class="bi bi-currency-rupee me-2"></i>Pricing Slabs
+            </a>
+
+            <a routerLink="/ai-features" class="btn btn-outline-dark rounded-pill px-4">
+              <i class="bi bi-cpu me-2"></i>AI Features
+            </a>
+
+            <a routerLink="/all-quotations" class="btn btn-outline-dark rounded-pill px-4">
+              <i class="bi bi-file-earmark-text me-2"></i>All Quotations
+            </a>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+</div>

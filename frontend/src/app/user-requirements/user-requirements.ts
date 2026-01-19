@@ -1,18 +1,31 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import {
+  FormBuilder,
+  FormGroup,
+  ReactiveFormsModule,
+  Validators,
+} from '@angular/forms';
 import { HttpClient, HttpClientModule } from '@angular/common/http';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../service/auth.service';
-import { HttpHeaders } from '@angular/common/http';
 import { ToasterService } from '../service/toaster.service';
 import { ConfirmdialogService } from '../service/confirmdialog.service';
-import { RouterLink } from '@angular/router';
+
 export interface AIEnabled {
   id: number;
   AI_feature: string;
   costing: number;
 }
+
+export interface CameraPricingSlab {
+  id: number;
+  min_cammera: number;
+  max_cammera: number | null;
+  total_costing: number;
+}
+
+type RightTab = 'camera' | 'ai' | 'preview';
 
 @Component({
   selector: 'app-user-requirements',
@@ -27,15 +40,26 @@ export class UserRequirements implements OnInit {
   errorMsg: string | null = null;
 
   aiFeatures: AIEnabled[] = [];
+  cameraPricing: CameraPricingSlab[] = [];
+
   quotation: any = null;
 
-  // ✅ Total AI cost live (frontend)
+  // ✅ live frontend totals
   totalAiCost = 0;
-
-  // ✅ Total cost returned by backend
   totalCost: number | null = null;
 
+  // ✅ enterprise flow flags
+  costCalculated = false;
+  quotationGenerated = false;
+
+  // ✅ right panel tab
+  activeTab: RightTab = 'camera';
+
+  // ✅ show selected slab for camera pricing table highlight
+  selectedCameraSlab: CameraPricingSlab | null = null;
+
   // ✅ API endpoints
+  private CAMERA_PRICING_API = 'http://127.0.0.1:8001/pricing-Model/cameraPricing/';
   private AI_API = 'http://127.0.0.1:8001/pricing-Model/ai-feature/';
   private QUOTE_API = 'http://127.0.0.1:8001/pricing-Model/Pricingcalculation/';
   private QUOTATION_API = 'http://127.0.0.1:8001/pricing-Model/user-quotations/';
@@ -50,93 +74,155 @@ export class UserRequirements implements OnInit {
   ) {
     this.form = this.fb.group({
       cammera: ['', [Validators.required, Validators.min(1)]],
-      ai_features: [[]], // ✅ selected feature ids
+      ai_features: [[]],
     });
   }
 
   ngOnInit(): void {
+    this.fetchCameraPricing();
     this.fetchAIFeatures();
 
-    // ✅ Update total AI cost when checkbox selection changes
+    // ✅ when AI checkbox changes -> update AI total + switch tab
     this.form.get('ai_features')?.valueChanges.subscribe((selectedIds: number[]) => {
       this.totalAiCost = this.calculateAiCost(selectedIds || []);
+      // enterprise: if user selects features, show AI tab
+      if ((selectedIds || []).length > 0 && !this.quotationGenerated) {
+        this.activeTab = 'ai';
+      }
+    });
+
+    // ✅ when camera count changes -> show camera tab + highlight slab
+    this.form.get('cammera')?.valueChanges.subscribe((value: any) => {
+      const cam = Number(value || 0);
+      this.selectedCameraSlab = this.findMatchingSlab(cam);
+      if (!this.quotationGenerated) {
+        this.activeTab = 'camera';
+      }
+    });
+
+    // ✅ if user changes anything after calculating -> reset flow
+    this.form.valueChanges.subscribe(() => {
+      this.costCalculated = false;
+      this.quotationGenerated = false;
+      this.quotation = null;
+      this.totalCost = null;
+      this.errorMsg = null;
     });
   }
-back(): void {
-  this.router.navigateByUrl('/dashboard');
-}
 
-  // ✅ Logout
-  async PromiseLogout() {
-    const ok = await this.confirm.open(
-      "Confirmation",
-      "Are you sure you want to logout?"
-    );
-    if (ok){
-      this.toaster.success("Logged out successfully");
-   this.auth.logout();
-    }
-  }
-  async onback() {
-    const ok = await this.confirm.open(
-      "Confirmation",
-      "Want to see PriceList again?"
-    );
-    if (ok){
-      this.toaster.success("PriceList opened successfully");
-   this.back();
-    }
+  // ==========================
+  // ✅ UI helpers
+  // ==========================
+  setTab(tab: RightTab) {
+    this.activeTab = tab;
   }
 
-  // ✅ Validation helper
   isInvalid(controlName: string): boolean {
     const c = this.form.get(controlName);
     return !!(c && c.invalid && (c.dirty || c.touched));
   }
 
-  // ✅ Load AI features for dropdown list
-  fetchAIFeatures(): void {
-    this.http.get<AIEnabled[]>(this.AI_API).subscribe({
-      next: (data) => {
-        this.aiFeatures = data || [];
+  // ==========================
+  // ✅ Navigation
+  // ==========================
+  back(): void {
+    this.router.navigateByUrl('/dashboard');
+  }
 
-        // recalc total AI cost after data load
-        const selected: number[] = this.form.value.ai_features || [];
-        this.totalAiCost = this.calculateAiCost(selected);
+  async PromiseLogout() {
+    const ok = await this.confirm.open('Confirmation', 'Are you sure you want to logout?');
+    if (ok) {
+      this.toaster.success('Logged out successfully');
+      this.auth.logout();
+    }
+  }
+
+  async onback() {
+    const ok = await this.confirm.open('Confirmation', 'Want to go back to Dashboard?');
+    if (ok) {
+      this.back();
+    }
+  }
+
+  // ==========================
+  // ✅ Fetch Camera Pricing slabs
+  // ==========================
+  fetchCameraPricing(): void {
+    this.http.get<CameraPricingSlab[]>(this.CAMERA_PRICING_API).subscribe({
+      next: (data) => {
+        this.cameraPricing = data || [];
+        const cam = Number(this.form.value.cammera || 0);
+        this.selectedCameraSlab = this.findMatchingSlab(cam);
       },
       error: () => {
-        this.errorMsg = 'Failed to load AI features.';
+        // not blocking flow, just inform
+        console.log('❌ Failed to load camera pricing');
       },
     });
   }
 
-  // ✅ Checkbox toggle handler
+  private findMatchingSlab(cameras: number): CameraPricingSlab | null {
+    if (!cameras || this.cameraPricing.length === 0) return null;
+
+    // match min <= cameras and (max >= cameras OR max null)
+    const slab =
+      this.cameraPricing
+        .filter(s => Number(s.min_cammera) <= cameras)
+        .filter(s => s.max_cammera === null || Number(s.max_cammera) >= cameras)
+        .sort((a, b) => Number(a.min_cammera) - Number(b.min_cammera))[0] || null;
+
+    // if none found, pick highest slab (fallback enterprise)
+    return slab ?? this.cameraPricing.sort((a, b) => Number(b.min_cammera) - Number(a.min_cammera))[0] ?? null;
+  }
+
+  // ==========================
+  // ✅ Fetch AI Features
+  // ==========================
+  fetchAIFeatures(): void {
+    this.http.get<AIEnabled[]>(this.AI_API).subscribe({
+      next: (data) => {
+        this.aiFeatures = data || [];
+        const selected: number[] = this.form.value.ai_features || [];
+        this.totalAiCost = this.calculateAiCost(selected);
+      },
+      error: () => (this.errorMsg = 'Failed to load AI features.'),
+    });
+  }
+
   onToggleFeature(id: number, event: Event): void {
     const checked = (event.target as HTMLInputElement).checked;
     const current: number[] = this.form.value.ai_features || [];
 
     let updated: number[];
-
-    if (checked) {
-      updated = current.includes(id) ? current : [...current, id];
-    } else {
-      updated = current.filter((x) => x !== id);
-    }
+    if (checked) updated = current.includes(id) ? current : [...current, id];
+    else updated = current.filter(x => x !== id);
 
     this.form.patchValue({ ai_features: updated });
   }
 
-  // ✅ Calculate AI total cost in frontend
   private calculateAiCost(selectedIds: number[]): number {
     return this.aiFeatures
-      .filter((ai) => selectedIds.includes(ai.id))
+      .filter(ai => selectedIds.includes(ai.id))
       .reduce((sum, ai) => sum + Number(ai.costing || 0), 0);
   }
 
-  // ✅ Calculate Cost (POST Pricingcalculation API)
+  get selectedFeatures(): AIEnabled[] {
+  const ids: number[] = this.form.value.ai_features || [];
+  return this.aiFeatures.filter(ai => ids.includes(ai.id));
+}
+
+
+  // ==========================
+  // ✅ Step 1: Calculate Cost
+  // ==========================
   calculateCost(): void {
     this.errorMsg = null;
     this.totalCost = null;
+
+    // reset next step
+    this.costCalculated = false;
+    this.quotationGenerated = false;
+    this.quotation = null;
 
     if (this.form.invalid) {
       this.form.markAllAsTouched();
@@ -153,32 +239,29 @@ back(): void {
     this.http.post(this.QUOTE_API, payload).subscribe({
       next: (res: any) => {
         this.loading = false;
-        this.toaster.info("Cost calculated successfully");
 
-        // ✅ show total cost below calculate cost
         this.totalCost = res?.total_costing ?? null;
+        this.costCalculated = true;
 
-        // ❌ don't render preview here
-        // this.quotation = res;
+        this.toaster.success('Cost calculated successfully ✅');
+        // enterprise: after cost calculation, show camera tab (pricing justification)
+        this.activeTab = 'camera';
       },
       error: (err) => {
         this.loading = false;
-
-        // ✅ show useful message
-        if (err?.error?.cammera) {
-          this.errorMsg = err.error.cammera;
-        } else {
-          this.errorMsg = err?.error?.detail || 'Failed to calculate cost.';
-        }
+        if (err?.error?.cammera) this.errorMsg = err.error.cammera;
+        else this.errorMsg = err?.error?.detail || 'Failed to calculate cost.';
       },
     });
   }
 
-  // ✅ Generate Quotation Preview (GET quotations API)
+  // ==========================
+  // ✅ Step 2: Generate Quotation -> auto open Preview tab
+  // ==========================
   generateQuotation(): void {
     this.errorMsg = null;
 
-    if (this.totalCost === null) {
+    if (!this.costCalculated || this.totalCost === null) {
       this.errorMsg = 'Please calculate cost first.';
       return;
     }
@@ -195,13 +278,16 @@ back(): void {
           return;
         }
 
-        // ✅ backend returns latest first (order_by -created_at)
         const latest = res[0];
-
         this.quotation = latest;
-        this.toaster.info("Quotation generated successfully");
-        // ✅ update totalCost in UI also
         this.totalCost = latest?.total_costing ?? this.totalCost;
+
+        this.quotationGenerated = true;
+
+        // ✅ AUTO SWITCH to preview tab (enterprise behavior)
+        this.activeTab = 'preview';
+
+        this.toaster.success('Quotation generated ✅');
       },
       error: (err) => {
         this.loading = false;
@@ -209,59 +295,87 @@ back(): void {
       },
     });
   }
-  sendEmail(): void {
-  if (!this.quotation?.id) return;
-
-  this.http.post(
-    `http://127.0.0.1:8001/pricing-Model/quotation/${this.quotation.id}/send-email/`,
-    {}
-  ).subscribe({
-    next: () => alert("Email is sent ✅"),
-    error: () => alert("Failed to send email ❌"),
-  });
+removeFeature(id: number): void {
+  const current: number[] = this.form.value.ai_features || [];
+  const updated = current.filter(x => x !== id);
+  this.form.patchValue({ ai_features: updated });
 }
 
+  // ==========================
+  // ✅ Email
+  // ==========================
+  sendEmail(): void {
+    if (!this.quotation?.id) {
+      this.toaster.error('Generate quotation first');
+      return;
+    }
 
-downloadPdf(): void {
-  if (!this.quotation?.id) {
-    this.errorMsg = 'Please generate quotation first.';
-    return;
+    this.loading = true;
+
+    this.http
+      .post(
+        `http://127.0.0.1:8001/pricing-Model/quotation/${this.quotation.id}/send-email/`,
+        {}
+      )
+      .subscribe({
+        next: () => {
+          this.loading = false;
+          this.toaster.success('Email queued/sent ✅');
+        },
+        error: () => {
+          this.loading = false;
+          this.toaster.error('Email failed ❌');
+        },
+      });
   }
 
-  const url = `http://127.0.0.1:8001/pricing-Model/quotation/${this.quotation.id}/pdf/`;
+  // ==========================
+  // ✅ Download PDF
+  // ==========================
+  downloadPdf(): void {
+    if (!this.quotation?.id) {
+      this.errorMsg = 'Please generate quotation first.';
+      return;
+    }
 
-  this.loading = true;
+    const url = `http://127.0.0.1:8001/pricing-Model/quotation/${this.quotation.id}/pdf/`;
 
-  this.http.get(url, { responseType: 'blob' }).subscribe({
-    next: (blob) => {
-      this.loading = false;
+    this.loading = true;
 
-      // ✅ create pdf file
-      const file = new Blob([blob], { type: 'application/pdf' });
+    this.http.get(url, { responseType: 'blob' }).subscribe({
+      next: (blob) => {
+        this.loading = false;
 
-      // ✅ download link
-      const downloadURL = window.URL.createObjectURL(file);
-      const a = document.createElement('a');
+        const file = new Blob([blob], { type: 'application/pdf' });
+        const downloadURL = window.URL.createObjectURL(file);
 
-      a.href = downloadURL;
-      a.download = `quotation_${this.quotation.id}.pdf`;
-      a.click();
-      this.toaster.success("PDF downloaded successfully");
-      window.URL.revokeObjectURL(downloadURL);
-    },
-    error: () => {
-      this.loading = false;
-      this.errorMsg = 'Failed to download PDF.';
-    },
-  });
-}
-clearQuotation(): void {
-  this.quotation = null;
-  this.totalCost = null;
-  this.errorMsg = null;
-}
+        const a = document.createElement('a');
+        a.href = downloadURL;
+        a.download = `quotation_${this.quotation.id}.pdf`;
+        a.click();
 
+        window.URL.revokeObjectURL(downloadURL);
+        this.toaster.success('PDF downloaded ✅');
+      },
+      error: () => {
+        this.loading = false;
+        this.errorMsg = 'Failed to download PDF.';
+      },
+    });
+  }
 
+  // ==========================
+  // ✅ Clear
+  // ==========================
+  clearQuotation(): void {
+    this.quotation = null;
+    this.totalCost = null;
+    this.errorMsg = null;
 
- 
+    this.costCalculated = false;
+    this.quotationGenerated = false;
+
+    this.activeTab = 'camera';
+    this.toaster.info('Cleared ✅');
+  }
 }

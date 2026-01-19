@@ -1,0 +1,90 @@
+<div
+  class="bg-white border-end shadow-sm d-flex flex-column"
+  [style.width]="collapsed ? '80px' : '260px'"
+  style="transition: all .2s;"
+>
+
+  <!-- Logo -->
+  <div class="p-3 border-bottom d-flex align-items-center gap-2">
+    <div class="bg-primary text-white fw-bold rounded-3 d-flex align-items-center justify-content-center"
+         style="width:42px;height:42px;">
+      SP
+    </div>
+
+    <div *ngIf="!collapsed">
+      <div class="fw-bold">Sentinel Pricing</div>
+      <div class="text-muted small">Enterprise Panel</div>
+    </div>
+  </div>
+
+  <!-- Nav -->
+  <div class="p-3 flex-grow-1">
+
+    <div class="text-uppercase text-muted small fw-semibold mb-2" *ngIf="!collapsed">Main</div>
+
+    <a routerLink="/dashboard" routerLinkActive="active"
+       class="nav-link d-flex align-items-center gap-2 rounded-3 px-3 py-2">
+      <i class="bi bi-house"></i>
+      <span *ngIf="!collapsed">Dashboard</span>
+    </a>
+
+    <a routerLink="/quotations" routerLinkActive="active"
+       class="nav-link d-flex align-items-center gap-2 rounded-3 px-3 py-2">
+      <i class="bi bi-receipt"></i>
+      <span *ngIf="!collapsed">Quotations</span>
+    </a>
+
+    <a routerLink="/profile" routerLinkActive="active"
+       class="nav-link d-flex align-items-center gap-2 rounded-3 px-3 py-2">
+      <i class="bi bi-person"></i>
+      <span *ngIf="!collapsed">Profile</span>
+    </a>
+
+    <!-- ✅ Admin Only -->
+    <div *ngIf="isAdmin">
+      <div class="text-uppercase text-muted small fw-semibold mt-4 mb-2" *ngIf="!collapsed">
+        System (Admin)
+      </div>
+
+      <a routerLink="/camera-pricing" routerLinkActive="active"
+         class="nav-link d-flex align-items-center gap-2 rounded-3 px-3 py-2">
+        <i class="bi bi-camera-video"></i>
+        <span *ngIf="!collapsed">Camera Pricing</span>
+      </a>
+
+      <a routerLink="/ai-features" routerLinkActive="active"
+         class="nav-link d-flex align-items-center gap-2 rounded-3 px-3 py-2">
+        <i class="bi bi-cpu"></i>
+        <span *ngIf="!collapsed">AI Features</span>
+      </a>
+
+      <a routerLink="/users" routerLinkActive="active"
+         class="nav-link d-flex align-items-center gap-2 rounded-3 px-3 py-2">
+        <i class="bi bi-people"></i>
+        <span *ngIf="!collapsed">Users</span>
+      </a>
+
+      <a routerLink="/logs" routerLinkActive="active"
+         class="nav-link d-flex align-items-center gap-2 rounded-3 px-3 py-2">
+        <i class="bi bi-journal-text"></i>
+        <span *ngIf="!collapsed">Logs / Audit</span>
+      </a>
+    </div>
+
+  </div>
+
+  <!-- User Footer -->
+  <div class="p-3 border-top">
+    <div class="d-flex align-items-center gap-2">
+      <div class="bg-light border rounded-circle d-flex align-items-center justify-content-center"
+           style="width:38px;height:38px;">
+        <i class="bi bi-person"></i>
+      </div>
+      <div *ngIf="!collapsed">
+        <div class="fw-semibold small">{{ username || 'User' }}</div>
+        <div class="text-muted small">{{ isAdmin ? 'Admin' : 'User' }}</div>
+      </div>
+    </div>
+  </div>
+
+</div>

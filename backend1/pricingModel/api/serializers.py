@@ -4,16 +4,28 @@ from django.db.models import Q
 
 
 class Cammera_PricingSerializer(serializers.ModelSerializer):
-    
-        class Meta:
-            model = Cammera_Pricing
-            fields = "__all__"
+    class Meta:
+        model = Cammera_Pricing
+        fields = "__all__"
+
+
+class AI_ENABLEDserializer(serializers.ModelSerializer):
+    class Meta:
+        model = AI_ENABLED
+        fields = ['id', 'AI_feature', 'costing']
 
 
 class userPricingSerializer(serializers.ModelSerializer):
     total_costing = serializers.IntegerField(read_only=True)
     camera_cost = serializers.IntegerField(read_only=True)
     ai_cost = serializers.IntegerField(read_only=True)
+
+    # ✅ important for ManyToMany write
+    ai_features = serializers.PrimaryKeyRelatedField(
+        queryset=AI_ENABLED.objects.all(),
+        many=True,
+        required=False
+    )
 
     class Meta:
         model = UserPricing
@@ -28,21 +40,18 @@ class userPricingSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ['camera_cost', 'ai_cost', 'total_costing', 'created_at']
 
-                
-class AI_ENABLEDserializer(serializers.ModelSerializer):
-    
-        class Meta:
-            model = AI_ENABLED
-            fields = ['id', 'AI_feature', 'costing']          
-            
+
 class AIFeatureQuotationSerializer(serializers.ModelSerializer):
     class Meta:
         model = AI_ENABLED
         fields = ['AI_feature', 'costing']
 
+
 class QuotationSerializer(serializers.ModelSerializer):
     ai_features = AIFeatureQuotationSerializer(many=True, read_only=True)
     camera_cost = serializers.SerializerMethodField()
+    ai_cost = serializers.IntegerField(read_only=True)
+
     class Meta:
         model = UserPricing
         fields = [
@@ -55,7 +64,6 @@ class QuotationSerializer(serializers.ModelSerializer):
             'created_at'
         ]
 
-
     def get_camera_cost(self, obj):
         pricing_range = Cammera_Pricing.objects.filter(
             min_cammera__lte=obj.cammera
@@ -64,6 +72,6 @@ class QuotationSerializer(serializers.ModelSerializer):
         ).first()
 
         if pricing_range is None:
-          pricing_range = Cammera_Pricing.objects.order_by('-min_cammera').first()
-          
-        return pricing_range.total_costing
+            pricing_range = Cammera_Pricing.objects.order_by('-min_cammera').first()
+
+        return pricing_range.total_costing if pricing_range else 0

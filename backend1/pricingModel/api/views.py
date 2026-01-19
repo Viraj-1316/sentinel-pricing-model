@@ -16,6 +16,7 @@ from rest_framework.response import Response
 from pricingModel.api.tasks import send_quotation_email_task
 from pricingModel.api.utils import generate_enterprise_quotation_pdf
 from io import BytesIO
+import requests
 from pricingModel.api.serializers import (
     userPricingSerializer,
     Cammera_PricingSerializer,
@@ -103,28 +104,33 @@ class pricingCalculate(generics.ListCreateAPIView):
         cameras = serializer.validated_data['cammera']
         ai_features = serializer.validated_data.get('ai_features', [])
 
-        # ✅ Find correct camera slab
         pricing_range = Cammera_Pricing.objects.filter(
             min_cammera__lte=cameras
         ).filter(
             Q(max_cammera__gte=cameras) | Q(max_cammera__isnull=True)
         ).first()
 
-        if not pricing_range:
-            raise ValidationError({"cammera": "No camera pricing slab found for this camera count"})
+        if pricing_range is None:
+            pricing_range = Cammera_Pricing.objects.order_by('-min_cammera').first()
 
         if pricing_range is None:
-          pricing = Cammera_Pricing.objects.order_by('-min_cammera').first()
-          
+            raise ValidationError({"cammera": "No camera pricing slab found"})
+
         camera_cost = int(pricing_range.total_costing)
         ai_cost = sum(int(ai.costing) for ai in ai_features)
-
         total_cost = camera_cost + ai_cost
 
-        serializer.save(
-            user_name = self.request.user,
-            total_costing = total_cost
+        # ✅ first save object
+        obj = serializer.save(
+            user_name=self.request.user,
+            camera_cost=camera_cost,
+            ai_cost=ai_cost,
+            total_costing=total_cost
         )
+
+        # ✅ then save m2m relations
+        obj.ai_features.set(ai_features)
+
 
 class UserQuotationList(generics.ListAPIView):
     serializer_class = QuotationSerializer
@@ -133,4 +139,5 @@ class UserQuotationList(generics.ListAPIView):
     def get_queryset(self):
         return UserPricing.objects.filter(
             user_name=self.request.user
+            
         ).order_by('-created_at')

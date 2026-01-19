@@ -7,7 +7,8 @@ from pricingModel.api.views import (
     UserQuotationList,
   
      send_quotation_email,
-   download_quotation_pdf,# ✅ ADD THIS
+   download_quotation_pdf,
+   # ✅ ADD THIS
 )
 from pricingModel.api.views import send_quotation_email
 
@@ -49,4 +50,5 @@ urlpatterns = [
         send_quotation_email,
         name='quotation-pdf'
     ),
+
 ]

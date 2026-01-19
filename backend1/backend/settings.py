@@ -39,7 +39,7 @@ EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 
 EMAIL_HOST_USER = 'sujit2004raut@gmail.com'
-EMAIL_HOST_PASSWORD = 'zrpg jdkk jpiz xbpx'   # ✅ use Gmail App Password
+EMAIL_HOST_PASSWORD = 'kavbrlxcaygtpqnb'   # ✅ use Gmail App Password
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
 

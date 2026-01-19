@@ -1,15 +1,20 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
+import {
+  FormBuilder,
+  FormGroup,
+  ReactiveFormsModule,
+  Validators
+} from '@angular/forms';
+import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../service/auth.service';
-import { RouterLink } from '@angular/router';
 import { ConfirmdialogService } from '../service/confirmdialog.service';
 import { ToasterService } from '../service/toaster.service';
+
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule,RouterLink],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink],
   templateUrl: './login.html',
 })
 export class Login {
@@ -40,12 +45,14 @@ export class Login {
   togglePassword(): void {
     this.showPassword = !this.showPassword;
   }
-  onregister(){
-    this.router.navigateByUrl('/registration')
+
+  onregister() {
+    this.router.navigateByUrl('/registration');
   }
 
   onSubmit(): void {
-      console.log("✅ Login submit clicked");
+    console.log('✅ Login submit clicked');
+
     this.errorMsg = null;
 
     if (this.loginForm.invalid) {
@@ -60,27 +67,42 @@ export class Login {
       password: this.loginForm.value.password,
     };
 
+    const remember = !!this.loginForm.value.rememberMe;
+
     this.auth.login(payload).subscribe({
       next: (res) => {
-        this.loading = false;
-
-        // ✅ Save token after login
+        // ✅ Save token properly (rememberMe based)
         if (res?.access) {
-          this.auth.saveToken(res.access);
+          this.auth.saveToken(res.access, remember);
         }
         if (res?.refresh) {
-          this.auth.saveRefreshToken(res.refresh);
+          this.auth.saveRefreshToken(res.refresh, remember);
         }
-        this.toaster.success("Login Successful");
-        this.router.navigateByUrl('/dashboard');
+
+        // ✅ IMPORTANT: Fetch /me API to load role (Admin/User)
+        this.auth.getMe().subscribe({
+          next: () => {
+            this.loading = false;
+            this.toaster.success('Login Successful ✅');
+            this.router.navigateByUrl('/dashboard', { replaceUrl: true });
+          },
+          error: () => {
+            // ✅ Even if /me fails, still allow login
+            this.loading = false;
+            this.toaster.success('Login Successful ✅');
+            this.router.navigateByUrl('/dashboard', { replaceUrl: true });
+          },
+        });
       },
+
       error: (err) => {
         this.loading = false;
 
         if (err?.status === 401) {
           this.errorMsg = 'Invalid username or password';
         } else {
-          this.errorMsg = err?.error?.detail || 'Something went wrong. Please try again.';
+          this.errorMsg =
+            err?.error?.detail || 'Something went wrong. Please try again.';
         }
       },
     });
