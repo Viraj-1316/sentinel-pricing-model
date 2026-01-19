@@ -1,21 +1,21 @@
 from django.urls import path
 from pricingModel.api.views import (
     aiFeatures,
-    defaultPricingListCreate,
     pricingCalculate,
     defaultPricingDetail,
+    CameraPricingGet,
+    send_quotation_email,
+    download_quotation_pdf,
     UserQuotationList,
-  
-     send_quotation_email,
-   download_quotation_pdf,# ✅ ADD THIS
 )
 from pricingModel.api.views import send_quotation_email
 
 urlpatterns = [
-    path(
+
+     path(
         'cameraPricing/',
-        defaultPricingListCreate.as_view(),
-        name='cam'
+        CameraPricingGet.as_view(),
+        name='cam1'
     ),
     path(
         'cameraPricing/<int:pk>/',

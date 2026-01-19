@@ -40,7 +40,7 @@ EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 
 EMAIL_HOST_USER = 'sujit2004raut@gmail.com'
-EMAIL_HOST_PASSWORD = 'lykl lldl jzuq dnql'  # ✅ NO SPACES
+EMAIL_HOST_PASSWORD = 'lykl lldl jzuq dnql'
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
 
@@ -118,29 +118,16 @@ WSGI_APPLICATION = 'backend.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.postgresql',
-#         'NAME': 'pricing_model',
-#         'USER': 'viraj',
-#         'PASSWORD': 'viraj123',
-#         'HOST': 'localhost',
-#         'PORT': '5432',
-#     }
-
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'sentinel_db',
-        'USER': 'sentinel_user',
-        'PASSWORD': 'Sentinel@123',
+        'NAME': 'pricing_model',
+        'USER': 'viraj',
+        'PASSWORD': 'viraj123',
         'HOST': 'localhost',
         'PORT': '5432',
     }
 }
-
-
-
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
