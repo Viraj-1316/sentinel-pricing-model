@@ -10,7 +10,6 @@ from pricingModel.api.views import (
     storageCosting,
     creatingCategory
 )
-from pricingModel.api.views import send_quotation_email
 
 urlpatterns = [
 

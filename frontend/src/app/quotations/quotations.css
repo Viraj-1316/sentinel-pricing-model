@@ -1,0 +1,24 @@
+/* ✅ Infinite scroll container MUST have fixed height */
+.quotations-scroll {
+  height: 55vh;          /* ✅ fixed height (works always) */
+  overflow-y: auto;
+  overflow-x: auto;
+  display: block;
+}
+
+/* ✅ Sticky header works better */
+.table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+
+/* ✅ Actions always in single line */
+.actions-row {
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+.actions-row button {
+  white-space: nowrap;
+}

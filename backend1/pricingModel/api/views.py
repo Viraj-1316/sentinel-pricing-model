@@ -1,3 +1,4 @@
+from django.contrib.auth.models import User
 from rest_framework import generics
 from django.db.models import Q
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
@@ -8,6 +9,8 @@ from reportlab.lib.pagesizes import A4
 from rest_framework.decorators import api_view, permission_classes
 # from pricingModel.models import Cammera_Pricing, UserPricing, AI_ENABLED,
 from pricingModel.models import Category, Component, Price,UserPricing
+from pricingModel.api.audit import create_audit_log
+from pricingModel.models import Cammera_Pricing, UserPricing, AI_ENABLED,AuditLog
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import inch
@@ -35,7 +38,6 @@ from pricingModel.api.serializers import (
 )
 
 
-
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def send_quotation_email(request, pk):
@@ -57,15 +59,21 @@ def send_quotation_email(request, pk):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def download_quotation_pdf(request, pk):
-    quotation = UserPricing.objects.filter(pk=pk, user_name=request.user).first()
+
+    # ✅ Admin can download any quotation
+    if request.user.is_staff:
+        quotation = UserPricing.objects.filter(pk=pk).first()
+    else:
+        quotation = UserPricing.objects.filter(pk=pk, user_name=request.user).first()
+
     if not quotation:
         return Response({"detail": "Quotation not found"}, status=404)
 
     pdf = generate_enterprise_quotation_pdf(quotation, request.user.username)
 
-    response = HttpResponse(content_type="application/pdf")
+
+    response = HttpResponse(pdf, content_type="application/pdf")
     response["Content-Disposition"] = f'attachment; filename="quotation_{quotation.id}.pdf"'
-    response.write(pdf)
     return response
 
 

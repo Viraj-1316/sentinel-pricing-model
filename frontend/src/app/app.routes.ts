@@ -1,79 +1,94 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './guards/auth.guard';
+import { guestGuard } from './guards/guest.guard';
+import { adminGuard } from './guards/admin.guard';
 
 export const routes: Routes = [
-  // ✅ default
+  // ✅ Default route
   { path: '', pathMatch: 'full', redirectTo: 'login' },
 
-  // ✅ public routes
+  // ✅ Public routes (only for not-logged-in users)
   {
     path: 'login',
+    canActivate: [guestGuard],
     loadComponent: () => import('./login/login').then(m => m.Login),
   },
   {
-    path: 'registration',
+    path: 'register',
+    canActivate: [guestGuard],
     loadComponent: () => import('./registration/registration').then(m => m.Registration),
   },
 
-  // ✅ protected routes inside layout
+  // ✅ Protected routes (all inside app layout)
   {
     path: '',
     loadComponent: () => import('./app-layout/app-layout').then(m => m.AppLayout),
     canActivate: [authGuard],
-    children: [
+    canActivateChild: [authGuard],
 
-      // ✅ single dashboard route
-      // inside dashboard component you will auto-switch UI (Admin/User)
+    children: [
+      // ✅ Default inside layout
+      { path: '', pathMatch: 'full', redirectTo: 'dashboard' },
+
+      // ✅ Dashboard (single)
       {
         path: 'dashboard',
         loadComponent: () => import('./dashboard/dashboard').then(m => m.Dashboard),
       },
 
-      // ✅ user requirement form
+      // ✅ User Requirements
       {
         path: 'user-requirements',
         loadComponent: () =>
           import('./user-requirements/user-requirements').then(m => m.UserRequirements),
       },
 
-      // ✅ quotations route (single for user+admin)
+      // ✅ Quotations
       {
         path: 'quotations',
-        loadComponent: () =>
-          import('./quotations/quotations').then(m => m.Quotations),
+        loadComponent: () => import('./quotations/quotations').then(m => m.Quotations),
       },
 
-      // ✅ Admin routes (you can hide from sidebar using isAdmin)
-      // {
-      //   path: 'camera-pricing',
-      //   loadComponent: () =>
-      //     import('./camera-pricing/camera-pricing').then(m => m.CameraPricing),
-      // },
-      // {
-      //   path: 'ai-features',
-      //   loadComponent: () =>
-      //     import('./ai-features/ai-features').then(m => m.AiFeatures),
-      // },
-      // {
-      //   path: 'users',
-      //   loadComponent: () =>
-      //     import('./users/users').then(m => m.Users),
-      // },
-      // {
-      //   path: 'logs',
-      //   loadComponent: () =>
-      //     import('./logs/logs').then(m => m.Logs),
-      // },
-
-      // // ✅ profile (optional)
+      // ✅ Profile
       {
         path: 'profile',
-        loadComponent: () =>
-          import('./profile/profile').then(m => m.Profile),
+        loadComponent: () => import('./profile/profile').then(m => m.Profile),
       },
 
-      // ✅ default inside layout
-      { path: '', pathMatch: 'full', redirectTo: 'dashboard' },
+      // ✅ Settings (enterprise)
+      {
+        path: 'settings',
+        loadComponent: () => import('./settings/settings').then(m => m.Settings),
+      },
+
+      // ✅ Admin pages (protected)
+      {
+        path: 'admin',
+        canActivate: [adminGuard],
+        children: [
+          {
+            path: 'pricelist',
+            loadComponent: () =>
+              import('./pricelist/pricelist').then(m => m.PriceList),
+          },
+
+          {
+            path: 'user-management',
+            loadComponent: () =>
+              import('./user-management/user-management').then(m => m.UserManagement),
+          },
+
+          {
+            path: 'logs',
+            loadComponent: () =>
+              import('./logs/logs').then(m => m.Logs),
+          },
+
+          // ✅ admin default
+          // { path: '', pathMatch: 'full', redirectTo: 'camera-pricing' },
+        ],
+      },
+
     ],
   },
 

@@ -1,0 +1,78 @@
+/* ====== THEME VARIABLES ====== */
+body[data-theme="light"] {
+  --bg: #ffffff;
+  --card: #ffffff;
+  --text: #0f172a;
+  --muted: #6b7280;
+  --border: #e5e7eb;
+  --shadow: 0 10px 25px rgba(0,0,0,0.06);
+}
+
+body[data-theme="dark"] {
+  --bg: #0b1220;
+  --card: #0f172a;
+  --text: #e5e7eb;
+  --muted: #9ca3af;
+  --border: rgba(255,255,255,0.10);
+  --shadow: 0 10px 25px rgba(0,0,0,0.45);
+}
+
+/* ====== APPLY TO UI ====== */
+body {
+  background: var(--bg) !important;
+  color: var(--text) !important;
+  transition: background 0.25s ease, color 0.25s ease;
+}
+
+/* cards */
+.card {
+  background: var(--card) !important;
+  color: var(--text) !important;
+  border-color: var(--border) !important;
+  box-shadow: var(--shadow) !important;
+}
+
+/* navbar/topbar */
+.navbar {
+  background: var(--card) !important;
+  border-color: var(--border) !important;
+}
+
+/* dropdown */
+.dropdown-menu {
+  background: var(--card) !important;
+  color: var(--text) !important;
+  border-color: var(--border) !important;
+}
+
+/* inputs */
+.form-control,
+.form-select {
+  background: transparent !important;
+  color: var(--text) !important;
+  border-color: var(--border) !important;
+}
+
+.form-control::placeholder {
+  color: var(--muted) !important;
+}
+
+/* table */
+.table {
+  color: var(--text) !important;
+}
+.table thead th {
+  color: var(--muted) !important;
+}
+
+/* muted text */
+.text-muted {
+  color: var(--muted) !important;
+}
+
+/* borders */
+.border,
+.border-bottom,
+.border-top {
+  border-color: var(--border) !important;
+}

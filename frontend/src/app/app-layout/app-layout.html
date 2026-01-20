@@ -1,21 +1,28 @@
-<div class="d-flex min-vh-100 bg-light">
+<div class="layout">
 
-  <!-- Sidebar -->
-  <app-sidebar [collapsed]="collapsed"></app-sidebar>
+  <!-- ✅ fixed sidebar -->
+  <aside class="layout-sidebar">
+    <app-sidebar></app-sidebar>
+  </aside>
 
-  <!-- Main -->
-  <div class="flex-grow-1 d-flex flex-column">
+  <!-- ✅ right side (topbar + content + footer) -->
+  <div class="layout-main">
 
-    <!-- Topbar -->
-    <app-topbar (toggleSidebar)="toggleSidebar()"></app-topbar>
+    <!-- ✅ fixed topbar -->
+    <header class="layout-topbar">
+      <app-topbar (toggleSidebar)="toggleSidebar()"></app-topbar>
+    </header>
 
-    <!-- Page content -->
-    <main class="flex-grow-1 p-4">
+    <!-- ✅ content (no scrolling page, fits height) -->
+    <main class="layout-content">
       <router-outlet></router-outlet>
     </main>
 
-    <!-- Footer -->
-    <app-footer></app-footer>
+    <!-- ✅ fixed footer -->
+    <footer class="layout-footer">
+      <app-footer></app-footer>
+    </footer>
 
   </div>
+
 </div>
