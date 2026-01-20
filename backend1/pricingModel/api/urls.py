@@ -1,31 +1,33 @@
 from django.urls import path
 from pricingModel.api.views import (
-    aiFeatures,
+    aiFeaturesCL,
     pricingCalculate,
-    defaultPricingDetail,
-    CameraPricingGet,
+    cameraSlabRUD,
+    cameraSlabsCS,
     send_quotation_email,
     download_quotation_pdf,
     UserQuotationList,
     storageCosting,
-    creatingCategory
+    creatingCategory,
+    processorUnit,
+    processorUnitDetail
 )
 
 urlpatterns = [
 
      path(
         'cameraPricing/',
-        CameraPricingGet.as_view(),
+        cameraSlabsCS.as_view(),
         name='cam1'
     ),
     path(
         'cameraPricing/<int:pk>/',
-        defaultPricingDetail.as_view(),
+        cameraSlabRUD.as_view(),
         name='cam-detail'
     ),
     path(
         'ai-feature/',
-        aiFeatures.as_view(),
+        aiFeaturesCL.as_view(),
         name='ai'
     ),
     path(
@@ -60,5 +62,17 @@ urlpatterns = [
         creatingCategory.as_view(),
         name='createCategory'
     ),
+    path(
+        'processorUnit/',
+        processorUnit.as_view(),
+        name='processor'
+    ),
+    path(
+        'processorUnit/<int:pk>/',
+        processorUnitDetail.as_view(),
+        name='processorRUD'
+    ),
+    
+    
 
 ]

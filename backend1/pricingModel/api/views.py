@@ -69,7 +69,7 @@ def download_quotation_pdf(request, pk):
     return response
 
 
-class CameraPricingGet(generics.ListCreateAPIView):
+class cameraSlabsCS(generics.ListCreateAPIView):
     serializer_class = cameraPricingSerializer
 
     def get_queryset(self):
@@ -94,12 +94,12 @@ class CameraPricingGet(generics.ListCreateAPIView):
         )
     
        
-class defaultPricingDetail(generics.RetrieveUpdateDestroyAPIView):
+class cameraSlabRUD(generics.RetrieveUpdateDestroyAPIView):
     
     serializer_class = cameraPricingSerializer
 
     def get_queryset(self):
-        return Component.objects.filter(category_id__name='camera')
+        return Component.objects.filter(category__name='camera')
     
     def get_permissions(self):
         if self.request.method == "GET":
@@ -108,7 +108,7 @@ class defaultPricingDetail(generics.RetrieveUpdateDestroyAPIView):
         return [IsAuthenticated(), IsAdminUser()]
     
 
-class aiFeatures(generics.ListCreateAPIView):
+class aiFeaturesCL(generics.ListCreateAPIView):
     serializer_class = AI_ENABLEDserializer
     
     def get_permissions(self):
@@ -117,7 +117,7 @@ class aiFeatures(generics.ListCreateAPIView):
         return [IsAuthenticated(), IsAdminUser()]
     
     def get_queryset(self):
-        return Component.objects.filter(category_id__name='AI')
+        return Component.objects.filter(category__name='AI')
     
     def perform_create(self, serializer):
         costing = serializer.validated_data.pop('costing')
@@ -290,7 +290,3 @@ class  processorUnitDetail(generics.RetrieveUpdateDestroyAPIView):
     def perform_destroy(self, instance):
         Price.objects.filter(component=instance).delete()
         instance.delete()
-
-           
-    
-    
