@@ -20,9 +20,14 @@ interface AiPricing {
   costing: number;
 }
 
+/** ✅ UPDATED: CPU GPU Pricing Interface */
 interface HardwarePricing {
   id: number;
-  name: string;
+  cpu: string;
+  cpu_cores: number;
+  gpu: string;
+  gpu_cores: number;
+  ram: number;
   cost: number;
 }
 
@@ -51,9 +56,9 @@ export class PriceList implements OnInit {
   // ✅ API endpoints
   private CAMERA_API = 'http://127.0.0.1:8001/pricing-Model/cameraPricing/';
   private AI_API = 'http://127.0.0.1:8001/pricing-Model/ai-feature/';
-  private HARDWARE_API = 'http://127.0.0.1:8001/pricing-Model/hardware-pricing/'; // optional later
+  private HARDWARE_API = 'http://127.0.0.1:8001/pricing-Model/hardware-pricing/'; // connect backend later
 
-  // ✅ Forms (declare only)
+  // ✅ Forms
   cameraForm!: FormGroup;
   aiForm!: FormGroup;
   hardwareForm!: FormGroup;
@@ -63,22 +68,30 @@ export class PriceList implements OnInit {
     private fb: FormBuilder,
     private toast: ToasterService
   ) {
-    // ✅ Initialize forms INSIDE constructor (fb is ready now)
+
+    // ✅ CAMERA FORM
     this.cameraForm = this.fb.group({
       min_cammera: [1, [Validators.required, Validators.min(1)]],
       max_cammera: [null as number | null],
       total_costing: [0, [Validators.required, Validators.min(0)]],
     });
 
+    // ✅ AI FORM
     this.aiForm = this.fb.group({
       AI_feature: ['', [Validators.required, Validators.minLength(2)]],
       costing: [0, [Validators.required, Validators.min(0)]],
     });
 
+    // ✅ CPU GPU PRICING FORM (FIXED)
     this.hardwareForm = this.fb.group({
-      name: ['', [Validators.required, Validators.minLength(2)]],
+      cpu: ['', [Validators.required, Validators.minLength(2)]],
+      cpu_cores: [0, [Validators.required, Validators.min(1)]],
+      gpu: ['', [Validators.required, Validators.minLength(2)]],
+      gpu_cores: [0, [Validators.required, Validators.min(1)]],
+      ram: [0, [Validators.required, Validators.min(1)]],
       cost: [0, [Validators.required, Validators.min(0)]],
     });
+
   }
 
   ngOnInit(): void {
@@ -187,14 +200,54 @@ export class PriceList implements OnInit {
   }
 
   // ==========================
-  // ✅ HARDWARE PRICING
+  // ✅ CPU GPU PRICING
   // ==========================
   loadHardwarePricing() {
-    this.hardwareList = [];
+    // ✅ If backend exists, enable this
+    this.loading = true;
+
+    this.http.get<HardwarePricing[]>(this.HARDWARE_API).subscribe({
+      next: (res) => {
+        this.loading = false;
+        this.hardwareList = res || [];
+      },
+      error: () => {
+        this.loading = false;
+        this.hardwareList = [];
+      },
+    });
   }
 
   saveHardwarePricing() {
-    this.toast.info('Hardware API not connected yet.');
+    if (this.hardwareForm.invalid) {
+      this.toast.error('Please fill CPU/GPU pricing properly.');
+      return;
+    }
+
+    this.saving = true;
+
+    // ✅ If backend exists, enable this
+    this.http.post(this.HARDWARE_API, this.hardwareForm.value).subscribe({
+      next: () => {
+        this.saving = false;
+        this.toast.success('CPU GPU pricing saved ✅');
+
+        this.hardwareForm.reset({
+          cpu: '',
+          cpu_cores: 0,
+          gpu: '',
+          gpu_cores: 0,
+          ram: 0,
+          cost: 0
+        });
+
+        this.loadHardwarePricing();
+      },
+      error: (err) => {
+        this.saving = false;
+        this.toast.error(err?.error?.detail || 'Failed to save CPU GPU pricing.');
+      },
+    });
   }
 
   trackById(_: number, item: any) {

@@ -4,7 +4,9 @@
   <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
     <div>
       <h4 class="fw-bold mb-1">Pricing List</h4>
-      <div class="text-muted small">Manage Camera slabs, AI features and Hardware pricing</div>
+      <div class="text-muted small">
+        Manage Camera slabs, AI features and CPU/GPU pricing
+      </div>
     </div>
   </div>
 
@@ -12,6 +14,7 @@
   <div class="pricing-tabs card border-0 shadow-sm rounded-4 mb-4">
     <div class="card-body p-2">
       <div class="d-flex flex-wrap gap-2">
+
         <button class="btn rounded-pill px-4"
                 [class.btn-primary]="tab==='camera'"
                 [class.btn-light]="tab!=='camera'"
@@ -26,12 +29,14 @@
           <i class="bi bi-cpu me-2"></i>AI Features Pricing
         </button>
 
+        <!-- ✅ changed hardware to cpu-gpu -->
         <button class="btn rounded-pill px-4"
                 [class.btn-primary]="tab==='hardware'"
                 [class.btn-light]="tab!=='hardware'"
                 (click)="setTab('hardware')">
-          <i class="bi bi-hdd-stack me-2"></i>Hardware Pricing
+          <i class="bi bi-gpu-card me-2"></i>CPU GPU Pricing
         </button>
+
       </div>
     </div>
   </div>
@@ -63,7 +68,8 @@
 
               <div class="mb-3">
                 <label class="form-label small fw-semibold">Max Cameras</label>
-                <input type="number" class="form-control" formControlName="max_cammera"
+                <input type="number" class="form-control"
+                       formControlName="max_cammera"
                        placeholder="Leave empty for unlimited">
               </div>
 
@@ -93,7 +99,10 @@
 
               <div class="mb-3">
                 <label class="form-label small fw-semibold">AI Feature Name</label>
-                <input type="text" class="form-control" formControlName="AI_feature" placeholder="ex: Face Detection">
+                <input type="text"
+                       class="form-control"
+                       formControlName="AI_feature"
+                       placeholder="ex: Face Detection">
               </div>
 
               <div class="mb-3">
@@ -113,28 +122,78 @@
             </form>
           </ng-container>
 
-          <!-- HARDWARE FORM -->
+          <!-- ✅ CPU GPU FORM -->
           <ng-container *ngIf="tab==='hardware'">
-            <div class="fw-bold mb-1">Hardware Pricing</div>
-            <div class="text-muted small mb-3">Add hardware items (coming soon)</div>
+            <div class="fw-bold mb-1">CPU GPU Pricing</div>
+            <div class="text-muted small mb-3">Add CPU/GPU configuration pricing</div>
 
             <form [formGroup]="hardwareForm" (ngSubmit)="saveHardwarePricing()">
 
-              <div class="mb-3">
-                <label class="form-label small fw-semibold">Hardware Name</label>
-                <input type="text" class="form-control" formControlName="name" placeholder="ex: NVR Device">
-              </div>
+              <div class="row g-3">
 
-              <div class="mb-3">
-                <label class="form-label small fw-semibold">Cost</label>
-                <div class="input-group">
-                  <span class="input-group-text bg-white">₹</span>
-                  <input type="number" class="form-control" formControlName="cost">
+                <!-- CPU -->
+                <div class="col-12">
+                  <label class="form-label small fw-semibold">CPU</label>
+                  <input type="text"
+                         class="form-control"
+                         formControlName="cpu"
+                         placeholder="ex: Intel i5 / Ryzen 5">
                 </div>
+
+                <!-- CPU CORES -->
+                <div class="col-12 col-md-6">
+                  <label class="form-label small fw-semibold">CPU Cores</label>
+                  <input type="number"
+                         class="form-control"
+                         formControlName="cpu_cores"
+                         placeholder="ex: 4 / 6 / 8">
+                </div>
+
+                <!-- RAM -->
+                <div class="col-12 col-md-6">
+                  <label class="form-label small fw-semibold">RAM (GB)</label>
+                  <input type="number"
+                         class="form-control"
+                         formControlName="ram"
+                         placeholder="ex: 8 / 16 / 32">
+                </div>
+
+                <!-- GPU -->
+                <div class="col-12">
+                  <label class="form-label small fw-semibold">GPU</label>
+                  <input type="text"
+                         class="form-control"
+                         formControlName="gpu"
+                         placeholder="ex: NVIDIA RTX / AMD Radeon">
+                </div>
+
+                <!-- GPU CORES -->
+                <div class="col-12 col-md-6">
+                  <label class="form-label small fw-semibold">GPU Cores</label>
+                  <input type="number"
+                         class="form-control"
+                         formControlName="gpu_cores"
+                         placeholder="ex: 512 / 1024">
+                </div>
+
+                <!-- COST -->
+                <div class="col-12 col-md-6">
+                  <label class="form-label small fw-semibold">Cost</label>
+                  <div class="input-group">
+                    <span class="input-group-text bg-white">₹</span>
+                    <input type="number"
+                           class="form-control"
+                           formControlName="cost"
+                           placeholder="Enter cost">
+                  </div>
+                </div>
+
               </div>
 
-              <button class="btn btn-secondary w-100 rounded-3">
-                Save Hardware
+              <button class="btn btn-primary w-100 rounded-3 mt-4"
+                      [disabled]="saving || hardwareForm.invalid">
+                <span *ngIf="saving" class="spinner-border spinner-border-sm me-2"></span>
+                Save CPU GPU Pricing
               </button>
 
             </form>
@@ -151,7 +210,13 @@
 
           <div class="p-4 border-bottom d-flex justify-content-between align-items-center">
             <div class="fw-bold">
-              {{ tab==='camera' ? 'Camera Slabs' : tab==='ai' ? 'AI Features' : 'Hardware Items' }}
+              {{
+                tab==='camera'
+                  ? 'Camera Slabs'
+                  : tab==='ai'
+                    ? 'AI Features'
+                    : 'CPU GPU Pricing'
+              }}
             </div>
             <div class="text-muted small" *ngIf="loading">
               <span class="spinner-border spinner-border-sm me-2"></span> Loading...
@@ -206,9 +271,38 @@
             </table>
           </div>
 
-          <!-- HARDWARE LIST -->
-          <div *ngIf="tab==='hardware'" class="p-4 text-muted">
-            Hardware pricing module will be enabled after backend API integration.
+          <!-- ✅ CPU GPU LIST -->
+          <div *ngIf="tab==='hardware'" class="table-responsive list-scroll">
+            <table class="table mb-0 align-middle">
+              <thead class="table-light position-sticky top-0">
+                <tr>
+                  <th>CPU</th>
+                  <th>CPU Cores</th>
+                  <th>GPU</th>
+                  <th>GPU Cores</th>
+                  <th>RAM</th>
+                  <th class="text-end">Cost</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                <tr *ngFor="let h of hardwareList; trackBy: trackById">
+                  <td class="fw-semibold">{{ h.cpu }}</td>
+                  <td>{{ h.cpu_cores }}</td>
+                  <td class="fw-semibold">{{ h.gpu }}</td>
+                  <td>{{ h.gpu_cores }}</td>
+                  <td>{{ h.ram }} GB</td>
+                  <td class="text-end fw-bold">₹ {{ h.cost }}</td>
+                </tr>
+
+                <tr *ngIf="hardwareList.length === 0">
+                  <td colspan="6" class="text-center text-muted py-5">
+                    No CPU/GPU pricing added.
+                  </td>
+                </tr>
+
+              </tbody>
+            </table>
           </div>
 
         </div>
