@@ -4,7 +4,7 @@ import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { ReactiveFormsModule, FormBuilder, Validators, FormGroup } from '@angular/forms';
 import { ToasterService } from '../service/toaster.service';
 
-type TabKey = 'category' | 'camera' | 'ai' | 'hardware';
+type TabKey = 'category' | 'camera' | 'ai' | 'hardware'| 'storage';
 
 interface CameraPricing {
   id: number;
@@ -26,14 +26,20 @@ interface Category {
 /** ✅ UPDATED: CPU GPU Pricing Interface */
 interface HardwarePricing {
   id: number;
-  cpu: string;
-  cpu_cores: number;
-  gpu: string;
-  gpu_cores: number;
-  ram: number;
-  cost: number;
+  name: string;
+  CPU: string;
+  CPUcores: number;
+  GPU: string;
+  GPUcores: number;
+  ram_required: number;
+  costing: number;
 }
-
+interface StorageCosting {
+  id: number;
+  storage_per_cam: number;
+  storage_perDay: number;
+  costing: number;
+}
 @Component({
   selector: 'app-pricelist',
   standalone: true,
@@ -41,7 +47,7 @@ interface HardwarePricing {
   templateUrl: './pricelist.html',
   styleUrl: './pricelist.css',
 })
-export class PriceList implements OnInit {
+export class Pricelist implements OnInit {
 
   // ✅ Active tab
   tab: TabKey = 'camera';
@@ -57,17 +63,18 @@ categoryForm!: FormGroup;
   cameraList: CameraPricing[] = [];
   aiList: AiPricing[] = [];
   hardwareList: HardwarePricing[] = [];
+  storageList: StorageCosting[] = [];
 private CATEGORY_API = 'http://127.0.0.1:8001/pricing-Model/create-category/';
   // ✅ API endpoints
   private CAMERA_API = 'http://127.0.0.1:8001/pricing-Model/cameraPricing/';
   private AI_API = 'http://127.0.0.1:8001/pricing-Model/ai-feature/';
-  private HARDWARE_API = 'http://127.0.0.1:8001/pricing-Model/hardware-pricing/'; // connect backend later
-
+  private HARDWARE_API = 'http://127.0.0.1:8001/pricing-Model/processorUnit/'; // connect backend later
+  private STORAGE_API = 'http://127.0.0.1:8001/pricing-Model/storage-costing/';
   // ✅ Forms
   cameraForm!: FormGroup;
   aiForm!: FormGroup;
   hardwareForm!: FormGroup;
-
+  storageForm!: FormGroup;
   constructor(
     private http: HttpClient,
     private fb: FormBuilder,
@@ -92,12 +99,19 @@ this.categoryForm = this.fb.group({
 
     // ✅ CPU GPU PRICING FORM (FIXED)
     this.hardwareForm = this.fb.group({
-      cpu: ['', [Validators.required, Validators.minLength(2)]],
-      cpu_cores: [0, [Validators.required, Validators.min(1)]],
-      gpu: ['', [Validators.required, Validators.minLength(2)]],
-      gpu_cores: [0, [Validators.required, Validators.min(1)]],
-      ram: [0, [Validators.required, Validators.min(1)]],
-      cost: [0, [Validators.required, Validators.min(0)]],
+      name:['',[Validators.required,Validators.minLength(2)]],
+      CPU: ['', [Validators.required, Validators.minLength(2)]],
+      CPUcores: [0, [Validators.required, Validators.min(1)]],
+      GPU: ['', [Validators.required, Validators.minLength(2)]],
+      GPUcores: [0, [Validators.required, Validators.min(1)]],
+      ram_required: [0, [Validators.required, Validators.min(1)]],
+      costing: [0, [Validators.required, Validators.min(0)]],
+    });
+
+    this.storageForm = this.fb.group({
+      storage_per_cam: [0, [Validators.required, Validators.min(0)]],
+      storage_perDay: [0, [Validators.required, Validators.min(0)]],
+      costing: [0, [Validators.required, Validators.min(0)]],
     });
 
   }
@@ -150,11 +164,53 @@ saveCategory() {
 
   // ✅ Load list based on tab
   loadCurrentTabData() {
+      if (this.tab === 'category') this.loadCategoryList();  
     if (this.tab === 'camera') this.loadCameraPricing();
     if (this.tab === 'ai') this.loadAiPricing();
     if (this.tab === 'hardware') this.loadHardwarePricing();
+    if (this.tab === 'storage') this.loadStorageCosting();
+      // Implement loadStorageCosting() if backend exists
+    
   }
+saveStorage(){
+if (this.storageForm.invalid) {
+      this.toast.error('Please fill storage costing properly.');
+      return;
+    }
 
+    this.storageForm.value.storage_per_cam;
+    this.storageForm.value.storage_perDay;
+
+   
+
+    this.saving = true;
+
+    this.http.post(this.STORAGE_API, this.storageForm.value).subscribe({
+      next: () => {
+        this.saving = false;
+        this.toast.success('Storage costing added ✅');
+        this.storageForm.reset({ storage_per_cam: 0, storage_perDay: 0, costing: 0 });
+        this.loadStorageCosting();
+      },
+      error: (err) => {
+        this.saving = false;
+        this.toast.error(err?.error?.detail || 'Failed to add storage costing.');
+      },
+    });
+  }
+  loadStorageCosting() {
+    this.loading = true;
+    this.http.get<StorageCosting[]>(this.STORAGE_API).subscribe({
+      next: (res) => {
+        this.loading = false;
+        this.storageList = res || [];
+      },
+      error: (err) => {
+        this.loading = false;
+        this.errorMsg = err?.error?.detail || 'Failed to load storage costing.';
+      },
+    });
+  }
   // ==========================
   // ✅ CAMERA PRICING
   // ==========================
@@ -275,12 +331,13 @@ saveCategory() {
         this.toast.success('CPU GPU pricing saved ✅');
 
         this.hardwareForm.reset({
-          cpu: '',
-          cpu_cores: 0,
-          gpu: '',
-          gpu_cores: 0,
-          ram: 0,
-          cost: 0
+          name: '',
+          CPU: '',
+          CPUcores: 0,
+          GPU: '',
+          GPUcores: 0,
+          ram_required: 0,
+          costing: 0
         });
 
         this.loadHardwarePricing();

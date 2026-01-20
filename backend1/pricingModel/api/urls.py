@@ -11,7 +11,9 @@ from pricingModel.api.views import (
     creatingCategory,
     processorUnit,
     processorUnitDetail,
-    AdminUsersListView
+    AdminUsersListView,
+    AdminAllQuotationsView,
+    AdminAuditLogsView,
 )
 
 urlpatterns = [
@@ -74,6 +76,9 @@ urlpatterns = [
         name='processorRUD'
     ),
         path('admin/users/', AdminUsersListView.as_view(), name='admin-users'),
+            path('admin/quotations/', AdminAllQuotationsView.as_view(), name='admin-quotations'),
+    path('admin/audit-logs/', AdminAuditLogsView.as_view(), name='admin-audit-logs'),
+
 
     
     

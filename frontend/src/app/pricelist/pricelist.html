@@ -41,7 +41,12 @@
                 (click)="setTab('hardware')">
           <i class="bi bi-gpu-card me-2"></i>CPU GPU Pricing
         </button>
-
+ <button class="btn rounded-pill px-4"
+                [class.btn-primary]="tab==='storage'"
+                [class.btn-light]="tab!=='storage'"
+                (click)="setTab('storage')">
+          <i class="bi bi-gpu-card me-2"></i>Storage Cost
+        </button>
       </div>
     </div>
   </div>
@@ -158,13 +163,19 @@
             <form [formGroup]="hardwareForm" (ngSubmit)="saveHardwarePricing()">
 
               <div class="row g-3">
-
+                <div class="col-12">
+                  <label class="form-label small fw-semibold">Name</label>
+                  <input type="text"
+                         class="form-control"
+                         formControlName="name"
+                         placeholder="ex: Intel i5 / Ryzen 5">
+                </div>
                 <!-- CPU -->
                 <div class="col-12">
                   <label class="form-label small fw-semibold">CPU</label>
                   <input type="text"
                          class="form-control"
-                         formControlName="cpu"
+                         formControlName="CPU"
                          placeholder="ex: Intel i5 / Ryzen 5">
                 </div>
 
@@ -173,7 +184,7 @@
                   <label class="form-label small fw-semibold">CPU Cores</label>
                   <input type="number"
                          class="form-control"
-                         formControlName="cpu_cores"
+                         formControlName="CPUcores"
                          placeholder="ex: 4 / 6 / 8">
                 </div>
 
@@ -182,7 +193,7 @@
                   <label class="form-label small fw-semibold">RAM (GB)</label>
                   <input type="number"
                          class="form-control"
-                         formControlName="ram"
+                         formControlName="ram_required"
                          placeholder="ex: 8 / 16 / 32">
                 </div>
 
@@ -191,7 +202,7 @@
                   <label class="form-label small fw-semibold">GPU</label>
                   <input type="text"
                          class="form-control"
-                         formControlName="gpu"
+                         formControlName="GPU"
                          placeholder="ex: NVIDIA RTX / AMD Radeon">
                 </div>
 
@@ -200,7 +211,7 @@
                   <label class="form-label small fw-semibold">GPU Cores</label>
                   <input type="number"
                          class="form-control"
-                         formControlName="gpu_cores"
+                         formControlName="GPUcores"
                          placeholder="ex: 512 / 1024">
                 </div>
 
@@ -211,22 +222,55 @@
                     <span class="input-group-text bg-white">₹</span>
                     <input type="number"
                            class="form-control"
-                           formControlName="cost"
+                           formControlName="costing"
                            placeholder="Enter cost">
                   </div>
                 </div>
 
               </div>
 
-              <button class="btn btn-primary w-100 rounded-3 mt-4"
-                      [disabled]="saving || hardwareForm.invalid">
+              <button class="btn btn-primary w-100 rounded-3 mt-4">
                 <span *ngIf="saving" class="spinner-border spinner-border-sm me-2"></span>
                 Save CPU GPU Pricing
               </button>
 
             </form>
           </ng-container>
+<ng-container *ngIf="tab==='storage'">
+  <div class="fw-bold mb-1">Create Category</div>
+  <div class="text-muted small mb-3">Add category name (Camera, AI, Storage, Processor etc.)</div>
 
+  <form [formGroup]="storageForm" (ngSubmit)="saveStorage()">
+
+    <div class="mb-3">
+      <label class="form-label small fw-semibold">Storage per Cam</label>
+      <input type="text"
+             class="form-control"
+             formControlName="storage_per_cam"
+             placeholder="ex: in GB/TB">
+    </div>
+ <div class="mb-3">
+      <label class="form-label small fw-semibold">Storage per Day</label>
+      <input type="text"
+             class="form-control"
+             formControlName="storage_perDay"
+             placeholder="ex: in GB/TB">
+    </div>
+     <div class="mb-3">
+      <label class="form-label small fw-semibold">Cost</label>
+      <input type="text"
+             class="form-control"
+             formControlName="costing"
+             placeholder="ex: Storage Cost">
+    </div>
+    <button class="btn btn-primary w-100 rounded-3"
+            [disabled]="saving || storageForm.invalid">
+      <span *ngIf="saving" class="spinner-border spinner-border-sm me-2"></span>
+      Save Storage Cost
+    </button>
+
+  </form>
+</ng-container>
         </div>
       </div>
     </div>
@@ -339,12 +383,12 @@
 
               <tbody>
                 <tr *ngFor="let h of hardwareList; trackBy: trackById">
-                  <td class="fw-semibold">{{ h.cpu }}</td>
-                  <td>{{ h.cpu_cores }}</td>
-                  <td class="fw-semibold">{{ h.gpu }}</td>
-                  <td>{{ h.gpu_cores }}</td>
-                  <td>{{ h.ram }} GB</td>
-                  <td class="text-end fw-bold">₹ {{ h.cost }}</td>
+                  <td class="fw-semibold">{{ h.CPU }}</td>
+                  <td>{{ h.CPUcores }}</td>
+                  <td class="fw-semibold">{{ h.GPU }}</td>
+                  <td>{{ h.GPUcores }}</td>
+                  <td>{{ h.ram_required }} GB</td>
+                  <td class="text-end fw-bold">₹ {{ h.costing }}</td>
                 </tr>
 
                 <tr *ngIf="hardwareList.length === 0">
@@ -353,6 +397,29 @@
                   </td>
                 </tr>
 
+              </tbody>
+            </table>
+          </div>
+          <div *ngIf="tab==='storage'" class="table-responsive list-scroll">
+            <table class="table mb-0 align-middle">
+              <thead class="table-light position-sticky top-0">
+                <tr>
+                  <th>storage_per_cam/th>
+                  <th>storage_perDay</th>
+                  <th class="text-end">Cost</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                <tr *ngFor="let c of storageList; trackBy: trackById">
+                  <td class="fw-semibold">{{ c.storage_per_cam }}</td>
+                  <td>{{ c.storage_perDay }}</td>
+                  <td class="text-end fw-bold">₹ {{ c.costing }}</td>
+                </tr>
+
+                <tr *ngIf="storageList.length === 0">
+                  <td colspan="3" class="text-center text-muted py-5">No storage pricing added.</td>
+                </tr>
               </tbody>
             </table>
           </div>

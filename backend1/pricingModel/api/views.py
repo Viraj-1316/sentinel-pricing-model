@@ -8,7 +8,7 @@ from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import A4
 from rest_framework.decorators import api_view, permission_classes
 # from pricingModel.models import Cammera_Pricing, UserPricing, AI_ENABLED,
-from pricingModel.models import Category, Component, Price,UserPricing
+from pricingModel.models import Category, Component, Price,UserPricing,AuditLog
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import inch
@@ -27,7 +27,9 @@ from pricingModel.api.serializers import (
     storagePricingSerializer,
     categorySerializer,
     processorSerializer,
-    AdminUserSerializer
+    AdminUserSerializer,
+    AdminQuotationSerializer,
+    AuditLogSerializer
 )
 
 class AdminUsersListView(generics.ListAPIView):
@@ -36,6 +38,13 @@ class AdminUsersListView(generics.ListAPIView):
 
     def get_queryset(self):
         return User.objects.all().order_by('-date_joined')
+        return User.objects.all().order_by('-date_joined')
+class AdminAllQuotationsView(generics.ListAPIView):
+    serializer_class = AdminQuotationSerializer
+    permission_classes = [IsAuthenticated, IsAdminUser]
+
+    def get_queryset(self):
+        return UserPricing.objects.select_related("user_name").prefetch_related("ai_features").order_by("-created_at")
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def send_quotation_email(request, pk):
@@ -306,3 +315,9 @@ class  processorUnitDetail(generics.RetrieveUpdateDestroyAPIView):
     def perform_destroy(self, instance):
         Price.objects.filter(component=instance).delete()
         instance.delete()
+class AdminAuditLogsView(generics.ListAPIView):
+    serializer_class = AuditLogSerializer
+    permission_classes = [IsAuthenticated, IsAdminUser]
+
+    def get_queryset(self):
+        return AuditLog.objects.select_related("user").all().order_by("-created_at")

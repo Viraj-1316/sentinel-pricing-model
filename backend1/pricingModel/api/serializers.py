@@ -1,5 +1,5 @@
 # from pricingModel.models import Cammera_Pricing, UserPricing, AI_ENABLED, 
-from pricingModel.models import Category, Component, Price,UserPricing
+from pricingModel.models import Category, Component, Price,UserPricing, AuditLog
 from rest_framework import serializers
 from django.db.models import Q
 from django.contrib.auth.models import User
@@ -179,7 +179,20 @@ class processorSerializer(serializers.ModelSerializer):
             'ram_required',
             'costing'
         ]
- 
+class AuditLogSerializer(serializers.ModelSerializer):
+    username = serializers.CharField(source="user.username", read_only=True)
+
+    class Meta:
+        model = AuditLog
+        fields = [
+            "id",
+            "action",
+            "username",
+            "details",
+            "ip_address",
+            "user_agent",
+            "created_at",
+        ]
         
             
     
