@@ -14,7 +14,11 @@ export const routes: Routes = [
     loadComponent: () => import('./login/login').then(m => m.Login),
   },
   {
+<<<<<<< HEAD
     path: 'registration',
+=======
+    path: 'register',
+>>>>>>> sujit-feature
     canActivate: [guestGuard],
     loadComponent: () => import('./registration/registration').then(m => m.Registration),
   },
@@ -69,7 +73,11 @@ export const routes: Routes = [
           {
             path: 'pricelist',
             loadComponent: () =>
+<<<<<<< HEAD
               import('./pricelist/pricelist').then(m => m.Pricelist),
+=======
+              import('./pricelist/pricelist').then(m => m.PriceList),
+>>>>>>> sujit-feature
           },
 
           {

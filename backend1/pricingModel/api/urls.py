@@ -11,6 +11,8 @@ from pricingModel.api.views import (
     creatingCategory,
     processorUnit,
     processorUnitDetail,
+    send_quotation_email,
+    download_quotation_pdf,
     AdminUsersListView,
     AdminAllQuotationsView,
     AdminAuditLogsView,
@@ -83,4 +85,5 @@ urlpatterns = [
     
     
 
+   
 ]

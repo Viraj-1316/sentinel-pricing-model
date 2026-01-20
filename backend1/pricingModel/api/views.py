@@ -18,7 +18,8 @@ from rest_framework.response import Response
 from pricingModel.api.tasks import send_quotation_email_task
 from pricingModel.api.utils import generate_enterprise_quotation_pdf
 from io import BytesIO
-
+import requests
+from pricingModel.api.audit import create_audit_log   
 from pricingModel.api.serializers import (
     AI_ENABLEDserializer,
     cameraPricingSerializer,
@@ -37,7 +38,6 @@ class AdminUsersListView(generics.ListAPIView):
     permission_classes = [IsAuthenticated, IsAdminUser]
 
     def get_queryset(self):
-        return User.objects.all().order_by('-date_joined')
         return User.objects.all().order_by('-date_joined')
 class AdminAllQuotationsView(generics.ListAPIView):
     serializer_class = AdminQuotationSerializer
@@ -218,6 +218,12 @@ class pricingCalculate(generics.ListCreateAPIView):
             user_pricing.ai_features.set(ai_features)
             user_pricing.processor = processor
             user_pricing.save()
+        # ✅ then save m2m relations
+            create_audit_log(
+                self.request,
+                "CREATE_QUOTATION",
+                f"Generated quotation. Cameras={cameras}, Total={total_cost}"
+)
 
 
 class UserQuotationList(generics.ListAPIView):
@@ -310,11 +316,22 @@ class  processorUnitDetail(generics.RetrieveUpdateDestroyAPIView):
                 component=processor,
                 defaults={'costing': costing}
             )
-
-    
     def perform_destroy(self, instance):
         Price.objects.filter(component=instance).delete()
         instance.delete()
+        
+        
+class AdminAuditLogsView(generics.ListAPIView):
+    serializer_class = AuditLogSerializer
+    permission_classes = [IsAuthenticated, IsAdminUser]
+
+    def get_queryset(self):
+        return UserPricing.objects.filter(
+            user_name=self.request.user
+            
+        ).order_by('-created_at')
+        
+        
 class AdminAuditLogsView(generics.ListAPIView):
     serializer_class = AuditLogSerializer
     permission_classes = [IsAuthenticated, IsAdminUser]
