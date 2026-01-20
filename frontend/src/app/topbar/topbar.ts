@@ -2,7 +2,8 @@ import { Component, EventEmitter, OnInit, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
-
+import { ToasterService } from '../service/toaster.service';
+import { ConfirmdialogService } from '../service/confirmdialog.service';
 export interface Quotation {
   id: number;
   cammera: number;
@@ -53,7 +54,7 @@ export class Topbar implements OnInit {
   loading = false;
   errorMsg: string | null = null;
 
-  constructor(private router: Router, private http: HttpClient) {}
+  constructor(private router: Router, private http: HttpClient, private toast: ToasterService, private confirm: ConfirmdialogService  ) {}
 
   ngOnInit(): void {
     // ✅ load user details
@@ -111,12 +112,22 @@ export class Topbar implements OnInit {
     });
   }
 
-  logout() {
-    localStorage.removeItem('access_token');
-    localStorage.removeItem('refresh_token');
-    localStorage.removeItem('username');
-    localStorage.removeItem('role');
+ async logout() {
+  const ok = await this.confirm.open(
+    "Confirmation",
+    "Are you sure you want to logout?"
+  );
 
-    this.router.navigateByUrl('/login', { replaceUrl: true });
-  }
+  if (!ok) return;
+
+  localStorage.removeItem('access_token');
+  localStorage.removeItem('refresh_token');
+  localStorage.removeItem('username');
+  localStorage.removeItem('role');
+
+  this.toast.success("Logged out successfully ✅");
+
+  this.router.navigateByUrl('/login', { replaceUrl: true });
+}
+
 }

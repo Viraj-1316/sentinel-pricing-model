@@ -1,3 +1,4 @@
+from django.contrib.auth.models import User
 from rest_framework import generics
 from django.db.models import Q
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
@@ -17,13 +18,7 @@ from rest_framework.response import Response
 from pricingModel.api.tasks import send_quotation_email_task
 from pricingModel.api.utils import generate_enterprise_quotation_pdf
 from io import BytesIO
-# from pricingModel.api.serializers import (
-#     userPricingSerializer,
-#     Cammera_PricingSerializer,
-#     AI_ENABLEDserializer,
-#     QuotationSerializer,
-#     cameraPricingSerializer
-# )
+
 from pricingModel.api.serializers import (
     AI_ENABLEDserializer,
     cameraPricingSerializer,
@@ -33,7 +28,6 @@ from pricingModel.api.serializers import (
     categorySerializer,
     processorSerializer
 )
-
 
 
 @api_view(['POST'])
@@ -57,23 +51,29 @@ def send_quotation_email(request, pk):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def download_quotation_pdf(request, pk):
-    quotation = UserPricing.objects.filter(pk=pk, user_name=request.user).first()
+
+    # ✅ Admin can download any quotation
+    if request.user.is_staff:
+        quotation = UserPricing.objects.filter(pk=pk).first()
+    else:
+        quotation = UserPricing.objects.filter(pk=pk, user_name=request.user).first()
+
     if not quotation:
         return Response({"detail": "Quotation not found"}, status=404)
 
     pdf = generate_enterprise_quotation_pdf(quotation, request.user.username)
 
-    response = HttpResponse(content_type="application/pdf")
+
+    response = HttpResponse(pdf, content_type="application/pdf")
     response["Content-Disposition"] = f'attachment; filename="quotation_{quotation.id}.pdf"'
-    response.write(pdf)
     return response
 
 
-class CameraPricingGet(generics.ListCreateAPIView):
+class cameraSlabsCS(generics.ListCreateAPIView):
     serializer_class = cameraPricingSerializer
 
     def get_queryset(self):
-        return Component.objects.filter(category_id__name='camera')
+        return Component.objects.filter(category__name='Camera')
     
     def get_permissions(self):
         if self.request.method == "GET":
@@ -82,24 +82,23 @@ class CameraPricingGet(generics.ListCreateAPIView):
         return [IsAuthenticated(), IsAdminUser()]
     
     def perform_create(self, serializer):
-        costing = serializer.validated_data.pop('costing')
+        costing = serializer.validated_data.pop('price')['costing']
 
         component = serializer.save(
-            category=Category.objects.get(name='camera')
+            category=Category.objects.get(name='Camera')
         )
 
         Price.objects.create(
             component=component,
             costing=costing
         )
-    
-       
-class defaultPricingDetail(generics.RetrieveUpdateDestroyAPIView):
+     
+class cameraSlabRUD(generics.RetrieveUpdateDestroyAPIView):
     
     serializer_class = cameraPricingSerializer
 
     def get_queryset(self):
-        return Component.objects.filter(category_id__name='camera')
+        return Component.objects.filter(category__name='Camera')
     
     def get_permissions(self):
         if self.request.method == "GET":
@@ -107,8 +106,23 @@ class defaultPricingDetail(generics.RetrieveUpdateDestroyAPIView):
 
         return [IsAuthenticated(), IsAdminUser()]
     
+    def perform_update(self, serializer):
+        costing = serializer.validated_data.pop('price', None)['costing']
 
-class aiFeatures(generics.ListCreateAPIView):
+        cameraPricing = serializer.save()
+
+        if costing is not None:
+            Price.objects.update_or_create(
+                component=cameraPricing,
+                defaults={'costing': costing}
+            )
+      
+    def perform_destroy(self, instance):
+        Price.objects.filter(component=instance).delete()
+        instance.delete()
+        
+        
+class aiFeaturesCL(generics.ListCreateAPIView):
     serializer_class = AI_ENABLEDserializer
     
     def get_permissions(self):
@@ -117,10 +131,11 @@ class aiFeatures(generics.ListCreateAPIView):
         return [IsAuthenticated(), IsAdminUser()]
     
     def get_queryset(self):
-        return Component.objects.filter(category_id__name='AI')
+        return Component.objects.filter(category__name='AI')
     
     def perform_create(self, serializer):
-        costing = serializer.validated_data.pop('costing')
+        costing = serializer.validated_data.pop('price')['costing']
+
 
         component = serializer.save(
             category=Category.objects.get(name='AI')
@@ -146,34 +161,41 @@ class pricingCalculate(generics.ListCreateAPIView):
             storage_days = serializer.validated_data['storage_days']
             ai_features = serializer.validated_data.get('ai_features', [])
             storage = Component.objects.filter(category__name='Storage').first()
-            processor = serializer.validated_data['processor']
-
+            # as processor is not compulsary we use get method else we will direclty use the value of dict
+            processor = serializer.validated_data.get('processor')
+          
             pricing_range = Component.objects.filter(
-                category__name='camera',
+                category__name='Camera',
                 min_cammera__lte=cameras
             ).filter(
                 Q(max_cammera__gte=cameras) | Q(max_cammera__isnull=True)
             ).first()
 
             if not pricing_range:
-                pricing_range = Component.objects.filter(
-                    category__name='camera'
-                ).order_by('-min_cammera').first()
+                raise ValidationError("Camera pricing not configured")
+
+            if not hasattr(pricing_range, 'price'):
+                raise ValidationError("Camera price missing")
 
             camera_cost = pricing_range.price.costing
 
             ai_cost = sum(ai.price.costing for ai in ai_features)
+            
+            processor_cost = 0
+            if processor:
+                if not hasattr(processor, 'price'):
+                    raise ValidationError("Processor pricing not configured")
+                processor_cost = processor.price.costing
 
-            if not hasattr(processor, 'price'):
-                raise ValidationError("Processor pricing not configured")
-
-            processor_cost = processor.price.costing
+            if not storage:
+                raise ValidationError("Storage component not configured")
 
             if not hasattr(storage, 'price'):
                 raise ValidationError("Storage pricing not configured")
 
             storage_used = cameras * storage.storage_per_cam * storage_days
             storage_cost = storage_used * storage.price.costing
+
 
             total_cost = (
                 camera_cost +
@@ -193,7 +215,9 @@ class pricingCalculate(generics.ListCreateAPIView):
             )
 
             user_pricing.ai_features.set(ai_features)
-            user_pricing.processor.set(processor)
+            user_pricing.processor = processor
+            user_pricing.save()
+
 
 class UserQuotationList(generics.ListAPIView):
             serializer_class = QuotationSerializer
@@ -229,7 +253,28 @@ class storageCosting(generics.ListCreateAPIView):
             costing=costing
         )
     
-        
+class storageCostingDetails(generics.RetrieveDestroyAPIView):
+    
+    serializer_class = storagePricingSerializer
+    
+    def get_queryset(self):
+        return Component.objects.filter(category__name= 'Storage')
+    
+    def perform_update(self, serializer):       
+        costing = serializer.validated_data.pop('price', None)['costing']
+
+        strogeDetails = serializer.save()
+
+        if costing is not None:
+            Price.objects.update_or_create(
+                component=strogeDetails,
+                defaults={'costing': costing}
+            )
+
+    def perform_destroy(self, instance):
+        Price.objects.filter(component=instance).delete()
+        instance.delete() 
+           
 class creatingCategory(generics.ListCreateAPIView):
     
     queryset = Category.objects.all()
@@ -256,7 +301,7 @@ class processorUnit(generics.ListCreateAPIView):
     
     def perform_create(self, serializer):
         
-        costing = serializer.validated_data.pop('costing')
+        costing = serializer.validated_data.pop('price')['costing']
         
         processor = serializer.save(
             category = Category.objects.get(name='Processor')
@@ -276,7 +321,7 @@ class  processorUnitDetail(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [IsAdminUser]
     
     def perform_update(self, serializer):
-        costing = serializer.validated_data.pop('costing', None)
+        costing = serializer.validated_data.pop('price', None)['costing']
 
         processor = serializer.save()
 
@@ -290,7 +335,3 @@ class  processorUnitDetail(generics.RetrieveUpdateDestroyAPIView):
     def perform_destroy(self, instance):
         Price.objects.filter(component=instance).delete()
         instance.delete()
-
-           
-    
-    

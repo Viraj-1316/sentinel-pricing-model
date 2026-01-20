@@ -2,6 +2,41 @@
 from pricingModel.models import Category, Component, Price,UserPricing
 from rest_framework import serializers
 from django.db.models import Q
+from django.contrib.auth.models import User
+
+class AdminUserSerializer(serializers.ModelSerializer):
+    role = serializers.SerializerMethodField()
+
+    class Meta:
+        model = User
+        fields = ['id', 'username', 'email', 'is_staff', 'date_joined', 'last_login', 'role']
+
+    def get_role(self, obj):
+        return "Admin" if obj.is_staff else "User"
+
+
+class AdminQuotationSerializer(serializers.ModelSerializer):
+    username = serializers.SerializerMethodField()
+    ai_features = serializers.SerializerMethodField()
+
+    class Meta:
+        model = UserPricing
+        fields = [
+            "id",
+            "username",
+            "cammera",
+            "camera_cost",
+            "ai_cost",
+            "total_costing",
+            "ai_features",
+            "created_at",
+        ]
+
+    def get_username(self, obj):
+        return obj.user_name.username if obj.user_name else None
+
+    def get_ai_features(self, obj):
+        return list(obj.ai_features.values("AI_feature", "costing"))
 
 
 # class Cammera_PricingSerializer(serializers.ModelSerializer):
@@ -51,7 +86,7 @@ class userPricingSerializer(serializers.ModelSerializer):
 
 # chage is id is removed               
 class AI_ENABLEDserializer(serializers.ModelSerializer):
-        costing = serializers.IntegerField(source='price.costing', read_only=True)
+        costing = serializers.IntegerField(source='price.costing')
         class Meta:
             model = Component
             fields = ['id','AI_feature', 'costing']          
@@ -102,14 +137,15 @@ class componentDetailSerializer(serializers.ModelSerializer):
 
 class cameraPricingSerializer(serializers.ModelSerializer):
     
-    total_costing = serializers.IntegerField(source='price.costing', read_only=True)
+    costing = serializers.IntegerField(source='price.costing')
     class Meta:
         
        model = Component
        fields = [
+           'id',
            'min_cammera',
            'max_cammera',
-           'total_costing'
+           'costing'
        ]        
 
 class storagePricingSerializer(serializers.ModelSerializer):
@@ -119,6 +155,7 @@ class storagePricingSerializer(serializers.ModelSerializer):
         
         model = Component
         fields = [
+                'id',
                 'storage_per_cam',
                 'storage_perDay',
                 'costing'
@@ -126,7 +163,7 @@ class storagePricingSerializer(serializers.ModelSerializer):
         
 class processorSerializer(serializers.ModelSerializer):
     
-    costing = serializers.IntegerField(source='price.costing', read_only = True)
+    costing = serializers.IntegerField(source='price.costing')
     
     class Meta:
         

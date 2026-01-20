@@ -1,0 +1,4 @@
+.click-row { cursor: pointer; }
+.click-row:hover { background: rgba(13,110,253,.05); }
+
+.badge { letter-spacing: .2px; }

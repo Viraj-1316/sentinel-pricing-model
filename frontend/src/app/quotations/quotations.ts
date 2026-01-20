@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { HttpClient, HttpClientModule, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../service/auth.service';
 import { ToasterService } from '../service/toaster.service';
@@ -13,8 +13,9 @@ export interface QuotationRow {
   total_costing: number;
   created_at: string;
 
-  // for admin view you may also have:
-  user_name?: string;
+  // admin fields
+  username?: string;
+  email?: string;
 }
 
 @Component({
@@ -22,9 +23,11 @@ export interface QuotationRow {
   standalone: true,
   imports: [CommonModule, HttpClientModule, RouterLink],
   templateUrl: './quotations.html',
+  styleUrl: './quotations.css',
 })
 export class Quotations implements OnInit {
   loading = false;
+  loadingMore = false;
   errorMsg: string | null = null;
 
   // role
@@ -35,6 +38,12 @@ export class Quotations implements OnInit {
   quotations: QuotationRow[] = [];
   filtered: QuotationRow[] = [];
 
+  // ✅ infinite scroll
+  pageSize = 20;
+  visibleCount = 20;
+  visibleRows: QuotationRow[] = [];
+  hasMore = true;
+
   // KPI
   totalQuotations = 0;
   latestTotal: number | null = null;
@@ -43,20 +52,13 @@ export class Quotations implements OnInit {
   search = '';
   sortBy: 'latest' | 'oldest' | 'high' | 'low' = 'latest';
 
-  // pagination (frontend pagination)
-  page = 1;
-  pageSize = 8;
-  totalPages = 1;
-
   // preview modal
   showPreview = false;
-  previewQuotation: any = null;
+  previewQuotation: QuotationRow | null = null;
 
-  // ✅ API endpoints
+  // ✅ APIs
   private USER_LIST_API = 'http://127.0.0.1:8001/pricing-Model/user-quotations/';
-  private ADMIN_LIST_API = 'http://127.0.0.1:8001/pricing-Model/admin-quotations/'; 
-  // ⬆️ You MUST have this endpoint in backend for all quotations
-  // If not available now, admin will also use USER_LIST_API
+  private ADMIN_LIST_API = 'http://127.0.0.1:8001/pricing-Model/admin/quotations/';
 
   constructor(
     private http: HttpClient,
@@ -68,22 +70,22 @@ export class Quotations implements OnInit {
     this.loadMeThenQuotations();
   }
 
-  // ✅ Load Me then role + quotations
+  // ✅ Load user role then load quotations
   loadMeThenQuotations() {
     this.auth.getMe().subscribe({
       next: (res: any) => {
-        this.username = res.username;
-        this.isAdmin = res.is_staff || res.is_superuser;
+        this.username = res?.username || '';
+        this.isAdmin = !!(res?.is_staff || res?.is_superuser);
         this.loadQuotations();
       },
       error: () => {
         this.isAdmin = false;
         this.loadQuotations();
-      }
+      },
     });
   }
 
-  // ✅ List quotations based on role
+  // ✅ Fetch quotations
   loadQuotations() {
     this.loading = true;
     this.errorMsg = null;
@@ -93,72 +95,110 @@ export class Quotations implements OnInit {
     this.http.get<QuotationRow[]>(api).subscribe({
       next: (data) => {
         this.loading = false;
+
         this.quotations = data || [];
         this.applyFilters();
         this.buildKpi();
+
+        // ✅ reset infinite scroll
+        this.visibleCount = this.pageSize;
+        this.applyInfiniteScroll();
       },
       error: (err) => {
         this.loading = false;
         this.errorMsg = err?.error?.detail || 'Failed to load quotations.';
-      }
+      },
     });
   }
 
-  // ✅ KPI
   buildKpi() {
     this.totalQuotations = this.quotations.length;
     const latest = this.quotations?.[0];
     this.latestTotal = latest?.total_costing ?? null;
   }
 
-  // ✅ Filter + Sort + Pagination
   applyFilters() {
-    let list = [...this.quotations];
+  let list = [...this.quotations];
 
-    // search by id
-    if (this.search?.trim()) {
-      const q = this.search.trim().toLowerCase();
-      list = list.filter((x) => String(x.id).includes(q));
-    }
+  // ✅ Search (ID + Username + Cameras + Total)
+  if (this.search?.trim()) {
+    const q = this.search.trim().toLowerCase();
 
-    // sort
-    if (this.sortBy === 'latest') {
-      list = list.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-    } else if (this.sortBy === 'oldest') {
-      list = list.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
-    } else if (this.sortBy === 'high') {
-      list = list.sort((a, b) => (b.total_costing || 0) - (a.total_costing || 0));
-    } else if (this.sortBy === 'low') {
-      list = list.sort((a, b) => (a.total_costing || 0) - (b.total_costing || 0));
-    }
+    list = list.filter((x) => {
+      const idMatch = String(x.id).toLowerCase().includes(q);
+      const cameraMatch = String(x.cammera).toLowerCase().includes(q);
+      const totalMatch = String(x.total_costing).toLowerCase().includes(q);
 
-    this.filtered = list;
+      // ✅ username search only if Admin
+      const userMatch = this.isAdmin
+        ? (x.username || '').toLowerCase().includes(q)
+        : false;
 
-    // pagination
-    this.totalPages = Math.max(1, Math.ceil(this.filtered.length / this.pageSize));
-    if (this.page > this.totalPages) this.page = this.totalPages;
+      return idMatch || cameraMatch || totalMatch || userMatch;
+    });
   }
 
-  get pageRows(): QuotationRow[] {
-    const start = (this.page - 1) * this.pageSize;
-    return this.filtered.slice(start, start + this.pageSize);
+  // ✅ Sort
+  if (this.sortBy === 'latest') {
+    list.sort(
+      (a, b) =>
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    );
+  } else if (this.sortBy === 'oldest') {
+    list.sort(
+      (a, b) =>
+        new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+    );
+  } else if (this.sortBy === 'high') {
+    list.sort((a, b) => (b.total_costing || 0) - (a.total_costing || 0));
+  } else if (this.sortBy === 'low') {
+    list.sort((a, b) => (a.total_costing || 0) - (b.total_costing || 0));
   }
 
-  goPage(p: number) {
-    if (p < 1 || p > this.totalPages) return;
-    this.page = p;
+  // ✅ Final
+  this.filtered = list;
+}
+
+
+  // ✅ infinite scroll apply
+  applyInfiniteScroll(): void {
+    const total = this.filtered.length;
+    this.visibleRows = this.filtered.slice(0, this.visibleCount);
+    this.hasMore = this.visibleCount < total;
+  }
+
+  // ✅ infinite scroll handler
+  onScroll(event: Event): void {
+    const el = event.target as HTMLElement;
+
+    const nearBottom =
+      el.scrollTop + el.clientHeight >= el.scrollHeight - 120;
+
+    if (!nearBottom || !this.hasMore || this.loadingMore) return;
+
+    this.loadingMore = true;
+
+    setTimeout(() => {
+      this.visibleCount += this.pageSize;
+      this.applyInfiniteScroll();
+      this.loadingMore = false;
+    }, 200);
   }
 
   onSearchChange(val: string) {
     this.search = val;
-    this.page = 1;
     this.applyFilters();
+
+    this.visibleCount = this.pageSize;
+    this.applyInfiniteScroll();
   }
 
   onSortChange(val: any) {
     this.sortBy = val;
-    this.page = 1;
     this.applyFilters();
+
+    this.visibleCount = this.pageSize;
+    this.applyInfiniteScroll();
   }
 
   refresh() {
@@ -166,18 +206,21 @@ export class Quotations implements OnInit {
     this.toast.info('Refreshing quotations...');
   }
 
-  // ✅ View Preview
-  openPreview(q: any) {
+  // ✅ Preview
+  openPreview(q: QuotationRow) {
     this.previewQuotation = q;
     this.showPreview = true;
   }
+
   closePreview() {
     this.showPreview = false;
     this.previewQuotation = null;
   }
 
-  // ✅ Download
-  downloadPdf(q: QuotationRow) {
+  // ✅ Download (NULL SAFE ✅ FIXED)
+  downloadPdf(q: QuotationRow | null) {
+    if (!q) return;
+
     const url = `http://127.0.0.1:8001/pricing-Model/quotation/${q.id}/pdf/`;
 
     this.toast.info(`Downloading PDF #${q.id}...`);
@@ -201,8 +244,10 @@ export class Quotations implements OnInit {
     });
   }
 
-  // ✅ Send Email
-  sendEmail(q: QuotationRow) {
+  // ✅ Email (NULL SAFE ✅ FIXED)
+  sendEmail(q: QuotationRow | null) {
+    if (!q) return;
+
     const url = `http://127.0.0.1:8001/pricing-Model/quotation/${q.id}/send-email/`;
 
     this.toast.info(`Sending email for quotation #${q.id}...`);
@@ -213,9 +258,9 @@ export class Quotations implements OnInit {
     });
   }
 
-  // ✅ Admin only: Delete quotation (optional)
-  deleteQuotation(q: QuotationRow) {
-    if (!this.isAdmin) return;
+  // ✅ Admin Delete (NULL SAFE)
+  deleteQuotation(q: QuotationRow | null) {
+    if (!this.isAdmin || !q) return;
 
     const url = `http://127.0.0.1:8001/pricing-Model/admin/quotation/${q.id}/delete/`;
 
@@ -228,5 +273,9 @@ export class Quotations implements OnInit {
       },
       error: () => this.toast.error('Delete failed'),
     });
+  }
+
+  trackById(_: number, row: QuotationRow) {
+    return row.id;
   }
 }

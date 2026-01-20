@@ -1,0 +1,21 @@
+.pricing-page {
+  width: 100%;
+}
+
+/* sticky form (enterprise UX) */
+.sticky-form {
+  position: sticky;
+  top: 90px;
+}
+
+/* list scroll area */
+.list-scroll {
+  max-height: 520px;
+  overflow: auto;
+}
+
+/* tabs */
+.pricing-tabs .btn {
+  font-weight: 700;
+  border-radius: 999px;
+}
