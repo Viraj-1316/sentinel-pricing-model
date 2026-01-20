@@ -9,8 +9,6 @@ from reportlab.lib.pagesizes import A4
 from rest_framework.decorators import api_view, permission_classes
 # from pricingModel.models import Cammera_Pricing, UserPricing, AI_ENABLED,
 from pricingModel.models import Category, Component, Price,UserPricing
-from pricingModel.api.audit import create_audit_log
-from pricingModel.models import Cammera_Pricing, UserPricing, AI_ENABLED,AuditLog
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import inch
@@ -20,13 +18,7 @@ from rest_framework.response import Response
 from pricingModel.api.tasks import send_quotation_email_task
 from pricingModel.api.utils import generate_enterprise_quotation_pdf
 from io import BytesIO
-# from pricingModel.api.serializers import (
-#     userPricingSerializer,
-#     Cammera_PricingSerializer,
-#     AI_ENABLEDserializer,
-#     QuotationSerializer,
-#     cameraPricingSerializer
-# )
+
 from pricingModel.api.serializers import (
     AI_ENABLEDserializer,
     cameraPricingSerializer,
