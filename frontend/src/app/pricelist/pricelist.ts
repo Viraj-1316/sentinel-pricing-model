@@ -4,14 +4,14 @@ import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { ReactiveFormsModule, FormBuilder, Validators, FormGroup } from '@angular/forms';
 import { ToasterService } from '../service/toaster.service';
 
-type TabKey = 'camera' | 'ai' | 'hardware';
+type TabKey = 'category' | 'camera' | 'ai' | 'hardware';
 
 interface CameraPricing {
   id: number;
   min_cammera: number;
   max_cammera: number | null;
-  Processor?: string;
-  total_costing: number;
+  // Processor?: string;
+  costing: number;
 }
 
 interface AiPricing {
@@ -19,7 +19,10 @@ interface AiPricing {
   AI_feature: string;
   costing: number;
 }
-
+interface Category {
+  id: number;
+  name: string;
+}
 /** ✅ UPDATED: CPU GPU Pricing Interface */
 interface HardwarePricing {
   id: number;
@@ -47,12 +50,14 @@ export class PriceList implements OnInit {
   loading = false;
   saving = false;
   errorMsg: string | null = null;
+categoryList: Category[] = [];
+categoryForm!: FormGroup;
 
   // ✅ Lists
   cameraList: CameraPricing[] = [];
   aiList: AiPricing[] = [];
   hardwareList: HardwarePricing[] = [];
-
+private CATEGORY_API = 'http://127.0.0.1:8001/pricing-Model/create-category/';
   // ✅ API endpoints
   private CAMERA_API = 'http://127.0.0.1:8001/pricing-Model/cameraPricing/';
   private AI_API = 'http://127.0.0.1:8001/pricing-Model/ai-feature/';
@@ -68,12 +73,15 @@ export class PriceList implements OnInit {
     private fb: FormBuilder,
     private toast: ToasterService
   ) {
+this.categoryForm = this.fb.group({
+  name: ['', [Validators.required, Validators.minLength(2)]],
+});
 
     // ✅ CAMERA FORM
     this.cameraForm = this.fb.group({
       min_cammera: [1, [Validators.required, Validators.min(1)]],
       max_cammera: [null as number | null],
-      total_costing: [0, [Validators.required, Validators.min(0)]],
+      costing: [0, [Validators.required, Validators.min(0)]],
     });
 
     // ✅ AI FORM
@@ -97,6 +105,40 @@ export class PriceList implements OnInit {
   ngOnInit(): void {
     this.loadCurrentTabData();
   }
+loadCategoryList() {
+  this.loading = true;
+  this.http.get<Category[]>(this.CATEGORY_API).subscribe({
+    next: (res) => {
+      this.loading = false;
+      this.categoryList = res || [];
+    },
+    error: (err) => {
+      this.loading = false;
+      this.errorMsg = err?.error?.detail || 'Failed to load categories.';
+    },
+  });
+}
+saveCategory() {
+  if (this.categoryForm.invalid) {
+    this.toast.error('Please enter category name.');
+    return;
+  }
+
+  this.saving = true;
+
+  this.http.post(this.CATEGORY_API, this.categoryForm.value).subscribe({
+    next: () => {
+      this.saving = false;
+      this.toast.success('Category added ✅');
+      this.categoryForm.reset({ name: '' });
+      this.loadCategoryList();
+    },
+    error: (err) => {
+      this.saving = false;
+      this.toast.error(err?.error?.detail || 'Failed to add category.');
+    },
+  });
+}
 
   // ✅ Tab switching
   setTab(key: TabKey) {
@@ -150,7 +192,7 @@ export class PriceList implements OnInit {
       next: () => {
         this.saving = false;
         this.toast.success('Camera pricing added ✅');
-        this.cameraForm.reset({ min_cammera: 1, max_cammera: null, total_costing: 0 });
+        this.cameraForm.reset({ min_cammera: 1, max_cammera: null, costing: 0 });
         this.loadCameraPricing();
       },
       error: (err) => {

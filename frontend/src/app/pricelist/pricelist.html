@@ -14,7 +14,12 @@
   <div class="pricing-tabs card border-0 shadow-sm rounded-4 mb-4">
     <div class="card-body p-2">
       <div class="d-flex flex-wrap gap-2">
-
+ <button class="btn rounded-pill px-4"
+              [class.btn-primary]="tab==='category'"
+              [class.btn-light]="tab!=='category'"
+              (click)="setTab('category')">
+        <i class="bi bi-tags me-2"></i>Categories
+      </button>
         <button class="btn rounded-pill px-4"
                 [class.btn-primary]="tab==='camera'"
                 [class.btn-light]="tab!=='camera'"
@@ -53,6 +58,29 @@
     <div class="col-12 col-lg-4">
       <div class="card border-0 shadow-sm rounded-4 sticky-form">
         <div class="card-body p-4">
+<!-- ✅ CATEGORY FORM -->
+<ng-container *ngIf="tab==='category'">
+  <div class="fw-bold mb-1">Create Category</div>
+  <div class="text-muted small mb-3">Add category name (Camera, AI, Storage, Processor etc.)</div>
+
+  <form [formGroup]="categoryForm" (ngSubmit)="saveCategory()">
+
+    <div class="mb-3">
+      <label class="form-label small fw-semibold">Category Name</label>
+      <input type="text"
+             class="form-control"
+             formControlName="name"
+             placeholder="ex: Camera">
+    </div>
+
+    <button class="btn btn-primary w-100 rounded-3"
+            [disabled]="saving || categoryForm.invalid">
+      <span *ngIf="saving" class="spinner-border spinner-border-sm me-2"></span>
+      Save Category
+    </button>
+
+  </form>
+</ng-container>
 
           <!-- CAMERA FORM -->
           <ng-container *ngIf="tab==='camera'">
@@ -77,7 +105,7 @@
                 <label class="form-label small fw-semibold">Cost</label>
                 <div class="input-group">
                   <span class="input-group-text bg-white">₹</span>
-                  <input type="number" class="form-control" formControlName="total_costing">
+                  <input type="number" class="form-control" formControlName="costing">
                 </div>
               </div>
 
@@ -202,6 +230,30 @@
         </div>
       </div>
     </div>
+<!-- ✅ CATEGORY LIST -->
+<div *ngIf="tab==='category'" class="table-responsive list-scroll">
+  <table class="table mb-0 align-middle">
+    <thead class="table-light position-sticky top-0">
+      <tr>
+        <th>#</th>
+        <th>Category Name</th>
+      </tr>
+    </thead>
+
+    <tbody>
+      <tr *ngFor="let cat of categoryList; let i = index; trackBy: trackById">
+        <td class="text-muted">{{ i + 1 }}</td>
+        <td class="fw-semibold">{{ cat.name }}</td>
+      </tr>
+
+      <tr *ngIf="categoryList.length === 0">
+        <td colspan="2" class="text-center text-muted py-5">
+          No categories added.
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
 
     <!-- Right: List -->
     <div class="col-12 col-lg-8">
@@ -238,7 +290,7 @@
                 <tr *ngFor="let c of cameraList; trackBy: trackById">
                   <td class="fw-semibold">{{ c.min_cammera }}</td>
                   <td>{{ c.max_cammera ?? '∞' }}</td>
-                  <td class="text-end fw-bold">₹ {{ c.total_costing }}</td>
+                  <td class="text-end fw-bold">₹ {{ c.costing }}</td>
                 </tr>
 
                 <tr *ngIf="cameraList.length === 0">

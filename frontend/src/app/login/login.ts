@@ -47,6 +47,7 @@ export class Login {
   }
 
   onregister() {
+    console.log('✅ Navigate to registration');
     this.router.navigateByUrl('/registration');
   }
 

@@ -10,7 +10,8 @@ from pricingModel.api.views import (
     storageCosting,
     creatingCategory,
     processorUnit,
-    processorUnitDetail
+    processorUnitDetail,
+    AdminUsersListView
 )
 
 urlpatterns = [
@@ -72,6 +73,8 @@ urlpatterns = [
         processorUnitDetail.as_view(),
         name='processorRUD'
     ),
+        path('admin/users/', AdminUsersListView.as_view(), name='admin-users'),
+
     
     
 

@@ -26,10 +26,16 @@ from pricingModel.api.serializers import (
     QuotationSerializer,
     storagePricingSerializer,
     categorySerializer,
-    processorSerializer
+    processorSerializer,
+    AdminUserSerializer
 )
 
+class AdminUsersListView(generics.ListAPIView):
+    serializer_class = AdminUserSerializer
+    permission_classes = [IsAuthenticated, IsAdminUser]
 
+    def get_queryset(self):
+        return User.objects.all().order_by('-date_joined')
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def send_quotation_email(request, pk):
