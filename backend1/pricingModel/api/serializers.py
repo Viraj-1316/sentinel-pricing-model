@@ -12,34 +12,54 @@ from django.db.models import Q
 
                         
 class userPricingSerializer(serializers.ModelSerializer):
+
     total_costing = serializers.IntegerField(read_only=True)
     camera_cost = serializers.IntegerField(read_only=True)
     ai_cost = serializers.IntegerField(read_only=True)
+    processor_cost = serializers.IntegerField(read_only=True)
+    storage_cost = serializers.IntegerField(read_only=True)
+
+    storage_days = serializers.IntegerField(write_only=True)
+
+    ai_features = serializers.PrimaryKeyRelatedField(
+        many=True,
+        queryset=Component.objects.filter(category__name='AI'),
+        required=False
+    )
+
+    processor = serializers.PrimaryKeyRelatedField(
+        queryset=Component.objects.filter(category__name='Processor'),
+        required = False
+    )
 
     class Meta:
         model = UserPricing
         fields = [
             'id',
             'cammera',
+            'storage_days',
             'ai_features',
+            'processor',
             'camera_cost',
             'ai_cost',
+            'processor_cost',
+            'storage_cost',
             'total_costing',
-            'created_at'
+            'created_at',
         ]
-        read_only_fields = ['camera_cost', 'ai_cost', 'total_costing', 'created_at']
+        
 
 # chage is id is removed               
 class AI_ENABLEDserializer(serializers.ModelSerializer):
         costing = serializers.IntegerField(source='price.costing', read_only=True)
         class Meta:
             model = Component
-            fields = ['AI_feature', 'costing']          
+            fields = ['id','AI_feature', 'costing']          
 
 
 class QuotationSerializer(serializers.ModelSerializer):
     ai_features = AI_ENABLEDserializer(many=True, read_only=True)
-    # camera_cost = serializers.SerializerMethodField()
+   
     class Meta:
         model = UserPricing
         fields = [
@@ -47,22 +67,12 @@ class QuotationSerializer(serializers.ModelSerializer):
             'camera_cost',
             'ai_cost',
             'ai_features',
+            'processor',
+            'storage_days',
+            'processor_cost',
             'total_costing',
             'created_at'
         ]
-
-
-#     def get_camera_cost(self, obj):
-#         pricing_range = Cammera_Pricing.objects.filter(
-#             min_cammera__lte=obj.cammera
-#         ).filter(
-#             Q(max_cammera__gte=obj.cammera) | Q(max_cammera__isnull=True)
-#         ).first()
-
-#         if pricing_range is None:
-#           pricing_range = Cammera_Pricing.objects.order_by('-min_cammera').first()
-          
-#         return pricing_range.total_costing
 
 
 class categorySerializer(serializers.ModelSerializer):
@@ -101,3 +111,38 @@ class cameraPricingSerializer(serializers.ModelSerializer):
            'max_cammera',
            'total_costing'
        ]        
+
+class storagePricingSerializer(serializers.ModelSerializer):
+    costing = serializers.IntegerField(source='price.costing')
+    # category = categorySerializer()
+    class Meta:
+        
+        model = Component
+        fields = [
+                'storage_per_cam',
+                'storage_perDay',
+                'costing'
+                ]
+        
+class processorSerializer(serializers.ModelSerializer):
+    
+    costing = serializers.IntegerField(source='price.costing', read_only = True)
+    
+    class Meta:
+        
+        model = Component
+    
+        fields = [
+            'id',
+            'name',
+            'CPU',
+            'GPU',
+            'CPUcores',
+            'GPUcores',
+            'ram_required',
+            'costing'
+        ]
+ 
+        
+            
+    

@@ -7,6 +7,8 @@ from pricingModel.api.views import (
     send_quotation_email,
     download_quotation_pdf,
     UserQuotationList,
+    storageCosting,
+    creatingCategory
 )
 from pricingModel.api.views import send_quotation_email
 
@@ -48,6 +50,16 @@ urlpatterns = [
         'quotation/<int:pk>/send-email/',
         send_quotation_email,
         name='quotation-pdf'
+    ),
+     path(
+        'storage-costing/',
+        storageCosting.as_view(),
+        name='storageCosting'
+    ),
+        path(
+        'create-category/',
+        creatingCategory.as_view(),
+        name='createCategory'
     ),
 
 ]
