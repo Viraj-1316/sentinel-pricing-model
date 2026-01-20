@@ -23,11 +23,6 @@
       </div>
 
       <div class="d-flex gap-2">
-        <a routerLink="/user-requirements" class="btn btn-primary rounded-3">
-          <i class="bi bi-file-earmark-plus me-1"></i>
-          Generate New
-        </a>
-
         <button class="btn btn-outline-secondary rounded-3" (click)="refresh()">
           <i class="bi bi-arrow-clockwise me-1"></i>
           Refresh
@@ -105,13 +100,16 @@
 
         <div class="row g-3 align-items-center">
           <div class="col-12 col-md-6 col-xl-4">
-            <label class="text-muted small fw-semibold mb-1">Search quotation by ID</label>
+            <label class="text-muted small fw-semibold mb-1">
+              Search quotation {{ isAdmin ? 'by username / ID' : 'by ID' }}
+            </label>
+
             <div class="input-group">
               <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
               <input
                 type="text"
                 class="form-control"
-                placeholder="ex: 42"
+                placeholder="{{ isAdmin ? 'ex: viraj / 42' : 'ex: 42' }}"
                 [value]="search"
                 (input)="onSearchChange($any($event.target).value)"
               />
@@ -139,72 +137,85 @@
       </div>
     </div>
 
-    <!-- Table -->
+    <!-- ✅ Table -->
     <div class="card border-0 shadow-sm rounded-4 overflow-hidden" *ngIf="!loading">
 
       <div class="card-body p-0">
 
-        <div class="table-responsive">
+        <!-- ✅ Scroll container (important for infinite scroll) -->
+        <div class="table-responsive quotations-scroll" (scroll)="onScroll($event)">
           <table class="table table-hover align-middle mb-0">
 
-            <thead class="table-light">
+            <!-- ✅ Sticky header -->
+            <thead class="table-light position-sticky top-0" style="z-index:2;">
               <tr>
-                <th style="width:90px;">ID</th>
-
-                <!-- ✅ Admin extra column -->
                 <th *ngIf="isAdmin">User</th>
-
                 <th>Cameras</th>
                 <th class="text-end">AI Cost</th>
                 <th class="text-end">Total</th>
                 <th>Date</th>
-                <th style="width:260px;" class="text-center">Actions</th>
+                <th class="text-center" style="width:320px;">Actions</th>
               </tr>
             </thead>
 
             <tbody>
 
-              <tr *ngFor="let q of pageRows">
-                <td class="fw-semibold">#{{ q.id }}</td>
-
-                <td *ngIf="isAdmin" class="text-muted">
-                  {{ q.user_name || '-' }}
-                </td>
+              <!-- ✅ Rows -->
+              <tr *ngFor="let q of visibleRows">
+                <td *ngIf="isAdmin" class="fw-semibold text-muted">{{ q.username || '-' }}</td>
 
                 <td>{{ q.cammera }}</td>
                 <td class="text-end">₹ {{ q.ai_cost || 0 }}</td>
                 <td class="text-end fw-bold text-success">₹ {{ q.total_costing }}</td>
                 <td class="text-muted">{{ q.created_at | date:'medium' }}</td>
 
+                <!-- ✅ Actions (all in one line) -->
                 <td class="text-center">
-                  <div class="d-flex justify-content-center gap-2 flex-wrap">
+                  <div class="d-inline-flex gap-2 flex-nowrap actions-row">
 
-                    <button class="btn btn-outline-secondary btn-sm rounded-3" (click)="openPreview(q)">
-                      <i class="bi bi-eye me-1"></i> View
+                    <button class="btn btn-outline-secondary btn-sm rounded-3"
+                            (click)="openPreview(q)">
+                      <i class="bi bi-eye me-1"></i>View
                     </button>
 
-                    <button class="btn btn-success btn-sm rounded-3" (click)="downloadPdf(q)">
-                      <i class="bi bi-download me-1"></i> PDF
+                    <button class="btn btn-success btn-sm rounded-3"
+                            (click)="downloadPdf(q)">
+                      <i class="bi bi-download me-1"></i>PDF
                     </button>
 
-                    <button class="btn btn-primary btn-sm rounded-3" (click)="sendEmail(q)">
-                      <i class="bi bi-envelope me-1"></i> Email
+                    <button class="btn btn-primary btn-sm rounded-3"
+                            (click)="sendEmail(q)">
+                      <i class="bi bi-envelope me-1"></i>Email
                     </button>
 
-                    <!-- ✅ ADMIN ONLY -->
                     <button *ngIf="isAdmin"
                             class="btn btn-outline-danger btn-sm rounded-3"
                             (click)="deleteQuotation(q)">
-                      <i class="bi bi-trash me-1"></i> Delete
+                      <i class="bi bi-trash me-1"></i>Delete
                     </button>
 
                   </div>
                 </td>
               </tr>
 
-              <!-- empty state -->
+              <!-- ✅ Loading more indicator -->
+              <tr *ngIf="loadingMore">
+                <td [attr.colspan]="isAdmin ? 6 : 5" class="text-center text-muted py-3">
+                  <span class="spinner-border spinner-border-sm me-2"></span>
+                  Loading more quotations...
+                </td>
+              </tr>
+
+              <!-- ✅ End -->
+              <tr *ngIf="!hasMore && filtered.length > 0">
+                <td [attr.colspan]="isAdmin ? 6 : 5" class="text-center text-muted py-3 small">
+                  You have reached the end ✅
+                </td>
+              </tr>
+
+              <!-- ✅ Empty state -->
               <tr *ngIf="filtered.length === 0">
-                <td colspan="7" class="text-center text-muted py-5">
+                <td [attr.colspan]="isAdmin ? 6 : 5" class="text-center text-muted py-5">
                   <div class="display-6 mb-2"><i class="bi bi-inbox"></i></div>
                   <div class="fw-semibold">No quotations found</div>
                   <div class="small">Generate your first quotation to see it here.</div>
@@ -217,34 +228,13 @@
         </div>
 
       </div>
-
-      <!-- Pagination -->
-      <div class="border-top bg-white p-3 d-flex justify-content-between align-items-center flex-wrap gap-2"
-           *ngIf="filtered.length > 0">
-
-        <div class="text-muted small">
-          Page {{ page }} / {{ totalPages }}
-        </div>
-
-        <div class="d-flex gap-2">
-          <button class="btn btn-outline-secondary btn-sm rounded-3"
-                  [disabled]="page === 1"
-                  (click)="goPage(page - 1)">
-            <i class="bi bi-chevron-left"></i>
-          </button>
-
-          <button class="btn btn-outline-secondary btn-sm rounded-3"
-                  [disabled]="page === totalPages"
-                  (click)="goPage(page + 1)">
-            <i class="bi bi-chevron-right"></i>
-          </button>
-        </div>
-      </div>
     </div>
 
     <!-- ✅ Preview Modal -->
-    <div *ngIf="showPreview" class="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center"
+    <div *ngIf="showPreview"
+         class="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center"
          style="background: rgba(0,0,0,.55); z-index: 9999;">
+
       <div class="bg-white rounded-4 shadow-lg p-4" style="width: min(900px, 95vw);">
 
         <div class="d-flex justify-content-between align-items-center mb-3">
@@ -252,6 +242,7 @@
             <h5 class="fw-bold mb-0">Quotation Preview</h5>
             <div class="text-muted small">Quotation #{{ previewQuotation?.id }}</div>
           </div>
+
           <button class="btn btn-outline-secondary rounded-3" (click)="closePreview()">
             <i class="bi bi-x-lg"></i>
           </button>

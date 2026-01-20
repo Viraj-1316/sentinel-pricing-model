@@ -40,31 +40,31 @@
       <span *ngIf="!collapsed">Profile</span>
     </a>
 
-    <!-- ✅ Admin Only -->
-    <div *ngIf="isAdmin">
-      <div class="text-uppercase text-muted small fw-semibold mt-4 mb-2" *ngIf="!collapsed">
+     <!-- ✅ Admin Only -->
+     <div *ngIf="isAdmin">
+      <!-- <div class="text-uppercase text-muted small fw-semibold mt-4 mb-2" *ngIf="!collapsed">
         System (Admin)
-      </div>
+      </div>  -->
 
-      <a routerLink="/camera-pricing" routerLinkActive="active"
+      <a routerLink="/admin/pricelist" routerLinkActive="active"
          class="nav-link d-flex align-items-center gap-2 rounded-3 px-3 py-2">
         <i class="bi bi-camera-video"></i>
-        <span *ngIf="!collapsed">Camera Pricing</span>
+        <span *ngIf="!collapsed">PriceList</span>
       </a>
 
-      <a routerLink="/ai-features" routerLinkActive="active"
+      <!-- <a routerLink="/ai-features" routerLinkActive="active"
          class="nav-link d-flex align-items-center gap-2 rounded-3 px-3 py-2">
         <i class="bi bi-cpu"></i>
         <span *ngIf="!collapsed">AI Features</span>
-      </a>
+      </a> -->
 
-      <a routerLink="/users" routerLinkActive="active"
+      <a routerLink="/admin/user-management" routerLinkActive="active"
          class="nav-link d-flex align-items-center gap-2 rounded-3 px-3 py-2">
         <i class="bi bi-people"></i>
-        <span *ngIf="!collapsed">Users</span>
+        <span *ngIf="!collapsed">User Management</span>
       </a>
 
-      <a routerLink="/logs" routerLinkActive="active"
+      <a routerLink="/admin/logs" routerLinkActive="active"
          class="nav-link d-flex align-items-center gap-2 rounded-3 px-3 py-2">
         <i class="bi bi-journal-text"></i>
         <span *ngIf="!collapsed">Logs / Audit</span>

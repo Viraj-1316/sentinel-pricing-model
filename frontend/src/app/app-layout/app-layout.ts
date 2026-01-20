@@ -13,8 +13,13 @@ import { Footer } from '../footer/footer';
 })
 export class AppLayout {
   collapsed = false;
+ngOnInit() {
+  const theme = localStorage.getItem('theme') || 'light';
+  document.body.setAttribute('data-theme', theme);
+}
 
   toggleSidebar() {
     this.collapsed = !this.collapsed;
   }
+  
 }

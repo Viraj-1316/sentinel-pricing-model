@@ -1,0 +1,4 @@
+.dashboard-wrap {
+  max-width: 1200px;   /* increase like enterprise dashboards */
+  margin-left: 0;      /* keep left aligned */
+}

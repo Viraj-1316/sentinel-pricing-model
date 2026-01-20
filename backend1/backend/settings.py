@@ -52,7 +52,7 @@ SECRET_KEY = 'django-insecure-$rjj$==$_ij=7=ypyma(2ox%i@f)(1ut3-%iz16%$^)%pwl+13
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1',"192.168.65.89"]
+ALLOWED_HOSTS = ['localhost', '127.0.0.1',"192.168.65.89","10.136.76.181"]
 
 
 

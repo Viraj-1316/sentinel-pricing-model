@@ -333,36 +333,44 @@ removeFeature(id: number): void {
   // ✅ Download PDF
   // ==========================
   downloadPdf(): void {
-    if (!this.quotation?.id) {
-      this.errorMsg = 'Please generate quotation first.';
-      return;
-    }
-
-    const url = `http://127.0.0.1:8001/pricing-Model/quotation/${this.quotation.id}/pdf/`;
-
-    this.loading = true;
-
-    this.http.get(url, { responseType: 'blob' }).subscribe({
-      next: (blob) => {
-        this.loading = false;
-
-        const file = new Blob([blob], { type: 'application/pdf' });
-        const downloadURL = window.URL.createObjectURL(file);
-
-        const a = document.createElement('a');
-        a.href = downloadURL;
-        a.download = `quotation_${this.quotation.id}.pdf`;
-        a.click();
-
-        window.URL.revokeObjectURL(downloadURL);
-        this.toaster.success('PDF downloaded ✅');
-      },
-      error: () => {
-        this.loading = false;
-        this.errorMsg = 'Failed to download PDF.';
-      },
-    });
+  if (!this.quotation?.id) {
+    this.errorMsg = 'Please generate quotation first.';
+    return;
   }
+
+  const url = `http://127.0.0.1:8001/pricing-Model/quotation/${this.quotation.id}/pdf/`;
+  const token = localStorage.getItem('access_token');
+
+  this.loading = true;
+  this.errorMsg = null;
+
+  this.http.get(url, {
+    responseType: 'blob',
+    headers: {
+      Authorization: `Bearer ${token}`
+    }
+  }).subscribe({
+    next: (blob) => {
+      this.loading = false;
+
+      const file = new Blob([blob], { type: 'application/pdf' });
+      const downloadURL = window.URL.createObjectURL(file);
+
+      const a = document.createElement('a');
+      a.href = downloadURL;
+      a.download = `quotation_${this.quotation.id}.pdf`;
+      a.click();
+
+      window.URL.revokeObjectURL(downloadURL);
+      this.toaster.success('PDF downloaded ✅');
+    },
+    error: (err) => {
+      this.loading = false;
+      console.log("PDF Download Error:", err);
+      this.errorMsg = err?.error?.detail || 'Failed to download PDF.';
+    },
+  });
+}
 
   // ==========================
   // ✅ Clear
