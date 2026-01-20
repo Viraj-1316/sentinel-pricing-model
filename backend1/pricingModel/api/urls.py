@@ -77,8 +77,10 @@ urlpatterns = [
         processorUnitDetail.as_view(),
         name='processorRUD'
     ),
-        path('admin/users/', AdminUsersListView.as_view(), name='admin-users'),
-            path('admin/quotations/', AdminAllQuotationsView.as_view(), name='admin-quotations'),
+    path('admin/users/', AdminUsersListView.as_view(), name='admin-users'),
+    
+    path('admin/quotations/', AdminAllQuotationsView.as_view(), name='admin-quotations'),
+    
     path('admin/audit-logs/', AdminAuditLogsView.as_view(), name='admin-audit-logs'),
 
 

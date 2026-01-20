@@ -18,7 +18,6 @@ from rest_framework.response import Response
 from pricingModel.api.tasks import send_quotation_email_task
 from pricingModel.api.utils import generate_enterprise_quotation_pdf
 from io import BytesIO
-import requests
 from pricingModel.api.audit import create_audit_log   
 from pricingModel.api.serializers import (
     AI_ENABLEDserializer,
