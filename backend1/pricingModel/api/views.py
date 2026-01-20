@@ -73,7 +73,7 @@ class cameraSlabsCS(generics.ListCreateAPIView):
     serializer_class = cameraPricingSerializer
 
     def get_queryset(self):
-        return Component.objects.filter(category_id__name='camera')
+        return Component.objects.filter(category__name='Camera')
     
     def get_permissions(self):
         if self.request.method == "GET":
@@ -82,10 +82,10 @@ class cameraSlabsCS(generics.ListCreateAPIView):
         return [IsAuthenticated(), IsAdminUser()]
     
     def perform_create(self, serializer):
-        costing = serializer.validated_data.pop('costing')
+        costing = serializer.validated_data.pop('price')['costing']
 
         component = serializer.save(
-            category=Category.objects.get(name='camera')
+            category=Category.objects.get(name='Camera')
         )
 
         Price.objects.create(
@@ -256,7 +256,7 @@ class processorUnit(generics.ListCreateAPIView):
     
     def perform_create(self, serializer):
         
-        costing = serializer.validated_data.pop('costing')
+        costing = serializer.validated_data.pop('price')['costing']
         
         processor = serializer.save(
             category = Category.objects.get(name='Processor')
@@ -276,7 +276,7 @@ class  processorUnitDetail(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [IsAdminUser]
     
     def perform_update(self, serializer):
-        costing = serializer.validated_data.pop('costing', None)
+        costing = serializer.validated_data.pop('price', None)['costing']
 
         processor = serializer.save()
 

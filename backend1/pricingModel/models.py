@@ -61,7 +61,7 @@ class Price(models.Model):
     component = models.OneToOneField(Component, on_delete=models.CASCADE, related_name='price')
     
     def __str__(self):
-        return f"{self.costing} ({self.price.AI_feature})"
+        return f"{self.costing} ({self.component})"
 
    
 class UserPricing(models.Model):

@@ -137,14 +137,15 @@ class componentDetailSerializer(serializers.ModelSerializer):
 
 class cameraPricingSerializer(serializers.ModelSerializer):
     
-    total_costing = serializers.IntegerField(source='price.costing', read_only=True)
+    costing = serializers.IntegerField(source='price.costing')
     class Meta:
         
        model = Component
        fields = [
+           'id',
            'min_cammera',
            'max_cammera',
-           'total_costing'
+           'costing'
        ]        
 
 class storagePricingSerializer(serializers.ModelSerializer):
