@@ -39,19 +39,26 @@ class Component(models.Model):
         ordering = ["min_cammera"]
 
     def __str__(self):
-        if self.category.name == "AI" and self.AI_feature:
-            return self.AI_feature
+        try:
+            if self.category and self.category.name.lower() == "ai":
+                return self.AI_feature or "AI Component"
 
-        if self.category.name == "camera" and self.min_cammera is not None:
-            return f"{self.min_cammera} - {self.max_cammera} cameras"
+            if self.category and self.category.name.lower() == "camera":
+                min_cam = self.min_cammera or 0
+                max_cam = self.max_cammera or "∞"
+                return f"{min_cam} - {max_cam} cameras"
 
-        if self.category.name == "processor":
-            return f"{self.name}"
+            if self.category and self.category.name.lower() == "processor":
+                return self.name or "Processor Component"
 
-        if self.category.name == "storage":
-            return f"{self.storage_per_cam}GB/day"
+            if self.category and self.category.name.lower() == "storage":
+                return f"{self.storage_per_cam or 0} GB/day Storage"
 
-        return self.name
+            return self.name or f"Component #{self.id}"
+
+        except Exception:
+            return f"Component #{self.id}"
+
 
         
         

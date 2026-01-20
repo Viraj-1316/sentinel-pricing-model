@@ -107,8 +107,7 @@ class cameraSlabsCS(generics.ListCreateAPIView):
             component=component,
             costing=costing
         )
-    
-       
+     
 class cameraSlabRUD(generics.RetrieveUpdateDestroyAPIView):
     
     serializer_class = cameraPricingSerializer
@@ -122,7 +121,22 @@ class cameraSlabRUD(generics.RetrieveUpdateDestroyAPIView):
 
         return [IsAuthenticated(), IsAdminUser()]
     
+    def perform_update(self, serializer):
+        costing = serializer.validated_data.pop('price', None)['costing']
 
+        cameraPricing = serializer.save()
+
+        if costing is not None:
+            Price.objects.update_or_create(
+                component=cameraPricing,
+                defaults={'costing': costing}
+            )
+      
+    def perform_destroy(self, instance):
+        Price.objects.filter(component=instance).delete()
+        instance.delete()
+        
+        
 class aiFeaturesCL(generics.ListCreateAPIView):
     serializer_class = AI_ENABLEDserializer
     
@@ -260,7 +274,28 @@ class storageCosting(generics.ListCreateAPIView):
             costing=costing
         )
     
-        
+class storageCostingDetails(generics.RetrieveDestroyAPIView):
+    
+    serializer_class = storagePricingSerializer
+    
+    def get_queryset(self):
+        return Component.objects.filter(category__name= 'Storage')
+    
+    def perform_update(self, serializer):       
+        costing = serializer.validated_data.pop('price', None)['costing']
+
+        strogeDetails = serializer.save()
+
+        if costing is not None:
+            Price.objects.update_or_create(
+                component=strogeDetails,
+                defaults={'costing': costing}
+            )
+
+    def perform_destroy(self, instance):
+        Price.objects.filter(component=instance).delete()
+        instance.delete() 
+           
 class creatingCategory(generics.ListCreateAPIView):
     
     queryset = Category.objects.all()
