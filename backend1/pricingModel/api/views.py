@@ -99,7 +99,7 @@ class cameraSlabRUD(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = cameraPricingSerializer
 
     def get_queryset(self):
-        return Component.objects.filter(category__name='camera')
+        return Component.objects.filter(category__name='Camera')
     
     def get_permissions(self):
         if self.request.method == "GET":
@@ -120,7 +120,8 @@ class aiFeaturesCL(generics.ListCreateAPIView):
         return Component.objects.filter(category__name='AI')
     
     def perform_create(self, serializer):
-        costing = serializer.validated_data.pop('costing')
+        costing = serializer.validated_data.pop('price')['costing']
+
 
         component = serializer.save(
             category=Category.objects.get(name='AI')
@@ -146,34 +147,41 @@ class pricingCalculate(generics.ListCreateAPIView):
             storage_days = serializer.validated_data['storage_days']
             ai_features = serializer.validated_data.get('ai_features', [])
             storage = Component.objects.filter(category__name='Storage').first()
-            processor = serializer.validated_data['processor']
-
+            # as processor is not compulsary we use get method else we will direclty use the value of dict
+            processor = serializer.validated_data.get('processor')
+          
             pricing_range = Component.objects.filter(
-                category__name='camera',
+                category__name='Camera',
                 min_cammera__lte=cameras
             ).filter(
                 Q(max_cammera__gte=cameras) | Q(max_cammera__isnull=True)
             ).first()
 
             if not pricing_range:
-                pricing_range = Component.objects.filter(
-                    category__name='camera'
-                ).order_by('-min_cammera').first()
+                raise ValidationError("Camera pricing not configured")
+
+            if not hasattr(pricing_range, 'price'):
+                raise ValidationError("Camera price missing")
 
             camera_cost = pricing_range.price.costing
 
             ai_cost = sum(ai.price.costing for ai in ai_features)
+            
+            processor_cost = 0
+            if processor:
+                if not hasattr(processor, 'price'):
+                    raise ValidationError("Processor pricing not configured")
+                processor_cost = processor.price.costing
 
-            if not hasattr(processor, 'price'):
-                raise ValidationError("Processor pricing not configured")
-
-            processor_cost = processor.price.costing
+            if not storage:
+                raise ValidationError("Storage component not configured")
 
             if not hasattr(storage, 'price'):
                 raise ValidationError("Storage pricing not configured")
 
             storage_used = cameras * storage.storage_per_cam * storage_days
             storage_cost = storage_used * storage.price.costing
+
 
             total_cost = (
                 camera_cost +
@@ -193,7 +201,9 @@ class pricingCalculate(generics.ListCreateAPIView):
             )
 
             user_pricing.ai_features.set(ai_features)
-            user_pricing.processor.set(processor)
+            user_pricing.processor = processor
+            user_pricing.save()
+
 
 class UserQuotationList(generics.ListAPIView):
             serializer_class = QuotationSerializer

@@ -86,7 +86,7 @@ class userPricingSerializer(serializers.ModelSerializer):
 
 # chage is id is removed               
 class AI_ENABLEDserializer(serializers.ModelSerializer):
-        costing = serializers.IntegerField(source='price.costing', read_only=True)
+        costing = serializers.IntegerField(source='price.costing')
         class Meta:
             model = Component
             fields = ['id','AI_feature', 'costing']          
@@ -155,6 +155,7 @@ class storagePricingSerializer(serializers.ModelSerializer):
         
         model = Component
         fields = [
+                'id',
                 'storage_per_cam',
                 'storage_perDay',
                 'costing'
@@ -162,7 +163,7 @@ class storagePricingSerializer(serializers.ModelSerializer):
         
 class processorSerializer(serializers.ModelSerializer):
     
-    costing = serializers.IntegerField(source='price.costing', read_only = True)
+    costing = serializers.IntegerField(source='price.costing')
     
     class Meta:
         
