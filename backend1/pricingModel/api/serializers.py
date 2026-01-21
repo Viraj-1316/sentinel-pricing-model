@@ -76,13 +76,6 @@ class AdminQuotationSerializer(serializers.ModelSerializer):
     def get_ai_features(self, obj):
         return list(obj.ai_features.values("AI_feature", "costing"))
 
-
-# class Cammera_PricingSerializer(serializers.ModelSerializer):
-    
-#         class Meta:
-#             model = Cammera_Pricing
-#             fields = "__all__"
-
                         
 class userPricingSerializer(serializers.ModelSerializer):
 
@@ -136,6 +129,7 @@ class QuotationSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserPricing
         fields = [
+            "id",
             'cammera',
             'camera_cost',
             'ai_cost',

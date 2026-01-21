@@ -160,7 +160,35 @@ class aiFeaturesCL(generics.ListCreateAPIView):
             costing=costing
         )
 
+class aiFeaturesCLDetails(generics.RetrieveUpdateDestroyAPIView):
+    
+    serializer_class = cameraPricingSerializer
 
+    def get_queryset(self):
+        return Component.objects.filter(category__name='AI')
+    
+    def get_permissions(self):
+        if self.request.method == "GET":
+            return [IsAuthenticated()]
+
+        return [IsAuthenticated(), IsAdminUser()]
+    
+    def perform_update(self, serializer):
+        costing = serializer.validated_data.pop('price', None)['costing']
+
+        AICosting = serializer.save()
+
+        if costing is not None:
+            Price.objects.update_or_create(
+                component=AICosting,
+                defaults={'costing': costing}
+            )
+      
+    def perform_destroy(self, instance):
+        Price.objects.filter(component=instance).delete()
+        instance.delete()
+
+        
 class pricingCalculate(generics.ListCreateAPIView):
         serializer_class = userPricingSerializer
         permission_classes = [IsAuthenticated]

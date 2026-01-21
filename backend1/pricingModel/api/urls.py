@@ -16,6 +16,7 @@ from pricingModel.api.views import (
     AdminUsersListView,
     AdminAllQuotationsView,
     AdminAuditLogsView,
+    aiFeaturesCLDetails
 )
 
 urlpatterns = [
@@ -33,6 +34,11 @@ urlpatterns = [
     path(
         'ai-feature/',
         aiFeaturesCL.as_view(),
+        name='ai'
+    ),
+    path(
+        'ai-feature/<>int:pk',
+        aiFeaturesCLDetails.as_view(),
         name='ai'
     ),
     path(
