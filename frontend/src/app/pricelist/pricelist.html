@@ -538,7 +538,7 @@
               <tbody>
                 <tr *ngFor="let s of storageList; trackBy: trackById">
                   <td class="fw-semibold">{{ s.storage_per_cam }}</td>
-                  <td>{{ s.storage_perDay }}</td>
+                  <td>{{ s.storage_perDay }} GB</td>
                   <td class="text-end fw-bold">₹ {{ s.costing }}</td>
 
                   <td class="text-end">
@@ -569,3 +569,5 @@
 
   </div>
 </div>
+
+
