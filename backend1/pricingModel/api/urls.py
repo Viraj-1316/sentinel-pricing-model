@@ -38,7 +38,7 @@ urlpatterns = [
         name='ai'
     ),
     path(
-        'ai-feature/<>int:pk',
+        'ai-feature/<int:pk>/',
         aiFeaturesCLDetails.as_view(),
         name='ai'
     ),

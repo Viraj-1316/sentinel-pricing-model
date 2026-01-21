@@ -45,9 +45,21 @@ export interface StorageCosting {
   costing: number;
 }
 
+/** ✅ Response type for Pricingcalculation API */
+export interface PricingCalculationResponse {
+  camera_cost: number;
+  storage_cost: number;
+  processor_cost: number;
+  ai_cost: number;
+  total_costing: number;
+
+  // optional fields if backend sends extra info
+  slab_id?: number | null;
+  slab_range?: string | null;
+}
+
 type RightTab = 'camera' | 'ai' | 'compute' | 'storage' | 'preview';
 type WizardStep = 1 | 2 | 3 | 4 | 5;
-
 
 @Component({
   selector: 'app-user-requirements',
@@ -57,82 +69,81 @@ type WizardStep = 1 | 2 | 3 | 4 | 5;
   styleUrl: './user-requirements.css',
 })
 export class UserRequirements implements OnInit {
+  // ==========================
+  // ✅ Wizard step UI
+  // ==========================
+  step: WizardStep = 1;
 
-step: WizardStep = 1;
+  // ✅ which step is allowed
+  maxStepReached: WizardStep = 1;
 
-// ✅ which step is allowed
-maxStepReached: WizardStep = 1;
-
-goToStep(s: WizardStep) {
-  // allow only already reached steps (enterprise UX)
-  if (s <= this.maxStepReached) {
-    this.step = s;
-    this.syncRightPanel();
-  }
-}
-
-nextStep() {
-  // validation per step
-  const ok = this.validateStep(this.step);
-  if (!ok) return;
-
-  if (this.step < 5) {
-    this.step = (this.step + 1) as WizardStep;
-    if (this.step > this.maxStepReached) this.maxStepReached = this.step;
-    this.syncRightPanel();
-  }
-}
-
-prevStep() {
-  if (this.step > 1) {
-    this.step = (this.step - 1) as WizardStep;
-    this.syncRightPanel();
-  }
-}
-
-// ✅ maps step → right tab
-syncRightPanel() {
-  if (this.step === 1) this.activeTab = 'camera';
-  if (this.step === 2) this.activeTab = 'storage';
-  if (this.step === 3) this.activeTab = 'compute';
-  if (this.step === 4) this.activeTab = 'ai';
-  if (this.step === 5) this.activeTab = 'preview';
-}
-validateStep(step: WizardStep): boolean {
-  if (step === 1) {
-    const cam = this.form.get('cammera');
-    if (!cam || cam.invalid) {
-      cam?.markAsTouched();
-      this.toaster.error('Please enter valid camera count.');
-      return false;
+  goToStep(s: WizardStep) {
+    if (s <= this.maxStepReached) {
+      this.step = s;
+      this.syncRightPanel();
     }
-    return true;
   }
 
-  if (step === 2) {
-    const days = this.form.get('storage_days');
-    if (!days || days.invalid) {
-      days?.markAsTouched();
-      this.toaster.error('Please enter valid storage days.');
-      return false;
+  nextStep() {
+    const ok = this.validateStep(this.step);
+    if (!ok) return;
+
+    if (this.step < 5) {
+      this.step = (this.step + 1) as WizardStep;
+      if (this.step > this.maxStepReached) this.maxStepReached = this.step;
+      this.syncRightPanel();
     }
+  }
+
+  prevStep() {
+    if (this.step > 1) {
+      this.step = (this.step - 1) as WizardStep;
+      this.syncRightPanel();
+    }
+  }
+
+  // ✅ maps step → right tab
+  syncRightPanel() {
+    if (this.step === 1) this.activeTab = 'camera';
+    if (this.step === 2) this.activeTab = 'storage';
+    if (this.step === 3) this.activeTab = 'compute';
+    if (this.step === 4) this.activeTab = 'ai';
+    if (this.step === 5) this.activeTab = 'preview';
+  }
+
+  validateStep(step: WizardStep): boolean {
+    if (step === 1) {
+      const cam = this.form.get('cammera');
+      if (!cam || cam.invalid) {
+        cam?.markAsTouched();
+        this.toaster.error('Please enter valid camera count.');
+        return false;
+      }
+      return true;
+    }
+
+    if (step === 2) {
+      const days = this.form.get('storage_days');
+      if (!days || days.invalid) {
+        days?.markAsTouched();
+        this.toaster.error('Please enter valid storage days.');
+        return false;
+      }
+      return true;
+    }
+
+    // step 3 compute optional
+    if (step === 3) return true;
+
+    // step 4 AI optional
+    if (step === 4) return true;
+
     return true;
   }
 
-  if (step === 3) {
-    // optional requirement
-    // allow skip cpu/gpu (but recommended)
-    return true;
-  }
-
-  if (step === 4) {
-    // AI selection optional
-    return true;
-  }
-
-  return true;
-}
-
+  // ==========================
+  // ✅ Form & state
+  // ==========================
   form: FormGroup;
 
   loading = false;
@@ -149,7 +160,13 @@ validateStep(step: WizardStep): boolean {
 
   quotation: any = null;
 
+  // ✅ AI local cost
   totalAiCost = 0;
+
+  // ✅ Cost breakup returned by API
+  costBreakup: PricingCalculationResponse | null = null;
+
+  // ✅ total cost displayed
   totalCost: number | null = null;
 
   costCalculated = false;
@@ -161,7 +178,9 @@ validateStep(step: WizardStep): boolean {
   // ✅ camera slab highlight
   selectedCameraSlab: CameraPricingSlab | null = null;
 
+  // ==========================
   // ✅ API endpoints
+  // ==========================
   private CAMERA_PRICING_API = 'http://127.0.0.1:8001/pricing-Model/cameraPricing/';
   private AI_API = 'http://127.0.0.1:8001/pricing-Model/ai-feature/';
   private HARDWARE_API = 'http://127.0.0.1:8001/pricing-Model/processorUnit/';
@@ -180,7 +199,7 @@ validateStep(step: WizardStep): boolean {
     this.form = this.fb.group({
       cammera: ['', [Validators.required, Validators.min(1)]],
       storage_days: [30, [Validators.required, Validators.min(1)]],
-      hardware_id: [null],
+      processor: [null],
       ai_features: [[]],
     });
   }
@@ -191,14 +210,14 @@ validateStep(step: WizardStep): boolean {
     this.fetchHardwarePricing();
     this.fetchStorageCosting();
 
-    // ✅ camera input changes: highlight slab + show camera tab
+    // ✅ camera input changes: highlight slab
     this.form.get('cammera')?.valueChanges.subscribe((value: any) => {
       const cam = Number(value || 0);
       this.selectedCameraSlab = this.findMatchingSlab(cam);
       if (!this.quotationGenerated) this.activeTab = 'camera';
     });
 
-    // ✅ AI selection changes: update total + show ai tab
+    // ✅ AI selection changes: update local AI cost
     this.form.get('ai_features')?.valueChanges.subscribe((selectedIds: number[]) => {
       this.totalAiCost = this.calculateAiCost(selectedIds || []);
       if ((selectedIds || []).length > 0 && !this.quotationGenerated) this.activeTab = 'ai';
@@ -210,6 +229,7 @@ validateStep(step: WizardStep): boolean {
       this.quotationGenerated = false;
       this.quotation = null;
       this.totalCost = null;
+      this.costBreakup = null;
       this.errorMsg = null;
     });
   }
@@ -265,7 +285,11 @@ validateStep(step: WizardStep): boolean {
         .filter(s => s.max_cammera === null || Number(s.max_cammera) >= cameras)
         .sort((a, b) => Number(a.min_cammera) - Number(b.min_cammera))[0] || null;
 
-    return slab ?? this.cameraPricing.sort((a, b) => Number(b.min_cammera) - Number(a.min_cammera))[0] ?? null;
+    return (
+      slab ??
+      this.cameraPricing.sort((a, b) => Number(b.min_cammera) - Number(a.min_cammera))[0] ??
+      null
+    );
   }
 
   // ==========================
@@ -287,7 +311,9 @@ validateStep(step: WizardStep): boolean {
     const current: number[] = this.form.value.ai_features || [];
 
     const updated = checked
-      ? (current.includes(id) ? current : [...current, id])
+      ? current.includes(id)
+        ? current
+        : [...current, id]
       : current.filter(x => x !== id);
 
     this.form.patchValue({ ai_features: updated });
@@ -313,10 +339,8 @@ validateStep(step: WizardStep): boolean {
   // ✅ Hardware Pricing
   // ==========================
   fetchHardwarePricing(): void {
-
     this.http.get<HardwarePricing[]>(this.HARDWARE_API).subscribe({
       next: (res) => {
-        console.log('✅ Hardware pricing loaded');
         this.hardwareList = res || [];
       },
       error: () => (this.hardwareList = []),
@@ -336,9 +360,8 @@ validateStep(step: WizardStep): boolean {
 
   selectHardware(hw: HardwarePricing): void {
     this.selectedHardware = hw;
-    this.form.patchValue({ hardware_id: hw.id });
+    this.form.patchValue({ processor: hw.id });
 
-    // open compute tab when selected
     if (!this.quotationGenerated) this.activeTab = 'compute';
   }
 
@@ -353,11 +376,12 @@ validateStep(step: WizardStep): boolean {
   }
 
   // ==========================
-  // ✅ Step 1: Calculate Cost
+  // ✅ Step 1: Calculate Cost (API returns breakup)
   // ==========================
   calculateCost(): void {
     this.errorMsg = null;
     this.totalCost = null;
+    this.costBreakup = null;
 
     this.costCalculated = false;
     this.quotationGenerated = false;
@@ -372,20 +396,38 @@ validateStep(step: WizardStep): boolean {
     const payload = {
       cammera: Number(this.form.value.cammera),
       storage_days: Number(this.form.value.storage_days),
-      hardware_id: this.form.value.hardware_id,
+      processor: this.form.value.processor, // can be null
       ai_features: this.form.value.ai_features || [],
     };
 
     this.loading = true;
 
-    this.http.post(this.QUOTE_API, payload).subscribe({
-      next: (res: any) => {
+    this.http.post<PricingCalculationResponse>(this.QUOTE_API, payload).subscribe({
+      next: (res) => {
         this.loading = false;
-        this.totalCost = res?.total_costing ?? null;
+
+        // ✅ store breakup
+        this.costBreakup = {
+          camera_cost: Number(res?.camera_cost || 0),
+          storage_cost: Number(res?.storage_cost || 0),
+          processor_cost: Number(res?.processor_cost || 0),
+          ai_cost: Number(res?.ai_cost || 0),
+          total_costing: Number(res?.total_costing || 0),
+          slab_id: res?.slab_id ?? null,
+          slab_range: res?.slab_range ?? null,
+        };
+
+        this.totalCost = this.costBreakup.total_costing;
         this.costCalculated = true;
 
         this.toaster.success('Cost calculated ✅');
-        this.activeTab = 'camera';
+
+        // ✅ move to preview tab automatically (enterprise UX)
+        this.activeTab = 'preview';
+
+        // ✅ also allow step 5 (preview)
+        if (this.maxStepReached < 5) this.maxStepReached = 5;
+        this.step = 5;
       },
       error: (err) => {
         this.loading = false;
@@ -418,10 +460,13 @@ validateStep(step: WizardStep): boolean {
           return;
         }
 
+        // ✅ if your API returns latest quotation first
         this.quotation = res[0];
-        this.totalCost = this.quotation?.total_costing ?? this.totalCost;
-        this.quotationGenerated = true;
 
+        // If quotation has total_costing, prefer it
+        this.totalCost = this.quotation?.total_costing ?? this.totalCost;
+
+        this.quotationGenerated = true;
         this.activeTab = 'preview';
         this.toaster.success('Quotation generated ✅');
       },
@@ -453,6 +498,7 @@ validateStep(step: WizardStep): boolean {
     }).subscribe({
       next: (blob) => {
         this.loading = false;
+
         const file = new Blob([blob], { type: 'application/pdf' });
         const downloadURL = window.URL.createObjectURL(file);
 
@@ -502,12 +548,16 @@ validateStep(step: WizardStep): boolean {
   clearQuotation(): void {
     this.quotation = null;
     this.totalCost = null;
+    this.costBreakup = null;
     this.errorMsg = null;
 
     this.costCalculated = false;
     this.quotationGenerated = false;
 
+    this.step = 1;
+    this.maxStepReached = 1;
     this.activeTab = 'camera';
+
     this.toaster.info('Cleared ✅');
   }
 }

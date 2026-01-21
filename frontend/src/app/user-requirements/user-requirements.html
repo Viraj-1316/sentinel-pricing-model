@@ -407,7 +407,7 @@
             </div>
 
             <!-- Summary tiles -->
-            <div class="summary-grid mb-4">
+            <div class="summary-grid mb-4" *ngIf>
               <div class="summary-tile">
                 <div class="label">Cameras</div>
                 <div class="value">{{ form.value.cammera || 0 }}</div>
@@ -631,56 +631,157 @@
             <!-- ========================= -->
             <!-- ✅ PREVIEW TAB -->
             <!-- ========================= -->
-            <div *ngIf="activeTab==='preview'" class="tab-panel">
+          <!-- ========================= -->
+<!-- ✅ PREVIEW TAB (FULL BREAKUP) -->
+<!-- ========================= -->
+<!-- ========================= -->
+<!-- ✅ PREVIEW TAB (INVOICE STYLE) -->
+<!-- ========================= -->
+<div *ngIf="activeTab==='preview'" class="tab-panel">
 
-              <!-- Empty -->
-              <div *ngIf="!quotationGenerated" class="text-center py-5">
-                <div class="display-6 text-muted">
-                  <i class="bi bi-file-earmark-text"></i>
-                </div>
-                <div class="fw-semibold mt-2">Quotation preview not generated</div>
-                <div class="text-muted small">
-                  Complete wizard → calculate cost → generate quotation.
-                </div>
+  <!-- ✅ If not calculated yet -->
+  <div *ngIf="!costCalculated || !costBreakup" class="text-center py-5">
+    <div class="display-6 text-muted">
+      <i class="bi bi-receipt"></i>
+    </div>
+    <div class="fw-semibold mt-2">Preview not available</div>
+    <div class="text-muted small">
+      Complete wizard → click <b>Calculate Cost</b>.
+    </div>
+  </div>
+
+  <!-- ✅ Preview Table -->
+  <div *ngIf="costCalculated && costBreakup">
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <div>
+        <div class="fw-black fs-5">Quotation Preview</div>
+        <div class="text-muted small">Cost breakup based on selected inputs.</div>
+      </div>
+      <span class="badge rounded-pill text-bg-light border">
+        Total: ₹ {{ costBreakup.total_costing || 0 }}
+      </span>
+    </div>
+
+    <div class="table-responsive">
+      <table class="table align-middle mb-0">
+        <thead class="table-light">
+          <tr>
+            <th style="width:70px;">#</th>
+            <th>Requirement</th>
+            <th>Input</th>
+            <th class="text-end">Cost</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          <!-- ✅ Cameras -->
+          <tr>
+            <td class="text-muted">1</td>
+            <td class="fw-semibold">Cameras</td>
+            <td>
+              <span class="badge text-bg-light border">
+                {{ form.value.cammera || 0 }} Cameras
+              </span>
+            </td>
+            <td class="text-end fw-bold">₹ {{ costBreakup.camera_cost || 0 }}</td>
+          </tr>
+
+          <!-- ✅ Storage -->
+          <tr>
+            <td class="text-muted">2</td>
+            <td class="fw-semibold">Storage</td>
+            <td>
+              <span class="badge text-bg-light border">
+                {{ form.value.storage_days || 0 }} Days
+              </span>
+            </td>
+            <td class="text-end fw-bold">₹ {{ costBreakup.storage_cost || 0 }}</td>
+          </tr>
+
+          <!-- ✅ Compute -->
+          <tr>
+            <td class="text-muted">3</td>
+            <td class="fw-semibold">Compute</td>
+            <td>
+              <span *ngIf="selectedHardware" class="badge text-bg-light border">
+                {{ selectedHardware.name }}
+              </span>
+              <span *ngIf="!selectedHardware" class="text-muted small">
+                Not Selected
+              </span>
+            </td>
+            <td class="text-end fw-bold">₹ {{ costBreakup.processor_cost || 0 }}</td>
+          </tr>
+
+          <!-- ✅ AI -->
+          <tr>
+            <td class="text-muted">4</td>
+            <td class="fw-semibold">AI Features</td>
+
+            <td>
+              <div *ngIf="selectedFeatures.length > 0" class="d-flex flex-wrap gap-2">
+                <span class="badge text-bg-light border"
+                      *ngFor="let ai of selectedFeatures">
+                  {{ ai.AI_feature }}
+                </span>
               </div>
 
-              <!-- Quotation -->
-              <div *ngIf="quotationGenerated && quotation">
+              <span *ngIf="selectedFeatures.length === 0" class="text-muted small">
+                No AI selected
+              </span>
+            </td>
 
-                <div class="metric-grid mb-4">
-                  <div class="metric-card">
-                    <div class="text-muted small">Cameras</div>
-                    <div class="fw-black fs-4">{{ quotation.cammera }}</div>
-                  </div>
+            <td class="text-end fw-bold">₹ {{ costBreakup.ai_cost || 0 }}</td>
+          </tr>
 
-                  <div class="metric-card">
-                    <div class="text-muted small">Camera Cost</div>
-                    <div class="fw-black fs-4">₹ {{ quotation.camera_cost }}</div>
-                  </div>
+          <!-- ✅ Grand Total -->
+          <tr class="table-success">
+            <td></td>
+            <td colspan="2" class="fw-black text-uppercase">Grand Total</td>
+            <td class="text-end fw-black fs-5">
+              ₹ {{ costBreakup.total_costing || 0 }}
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
 
-                  <div class="metric-card">
-                    <div class="text-muted small">Grand Total</div>
-                    <div class="fw-black fs-4 text-success">₹ {{ quotation.total_costing }}</div>
-                  </div>
-                </div>
+    <!-- ✅ Buttons ONLY IN PREVIEW -->
+    <div class="d-flex justify-content-end gap-2 flex-wrap mt-4">
 
-                <div class="d-flex justify-content-end gap-2 flex-wrap">
-                  <button class="btn btn-outline-secondary" type="button" (click)="clearQuotation()">
-                    <i class="bi bi-x-circle me-1"></i> Clear
-                  </button>
+      <button class="btn btn-outline-secondary" type="button" (click)="clearQuotation()">
+        <i class="bi bi-x-circle me-1"></i> Clear
+      </button>
 
-                  <button class="btn btn-success" type="button" (click)="downloadPdf()">
-                    <i class="bi bi-download me-1"></i> PDF
-                  </button>
+      <button class="btn btn-outline-primary" type="button"
+              [disabled]="loading"
+              (click)="calculateCost()">
+        <i class="bi bi-calculator me-1"></i> Recalculate
+      </button>
 
-                  <button class="btn btn-success" type="button" (click)="sendEmail()">
-                    <i class="bi bi-envelope me-1"></i> Email
-                  </button>
-                </div>
+      <button class="btn btn-success" type="button"
+              [disabled]="loading || !costCalculated"
+              (click)="generateQuotation()">
+        <i class="bi bi-file-earmark-text me-1"></i> Generate Quotation
+      </button>
 
-              </div>
+      <button class="btn btn-success" type="button"
+              [disabled]="!quotationGenerated"
+              (click)="downloadPdf()">
+        <i class="bi bi-download me-1"></i> PDF
+      </button>
 
-            </div>
+      <button class="btn btn-success" type="button"
+              [disabled]="!quotationGenerated"
+              (click)="sendEmail()">
+        <i class="bi bi-envelope me-1"></i> Email
+      </button>
+
+    </div>
+
+  </div>
+</div>
 
           </div>
         </div>

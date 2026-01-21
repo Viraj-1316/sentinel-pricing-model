@@ -519,3 +519,11 @@ body[data-theme="dark"] .step-chip{
   overflow: auto;
   padding-right: 6px;
 }
+.metric-card.highlight {
+  border: 2px solid rgba(25, 135, 84, 0.25);
+  box-shadow: 0 10px 26px rgba(25, 135, 84, 0.10);
+}
+
+.metric-card.highlight .text-success {
+  letter-spacing: -0.3px;
+}
