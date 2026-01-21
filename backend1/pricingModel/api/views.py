@@ -237,7 +237,7 @@ class pricingCalculate(generics.ListCreateAPIView):
 
             storage_used = cameras * storage.storage_per_cam * storage_days
             storage_cost = storage_used * storage.price.costing
-
+            storage_used_user = storage_used * 19
 
             total_cost = (
                 camera_cost +
@@ -253,7 +253,8 @@ class pricingCalculate(generics.ListCreateAPIView):
                 processor_cost=processor_cost,
                 storage_cost=storage_cost,
                 total_costing=total_cost,
-                storage_days=storage_days
+                storage_days=storage_days,
+                storage_used_user = storage_used_user
             )
 
             user_pricing.ai_features.set(ai_features)

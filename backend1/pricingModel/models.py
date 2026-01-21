@@ -76,7 +76,7 @@ class UserPricing(models.Model):
         ai_features = models.ManyToManyField(Component, blank=True, related_name='user_pricings')
         processor = models.ForeignKey(Component, on_delete=models.SET_NULL, related_name='user_processing_unit', null=True)
         storage = models.ForeignKey(Component, on_delete=models.SET_NULL, related_name='user_storage', null=True)
-        
+        storage_used_user = models.IntegerField(default=19)
         storage_days = models.IntegerField(default=1)
         camera_cost = models.IntegerField(default=0)
         ai_cost = models.IntegerField(default=0)
