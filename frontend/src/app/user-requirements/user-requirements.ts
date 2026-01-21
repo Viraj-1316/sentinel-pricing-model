@@ -5,6 +5,7 @@ import {
   FormGroup,
   ReactiveFormsModule,
   Validators,
+  FormsModule,
 } from '@angular/forms';
 import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { Router, RouterLink } from '@angular/router';
@@ -22,18 +23,116 @@ export interface CameraPricingSlab {
   id: number;
   min_cammera: number;
   max_cammera: number | null;
-  total_costing: number;
+  costing: number;
+  total_costing?: number;
 }
 
-type RightTab = 'camera' | 'ai' | 'preview';
+export interface HardwarePricing {
+  id: number;
+  name: string;
+  CPU: string;
+  CPUcores: number;
+  GPU: string;
+  GPUcores: number;
+  ram_required: number;
+  costing: number;
+}
+
+export interface StorageCosting {
+  id: number;
+  storage_per_cam: number;
+  storage_perDay: number;
+  costing: number;
+}
+
+type RightTab = 'camera' | 'ai' | 'compute' | 'storage' | 'preview';
+type WizardStep = 1 | 2 | 3 | 4 | 5;
+
 
 @Component({
   selector: 'app-user-requirements',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, HttpClientModule, RouterLink],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, HttpClientModule, RouterLink],
   templateUrl: './user-requirements.html',
+  styleUrl: './user-requirements.css',
 })
 export class UserRequirements implements OnInit {
+
+step: WizardStep = 1;
+
+// ✅ which step is allowed
+maxStepReached: WizardStep = 1;
+
+goToStep(s: WizardStep) {
+  // allow only already reached steps (enterprise UX)
+  if (s <= this.maxStepReached) {
+    this.step = s;
+    this.syncRightPanel();
+  }
+}
+
+nextStep() {
+  // validation per step
+  const ok = this.validateStep(this.step);
+  if (!ok) return;
+
+  if (this.step < 5) {
+    this.step = (this.step + 1) as WizardStep;
+    if (this.step > this.maxStepReached) this.maxStepReached = this.step;
+    this.syncRightPanel();
+  }
+}
+
+prevStep() {
+  if (this.step > 1) {
+    this.step = (this.step - 1) as WizardStep;
+    this.syncRightPanel();
+  }
+}
+
+// ✅ maps step → right tab
+syncRightPanel() {
+  if (this.step === 1) this.activeTab = 'camera';
+  if (this.step === 2) this.activeTab = 'storage';
+  if (this.step === 3) this.activeTab = 'compute';
+  if (this.step === 4) this.activeTab = 'ai';
+  if (this.step === 5) this.activeTab = 'preview';
+}
+validateStep(step: WizardStep): boolean {
+  if (step === 1) {
+    const cam = this.form.get('cammera');
+    if (!cam || cam.invalid) {
+      cam?.markAsTouched();
+      this.toaster.error('Please enter valid camera count.');
+      return false;
+    }
+    return true;
+  }
+
+  if (step === 2) {
+    const days = this.form.get('storage_days');
+    if (!days || days.invalid) {
+      days?.markAsTouched();
+      this.toaster.error('Please enter valid storage days.');
+      return false;
+    }
+    return true;
+  }
+
+  if (step === 3) {
+    // optional requirement
+    // allow skip cpu/gpu (but recommended)
+    return true;
+  }
+
+  if (step === 4) {
+    // AI selection optional
+    return true;
+  }
+
+  return true;
+}
+
   form: FormGroup;
 
   loading = false;
@@ -42,25 +141,31 @@ export class UserRequirements implements OnInit {
   aiFeatures: AIEnabled[] = [];
   cameraPricing: CameraPricingSlab[] = [];
 
+  hardwareList: HardwarePricing[] = [];
+  storageList: StorageCosting[] = [];
+
+  selectedHardware: HardwarePricing | null = null;
+  hardwareSearch = '';
+
   quotation: any = null;
 
-  // ✅ live frontend totals
   totalAiCost = 0;
   totalCost: number | null = null;
 
-  // ✅ enterprise flow flags
   costCalculated = false;
   quotationGenerated = false;
 
-  // ✅ right panel tab
+  // ✅ Right panel tabs
   activeTab: RightTab = 'camera';
 
-  // ✅ show selected slab for camera pricing table highlight
+  // ✅ camera slab highlight
   selectedCameraSlab: CameraPricingSlab | null = null;
 
   // ✅ API endpoints
   private CAMERA_PRICING_API = 'http://127.0.0.1:8001/pricing-Model/cameraPricing/';
   private AI_API = 'http://127.0.0.1:8001/pricing-Model/ai-feature/';
+  private HARDWARE_API = 'http://127.0.0.1:8001/pricing-Model/processorUnit/';
+  private STORAGE_API = 'http://127.0.0.1:8001/pricing-Model/storage-costing/';
   private QUOTE_API = 'http://127.0.0.1:8001/pricing-Model/Pricingcalculation/';
   private QUOTATION_API = 'http://127.0.0.1:8001/pricing-Model/user-quotations/';
 
@@ -74,6 +179,8 @@ export class UserRequirements implements OnInit {
   ) {
     this.form = this.fb.group({
       cammera: ['', [Validators.required, Validators.min(1)]],
+      storage_days: [30, [Validators.required, Validators.min(1)]],
+      hardware_id: [null],
       ai_features: [[]],
     });
   }
@@ -81,26 +188,23 @@ export class UserRequirements implements OnInit {
   ngOnInit(): void {
     this.fetchCameraPricing();
     this.fetchAIFeatures();
+    this.fetchHardwarePricing();
+    this.fetchStorageCosting();
 
-    // ✅ when AI checkbox changes -> update AI total + switch tab
-    this.form.get('ai_features')?.valueChanges.subscribe((selectedIds: number[]) => {
-      this.totalAiCost = this.calculateAiCost(selectedIds || []);
-      // enterprise: if user selects features, show AI tab
-      if ((selectedIds || []).length > 0 && !this.quotationGenerated) {
-        this.activeTab = 'ai';
-      }
-    });
-
-    // ✅ when camera count changes -> show camera tab + highlight slab
+    // ✅ camera input changes: highlight slab + show camera tab
     this.form.get('cammera')?.valueChanges.subscribe((value: any) => {
       const cam = Number(value || 0);
       this.selectedCameraSlab = this.findMatchingSlab(cam);
-      if (!this.quotationGenerated) {
-        this.activeTab = 'camera';
-      }
+      if (!this.quotationGenerated) this.activeTab = 'camera';
     });
 
-    // ✅ if user changes anything after calculating -> reset flow
+    // ✅ AI selection changes: update total + show ai tab
+    this.form.get('ai_features')?.valueChanges.subscribe((selectedIds: number[]) => {
+      this.totalAiCost = this.calculateAiCost(selectedIds || []);
+      if ((selectedIds || []).length > 0 && !this.quotationGenerated) this.activeTab = 'ai';
+    });
+
+    // ✅ reset flow if user edits anything
     this.form.valueChanges.subscribe(() => {
       this.costCalculated = false;
       this.quotationGenerated = false;
@@ -122,6 +226,10 @@ export class UserRequirements implements OnInit {
     return !!(c && c.invalid && (c.dirty || c.touched));
   }
 
+  trackById(_: number, item: any) {
+    return item?.id;
+  }
+
   // ==========================
   // ✅ Navigation
   // ==========================
@@ -129,19 +237,9 @@ export class UserRequirements implements OnInit {
     this.router.navigateByUrl('/dashboard');
   }
 
-  async PromiseLogout() {
-    const ok = await this.confirm.open('Confirmation', 'Are you sure you want to logout?');
-    if (ok) {
-      this.toaster.success('Logged out successfully');
-      this.auth.logout();
-    }
-  }
-
   async onback() {
     const ok = await this.confirm.open('Confirmation', 'Want to go back to Dashboard?');
-    if (ok) {
-      this.back();
-    }
+    if (ok) this.back();
   }
 
   // ==========================
@@ -154,24 +252,19 @@ export class UserRequirements implements OnInit {
         const cam = Number(this.form.value.cammera || 0);
         this.selectedCameraSlab = this.findMatchingSlab(cam);
       },
-      error: () => {
-        // not blocking flow, just inform
-        console.log('❌ Failed to load camera pricing');
-      },
+      error: () => console.log('❌ Failed to load camera pricing'),
     });
   }
 
   private findMatchingSlab(cameras: number): CameraPricingSlab | null {
     if (!cameras || this.cameraPricing.length === 0) return null;
 
-    // match min <= cameras and (max >= cameras OR max null)
     const slab =
       this.cameraPricing
         .filter(s => Number(s.min_cammera) <= cameras)
         .filter(s => s.max_cammera === null || Number(s.max_cammera) >= cameras)
         .sort((a, b) => Number(a.min_cammera) - Number(b.min_cammera))[0] || null;
 
-    // if none found, pick highest slab (fallback enterprise)
     return slab ?? this.cameraPricing.sort((a, b) => Number(b.min_cammera) - Number(a.min_cammera))[0] ?? null;
   }
 
@@ -193,11 +286,16 @@ export class UserRequirements implements OnInit {
     const checked = (event.target as HTMLInputElement).checked;
     const current: number[] = this.form.value.ai_features || [];
 
-    let updated: number[];
-    if (checked) updated = current.includes(id) ? current : [...current, id];
-    else updated = current.filter(x => x !== id);
+    const updated = checked
+      ? (current.includes(id) ? current : [...current, id])
+      : current.filter(x => x !== id);
 
     this.form.patchValue({ ai_features: updated });
+  }
+
+  removeFeature(id: number): void {
+    const current: number[] = this.form.value.ai_features || [];
+    this.form.patchValue({ ai_features: current.filter(x => x !== id) });
   }
 
   private calculateAiCost(selectedIds: number[]): number {
@@ -207,10 +305,52 @@ export class UserRequirements implements OnInit {
   }
 
   get selectedFeatures(): AIEnabled[] {
-  const ids: number[] = this.form.value.ai_features || [];
-  return this.aiFeatures.filter(ai => ids.includes(ai.id));
-}
+    const ids: number[] = this.form.value.ai_features || [];
+    return this.aiFeatures.filter(ai => ids.includes(ai.id));
+  }
 
+  // ==========================
+  // ✅ Hardware Pricing
+  // ==========================
+  fetchHardwarePricing(): void {
+
+    this.http.get<HardwarePricing[]>(this.HARDWARE_API).subscribe({
+      next: (res) => {
+        console.log('✅ Hardware pricing loaded');
+        this.hardwareList = res || [];
+      },
+      error: () => (this.hardwareList = []),
+    });
+  }
+
+  filteredHardwareList(): HardwarePricing[] {
+    const q = (this.hardwareSearch || '').toLowerCase().trim();
+    if (!q) return this.hardwareList;
+
+    return this.hardwareList.filter(hw =>
+      (hw.name || '').toLowerCase().includes(q) ||
+      (hw.CPU || '').toLowerCase().includes(q) ||
+      (hw.GPU || '').toLowerCase().includes(q)
+    );
+  }
+
+  selectHardware(hw: HardwarePricing): void {
+    this.selectedHardware = hw;
+    this.form.patchValue({ hardware_id: hw.id });
+
+    // open compute tab when selected
+    if (!this.quotationGenerated) this.activeTab = 'compute';
+  }
+
+  // ==========================
+  // ✅ Storage Costing
+  // ==========================
+  fetchStorageCosting(): void {
+    this.http.get<StorageCosting[]>(this.STORAGE_API).subscribe({
+      next: (res) => (this.storageList = res || []),
+      error: () => (this.storageList = []),
+    });
+  }
 
   // ==========================
   // ✅ Step 1: Calculate Cost
@@ -219,18 +359,20 @@ export class UserRequirements implements OnInit {
     this.errorMsg = null;
     this.totalCost = null;
 
-    // reset next step
     this.costCalculated = false;
     this.quotationGenerated = false;
     this.quotation = null;
 
     if (this.form.invalid) {
       this.form.markAllAsTouched();
+      this.toaster.error('Please fill required fields.');
       return;
     }
 
     const payload = {
       cammera: Number(this.form.value.cammera),
+      storage_days: Number(this.form.value.storage_days),
+      hardware_id: this.form.value.hardware_id,
       ai_features: this.form.value.ai_features || [],
     };
 
@@ -239,30 +381,29 @@ export class UserRequirements implements OnInit {
     this.http.post(this.QUOTE_API, payload).subscribe({
       next: (res: any) => {
         this.loading = false;
-
         this.totalCost = res?.total_costing ?? null;
         this.costCalculated = true;
 
-        this.toaster.success('Cost calculated successfully ✅');
-        // enterprise: after cost calculation, show camera tab (pricing justification)
+        this.toaster.success('Cost calculated ✅');
         this.activeTab = 'camera';
       },
       error: (err) => {
         this.loading = false;
-        if (err?.error?.cammera) this.errorMsg = err.error.cammera;
-        else this.errorMsg = err?.error?.detail || 'Failed to calculate cost.';
+        this.errorMsg = err?.error?.detail || 'Failed to calculate cost.';
+        this.toaster.error('Cost calculation failed ❌');
       },
     });
   }
 
   // ==========================
-  // ✅ Step 2: Generate Quotation -> auto open Preview tab
+  // ✅ Step 2: Generate Quotation
   // ==========================
   generateQuotation(): void {
     this.errorMsg = null;
 
     if (!this.costCalculated || this.totalCost === null) {
       this.errorMsg = 'Please calculate cost first.';
+      this.toaster.error('Calculate cost first');
       return;
     }
 
@@ -273,33 +414,62 @@ export class UserRequirements implements OnInit {
         this.loading = false;
 
         if (!res || res.length === 0) {
-          this.errorMsg = 'No quotation found. Please calculate cost first.';
-          this.quotation = null;
+          this.errorMsg = 'No quotation found.';
           return;
         }
 
-        const latest = res[0];
-        this.quotation = latest;
-        this.totalCost = latest?.total_costing ?? this.totalCost;
-
+        this.quotation = res[0];
+        this.totalCost = this.quotation?.total_costing ?? this.totalCost;
         this.quotationGenerated = true;
 
-        // ✅ AUTO SWITCH to preview tab (enterprise behavior)
         this.activeTab = 'preview';
-
         this.toaster.success('Quotation generated ✅');
       },
       error: (err) => {
         this.loading = false;
         this.errorMsg = err?.error?.detail || 'Failed to load quotation preview.';
+        this.toaster.error('Quotation failed ❌');
       },
     });
   }
-removeFeature(id: number): void {
-  const current: number[] = this.form.value.ai_features || [];
-  const updated = current.filter(x => x !== id);
-  this.form.patchValue({ ai_features: updated });
-}
+
+  // ==========================
+  // ✅ PDF
+  // ==========================
+  downloadPdf(): void {
+    if (!this.quotation?.id) {
+      this.toaster.error('Generate quotation first');
+      return;
+    }
+
+    const url = `http://127.0.0.1:8001/pricing-Model/quotation/${this.quotation.id}/pdf/`;
+    const token = localStorage.getItem('access_token');
+
+    this.loading = true;
+
+    this.http.get(url, {
+      responseType: 'blob',
+      headers: { Authorization: `Bearer ${token}` },
+    }).subscribe({
+      next: (blob) => {
+        this.loading = false;
+        const file = new Blob([blob], { type: 'application/pdf' });
+        const downloadURL = window.URL.createObjectURL(file);
+
+        const a = document.createElement('a');
+        a.href = downloadURL;
+        a.download = `quotation_${this.quotation.id}.pdf`;
+        a.click();
+
+        window.URL.revokeObjectURL(downloadURL);
+        this.toaster.success('PDF downloaded ✅');
+      },
+      error: () => {
+        this.loading = false;
+        this.toaster.error('PDF download failed ❌');
+      },
+    });
+  }
 
   // ==========================
   // ✅ Email
@@ -313,14 +483,11 @@ removeFeature(id: number): void {
     this.loading = true;
 
     this.http
-      .post(
-        `http://127.0.0.1:8001/pricing-Model/quotation/${this.quotation.id}/send-email/`,
-        {}
-      )
+      .post(`http://127.0.0.1:8001/pricing-Model/quotation/${this.quotation.id}/send-email/`, {})
       .subscribe({
         next: () => {
           this.loading = false;
-          this.toaster.success('Email queued/sent ✅');
+          this.toaster.success('Email sent ✅');
         },
         error: () => {
           this.loading = false;
@@ -328,49 +495,6 @@ removeFeature(id: number): void {
         },
       });
   }
-
-  // ==========================
-  // ✅ Download PDF
-  // ==========================
-  downloadPdf(): void {
-  if (!this.quotation?.id) {
-    this.errorMsg = 'Please generate quotation first.';
-    return;
-  }
-
-  const url = `http://127.0.0.1:8001/pricing-Model/quotation/${this.quotation.id}/pdf/`;
-  const token = localStorage.getItem('access_token');
-
-  this.loading = true;
-  this.errorMsg = null;
-
-  this.http.get(url, {
-    responseType: 'blob',
-    headers: {
-      Authorization: `Bearer ${token}`
-    }
-  }).subscribe({
-    next: (blob) => {
-      this.loading = false;
-
-      const file = new Blob([blob], { type: 'application/pdf' });
-      const downloadURL = window.URL.createObjectURL(file);
-
-      const a = document.createElement('a');
-      a.href = downloadURL;
-      a.download = `quotation_${this.quotation.id}.pdf`;
-      a.click();
-
-      window.URL.revokeObjectURL(downloadURL);
-      this.toaster.success('PDF downloaded ✅');
-    },
-    error: (err) => {
-      this.loading = false;
-      console.log("PDF Download Error:", err);
-      this.errorMsg = err?.error?.detail || 'Failed to download PDF.';
-    },
-  });
-}
 
   // ==========================
   // ✅ Clear

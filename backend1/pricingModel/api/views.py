@@ -110,14 +110,14 @@ class cameraSlabsCS(generics.ListCreateAPIView):
 class cameraSlabRUD(generics.RetrieveUpdateDestroyAPIView):
     
     serializer_class = cameraPricingSerializer
-
+ 
     def get_queryset(self):
         return Component.objects.filter(category__name='Camera')
     
     def get_permissions(self):
         if self.request.method == "GET":
             return [IsAuthenticated()]
-
+ 
         return [IsAuthenticated(), IsAdminUser()]
     
     def perform_update(self, serializer):

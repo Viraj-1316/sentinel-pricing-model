@@ -1,18 +1,14 @@
 <div class="page-shell">
-  <div class="bg-blob blob-1"></div>
-  <div class="bg-blob blob-2"></div>
-  <div class="bg-blob blob-3"></div>
-
   <div class="container-fluid page-content py-4 px-3 px-lg-4">
 
-    <!-- ✅ Premium Header -->
+    <!-- ✅ Header -->
     <div class="premium-header d-flex align-items-center justify-content-between flex-wrap gap-3 mb-4">
 
       <div class="d-flex align-items-center gap-3">
         <div class="brand-pill">SP</div>
         <div>
           <h4 class="header-title mb-0">User Requirements</h4>
-          <div class="header-subtitle">Build requirements → enterprise quotation</div>
+          <div class="header-subtitle">Enterprise configurator → guided quotation builder</div>
         </div>
       </div>
 
@@ -20,239 +16,462 @@
         <button class="btn btn-outline-primary" (click)="onback()">
           <i class="bi bi-arrow-left me-1"></i> Dashboard
         </button>
-
-        <!-- <button class="btn btn-outline-danger" (click)="PromiseLogout()">
-          <i class="bi bi-box-arrow-right me-1"></i> Logout
-        </button> -->
       </div>
 
     </div>
 
-    <!-- Alert -->
-    <div *ngIf="errorMsg" class="alert alert-danger rounded-3" role="alert">
+    <!-- Error Alert -->
+    <div *ngIf="errorMsg" class="alert alert-danger rounded-3 mb-4">
       <i class="bi bi-exclamation-triangle me-2"></i>
       {{ errorMsg }}
     </div>
 
-    <!-- GRID -->
+    <!-- ✅ GRID -->
     <div class="row g-4">
 
-      <!-- LEFT PANEL -->
+      <!-- ===================================================== -->
+      <!-- ✅ LEFT PANEL: WIZARD CONFIGURATOR -->
+      <!-- ===================================================== -->
       <div class="col-12 col-xl-5">
-        <div class="premium-card">
-          <div class="card-body p-4">
 
-            <div class="premium-card-header">
+        <div class="premium-card config-sticky">
+          <div class="card-body p-4 d-flex flex-column h-100">
+
+            <!-- Header -->
+            <div class="premium-card-header mb-3">
               <div class="d-flex align-items-center gap-2">
                 <div class="section-icon primary">
                   <i class="bi bi-ui-checks-grid fs-5"></i>
                 </div>
 
                 <div>
-                  <h5 class="fw-bold mb-0">Enter Requirements</h5>
-                  <div class="text-muted small">Cameras & AI Modules</div>
+                  <h5 class="fw-black mb-0">Configurator</h5>
+                  <div class="text-muted small">
+                    Step-by-step wizard (
+                      Camera → Storage → Compute → AI → Review)
+                  </div>
                 </div>
               </div>
 
-              <span class="section-badge">Step 1</span>
+              <span class="section-badge">Step {{ step }}/5</span>
             </div>
 
-            <form [formGroup]="form">
+            <!-- ✅ Step chips (premium edit-anytime) -->
+            <div class="wizard-steps mb-3">
+              <button type="button" class="step-chip"
+                      [class.active]="step===1"
+                      [disabled]="1 > maxStepReached"
+                      (click)="goToStep(1)">
+                1 Cameras
+              </button>
 
-              <!-- Cameras -->
-              <div class="mb-3">
-                <label class="form-label">No. of Cameras</label>
+              <button type="button" class="step-chip"
+                      [class.active]="step===2"
+                      [disabled]="2 > maxStepReached"
+                      (click)="goToStep(2)">
+                2 Storage
+              </button>
 
-                <div class="input-group input-group-lg">
-                  <span class="input-group-text bg-white">
-                    <i class="bi bi-camera-video"></i>
-                  </span>
+              <button type="button" class="step-chip"
+                      [class.active]="step===3"
+                      [disabled]="3 > maxStepReached"
+                      (click)="goToStep(3)">
+                3 Compute
+              </button>
 
-                  <input type="number"
-                         class="form-control"
-                         placeholder="Enter camera count (ex: 40)"
-                         formControlName="cammera"
-                         [class.is-invalid]="isInvalid('cammera')" />
+              <button type="button" class="step-chip"
+                      [class.active]="step===4"
+                      [disabled]="4 > maxStepReached"
+                      (click)="goToStep(4)">
+                4 AI
+              </button>
 
-                  <div class="invalid-feedback">
-                    Camera count is required.
+              <button type="button" class="step-chip"
+                      [class.active]="step===5"
+                      [disabled]="5 > maxStepReached"
+                      (click)="goToStep(5)">
+                5 Review
+              </button>
+            </div>
+
+            <!-- ✅ Scrollable form -->
+            <form [formGroup]="form" class="config-scroll">
+
+              <!-- ✅ STEP 1 -->
+              <div *ngIf="step === 1">
+                <div class="step-title">
+                  <div class="fw-black">Step 1 — Cameras</div>
+                  <div class="text-muted small">Enter camera requirement.</div>
+                </div>
+
+                <div class="mb-3 mt-3">
+                  <label class="form-label">No. of Cameras</label>
+                  <div class="input-group input-group-lg">
+                    <span class="input-group-text bg-white">
+                      <i class="bi bi-camera-video"></i>
+                    </span>
+                    <input type="number"
+                           class="form-control"
+                           placeholder="Enter camera count (ex: 40)"
+                           formControlName="cammera"
+                           min="1" />
+                  </div>
+
+                  <div class="hint mt-2">
+                    Pricing slab will auto-highlight on right panel.
+                  </div>
+                </div>
+              </div>
+
+              <!-- ✅ STEP 2 -->
+              <div *ngIf="step === 2">
+                <div class="step-title">
+                  <div class="fw-black">Step 2 — Storage Days</div>
+                  <div class="text-muted small">Used for storage costing.</div>
+                </div>
+
+                <div class="mb-3 mt-3">
+                  <label class="form-label">Storage Days</label>
+
+                  <div class="input-group input-group-lg">
+                    <span class="input-group-text bg-white">
+                      <i class="bi bi-calendar3"></i>
+                    </span>
+
+                    <input type="number"
+                           class="form-control"
+                           placeholder="Enter storage days (ex: 30)"
+                           formControlName="storage_days"
+                           min="1" />
+                  </div>
+
+                  <div class="hint mt-2">
+                    Storage pricing slabs will be shown on right panel.
+                  </div>
+                </div>
+              </div>
+
+              <!-- ✅ STEP 3 -->
+              <div *ngIf="step === 3">
+                <div class="step-title">
+                  <div class="fw-black">Step 3 — Compute Requirement</div>
+                  <div class="text-muted small">Select CPU / GPU profile (optional).</div>
+                </div>
+
+                <div class="mb-3 mt-3">
+                  <label class="form-label">CPU / GPU Requirement</label>
+
+                  <div class="dropdown w-100">
+                    <button class="btn btn-light border w-100 d-flex justify-content-between align-items-center py-3"
+                            type="button"
+                            data-bs-toggle="dropdown">
+                      <div class="d-flex align-items-center gap-2 flex-wrap" style="max-width:90%;">
+                        <i class="bi bi-gpu-card"></i>
+
+                        <span *ngIf="!selectedHardware" class="text-muted">
+                          Select CPU/GPU profile
+                        </span>
+
+                        <div *ngIf="selectedHardware" class="d-flex flex-wrap gap-2">
+                          <span class="chip">{{ selectedHardware.CPU }} ({{ selectedHardware.CPUcores }}C)</span>
+                          <span class="chip">{{ selectedHardware.GPU }} ({{ selectedHardware.GPUcores }}C)</span>
+                          <span class="chip">{{ selectedHardware.ram_required }}GB RAM</span>
+                          <span class="soft-badge">₹ {{ selectedHardware.costing }}</span>
+                        </div>
+                      </div>
+
+                      <i class="bi bi-chevron-down"></i>
+                    </button>
+
+                    <div class="dropdown-menu w-100 shadow-sm p-2"
+                         style="max-height: 320px; overflow-y:auto;">
+
+                      <div class="px-2 py-2">
+                        <input class="form-control"
+                               placeholder="Search CPU/GPU..."
+                               [(ngModel)]="hardwareSearch"
+                               [ngModelOptions]="{standalone:true}"
+                               (click)="$event.stopPropagation()">
+                      </div>
+
+                      <div class="dropdown-divider"></div>
+
+                      <button type="button"
+                              class="dropdown-item rounded-3 py-2"
+                              *ngFor="let hw of filteredHardwareList()"
+                              (click)="selectHardware(hw)">
+                        <div class="d-flex justify-content-between align-items-start">
+                          <div style="max-width:78%;">
+                            <div class="fw-semibold">{{ hw.name }}</div>
+                            <div class="text-muted small">
+                              CPU: {{ hw.CPU }} • {{ hw.CPUcores }}C |
+                              GPU: {{ hw.GPU }} • {{ hw.GPUcores }}C |
+                              RAM: {{ hw.ram_required }}GB
+                            </div>
+                          </div>
+                          <div class="fw-bold text-primary">₹ {{ hw.costing }}</div>
+                        </div>
+                      </button>
+
+                      <div *ngIf="hardwareList.length === 0"
+                           class="px-3 py-2 text-muted small">
+                        No CPU/GPU profiles found.
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="hint mt-2">
+                    Compute profile impacts AI processing workload.
+                  </div>
+                </div>
+              </div>
+
+              <!-- ✅ STEP 4 -->
+              <div *ngIf="step === 4">
+                <div class="step-title">
+                  <div class="fw-black">Step 4 — AI Features</div>
+                  <div class="text-muted small">Select AI modules (optional).</div>
+                </div>
+
+                <div class="mb-2 mt-3">
+                  <label class="form-label">AI Features</label>
+
+                  <div class="dropdown w-100">
+                    <button class="btn btn-light border w-100 d-flex justify-content-between align-items-center py-3"
+                            type="button"
+                            data-bs-toggle="dropdown">
+                      <div class="d-flex align-items-center gap-2 flex-wrap" style="max-width: 90%;">
+                        <i class="bi bi-cpu"></i>
+
+                        <span *ngIf="selectedFeatures.length === 0" class="text-muted">
+                          Select AI Features
+                        </span>
+
+                        <div *ngIf="selectedFeatures.length > 0" class="d-flex flex-wrap gap-2">
+                          <span *ngFor="let ai of selectedFeatures"
+                                class="chip"
+                                (click)="$event.stopPropagation()">
+
+                            {{ ai.AI_feature }}
+
+                            <i class="bi bi-x-circle-fill chip-remove"
+                               (click)="removeFeature(ai.id); $event.stopPropagation()"></i>
+                          </span>
+                        </div>
+                      </div>
+
+                      <i class="bi bi-chevron-down"></i>
+                    </button>
+
+                    <ul class="dropdown-menu w-100 shadow-sm"
+                        style="max-height: 280px; overflow-y:auto;">
+                      <li *ngFor="let ai of aiFeatures" class="px-2 py-2">
+                        <div class="form-check d-flex align-items-center justify-content-between">
+                          <div class="d-flex align-items-center gap-2">
+                            <input class="form-check-input"
+                                   type="checkbox"
+                                   [checked]="form.value.ai_features?.includes(ai.id)"
+                                   (change)="onToggleFeature(ai.id, $event)">
+                            <label class="form-check-label fw-semibold">
+                              {{ ai.AI_feature }}
+                            </label>
+                          </div>
+                          <span class="soft-badge">₹ {{ ai.costing }}</span>
+                        </div>
+                      </li>
+
+                      <li *ngIf="aiFeatures.length === 0"
+                          class="px-3 py-2 text-muted small">
+                        No AI Features found.
+                      </li>
+                    </ul>
+                  </div>
+
+                  <div class="d-flex justify-content-between mt-2">
+                    <div class="text-muted small">Multiple selection enabled</div>
+                    <div class="fw-semibold text-primary small">
+                      AI Total: ₹ {{ totalAiCost }}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- ✅ STEP 5 -->
+              <div *ngIf="step === 5">
+                <div class="step-title">
+                  <div class="fw-black">Step 5 — Review & Generate</div>
+                  <div class="text-muted small">Final review before quotation.</div>
+                </div>
+
+                <div class="review-card mt-3">
+                  <div class="review-row">
+                    <div class="k">Cameras</div>
+                    <div class="v">{{ form.value.cammera || 0 }}</div>
+                  </div>
+
+                  <div class="review-row">
+                    <div class="k">Storage Days</div>
+                    <div class="v">{{ form.value.storage_days || 0 }}</div>
+                  </div>
+
+                  <div class="review-row">
+                    <div class="k">Compute</div>
+                    <div class="v">{{ selectedHardware?.name || 'Not Selected' }}</div>
+                  </div>
+
+                  <div class="review-row">
+                    <div class="k">AI Selected</div>
+                    <div class="v">{{ selectedFeatures.length }}</div>
+                  </div>
+
+                  <div class="review-row">
+                    <div class="k">Estimated Total</div>
+                    <div class="v text-success fw-black">₹ {{ totalCost || 0 }}</div>
                   </div>
                 </div>
 
-                <div class="text-muted small mt-1">
-                  Camera pricing slab auto highlights on right panel.
+                <div class="hint mt-2">
+                  Click Calculate Cost → then Generate Quotation.
                 </div>
               </div>
 
-              <!-- AI Dropdown -->
-              <div class="mb-2">
-                <label class="form-label">AI Features</label>
+            </form>
 
-                <div class="dropdown w-100">
-                  <button class="btn btn-light border w-100 d-flex justify-content-between align-items-center py-3"
-                          type="button"
-                          data-bs-toggle="dropdown"
-                          aria-expanded="false">
+            <!-- ✅ Sticky wizard controls -->
+            <div class="config-actions mt-3">
 
-                    <div class="d-flex align-items-center gap-2 flex-wrap" style="max-width: 90%;">
-                      <i class="bi bi-cpu"></i>
+              <div class="d-flex justify-content-between align-items-center gap-2 flex-wrap">
 
-                      <!-- empty -->
-                      <span *ngIf="selectedFeatures.length === 0" class="text-muted">
-                        Select AI Features
-                      </span>
+                <button type="button"
+                        class="btn btn-outline-secondary"
+                        [disabled]="step === 1"
+                        (click)="prevStep()">
+                  <i class="bi bi-arrow-left me-1"></i> Back
+                </button>
 
-                      <!-- chips -->
-                      <div *ngIf="selectedFeatures.length > 0" class="d-flex flex-wrap gap-2">
-                        <span *ngFor="let ai of selectedFeatures"
-                              class="ai-chip"
-                              (click)="$event.stopPropagation()">
+                <!-- Proceed -->
+                <button type="button"
+                        class="btn btn-primary"
+                        *ngIf="step < 5"
+                        (click)="nextStep()">
+                  Proceed <i class="bi bi-arrow-right ms-1"></i>
+                </button>
 
-                          {{ ai.AI_feature }}
-
-                          <i class="bi bi-x-circle-fill chip-remove"
-                             (click)="removeFeature(ai.id); $event.stopPropagation()"></i>
-                        </span>
-                      </div>
-                    </div>
-
-                    <i class="bi bi-chevron-down"></i>
-                  </button>
-
-                  <!-- menu -->
-                  <ul class="dropdown-menu w-100 shadow-sm" style="max-height: 280px; overflow-y: auto;">
-                    <li *ngFor="let ai of aiFeatures" class="px-2 py-2">
-                      <div class="form-check d-flex align-items-center justify-content-between">
-                        <div class="d-flex align-items-center gap-2">
-                          <input class="form-check-input"
-                                 type="checkbox"
-                                 [id]="'ai-' + ai.id"
-                                 [checked]="form.value.ai_features?.includes(ai.id)"
-                                 (change)="onToggleFeature(ai.id, $event)" />
-
-                          <label class="form-check-label fw-semibold" [for]="'ai-' + ai.id">
-                            {{ ai.AI_feature }}
-                          </label>
-                        </div>
-
-                        <span class="soft-badge">
-                          ₹ {{ ai.costing }}
-                        </span>
-                      </div>
-                    </li>
-
-                    <li *ngIf="aiFeatures.length === 0" class="px-3 py-2 text-muted small">
-                      No AI Features found
-                    </li>
-                  </ul>
-                </div>
-
-                <div class="d-flex justify-content-between mt-2">
-                  <div class="text-muted small">Multiple selection enabled</div>
-                  <div class="fw-semibold text-primary small">AI Total: ₹ {{ totalAiCost }}</div>
-                </div>
-              </div>
-
-              <!-- ACTIONS -->
-              <div class="d-flex align-items-center justify-content-between gap-3 mt-4 flex-wrap">
-
-                <div class="d-flex gap-2 flex-wrap">
+                <!-- Final buttons -->
+                <div class="d-flex gap-2 flex-wrap" *ngIf="step === 5">
                   <button type="button"
-                          class="btn btn-outline-primary btn-lg"
+                          class="btn btn-outline-primary"
                           [disabled]="loading"
                           (click)="calculateCost()">
-
-                    <span *ngIf="!loading">
-                      <i class="bi bi-calculator me-2"></i> Calculate Cost
-                    </span>
-
-                    <span *ngIf="loading">
-                      <span class="spinner-border spinner-border-sm me-2"></span>
-                      Processing...
-                    </span>
+                    <span *ngIf="!loading"><i class="bi bi-calculator me-2"></i> Calculate Cost</span>
+                    <span *ngIf="loading"><span class="spinner-border spinner-border-sm me-2"></span> Processing</span>
                   </button>
 
                   <button type="button"
-                          class="btn btn-primary btn-lg"
+                          class="btn btn-success"
                           [disabled]="loading || !costCalculated"
                           (click)="generateQuotation()">
                     <i class="bi bi-file-earmark-text me-2"></i> Generate Quotation
                   </button>
                 </div>
 
-                <div *ngIf="totalCost !== null" class="fw-semibold text-success fs-5">
-                  Total: ₹ {{ totalCost }}
-                </div>
               </div>
 
-              <div class="text-center text-muted small mt-3" *ngIf="!costCalculated">
-                Step 1: Calculate cost to unlock quotation generation.
-              </div>
-
-              <div class="text-center text-muted small mt-3" *ngIf="costCalculated">
-                Step 2: Generate quotation preview for enterprise output.
-              </div>
-
-            </form>
+            </div>
 
           </div>
         </div>
+
       </div>
 
-      <!-- RIGHT PANEL -->
+      <!-- ===================================================== -->
+      <!-- ✅ RIGHT PANEL: SUMMARY + TABS -->
+      <!-- ===================================================== -->
       <div class="col-12 col-xl-7">
-        <div class="premium-card">
+
+        <div class="premium-card right-sticky">
           <div class="card-body p-4">
 
-            <div class="premium-card-header">
+            <div class="premium-card-header mb-3">
               <div class="d-flex align-items-center gap-2">
                 <div class="section-icon success">
                   <i class="bi bi-window-stack fs-5"></i>
                 </div>
                 <div>
-                  <h5 class="fw-bold mb-0">Enterprise Panel</h5>
-                  <div class="text-muted small">Pricing justification + preview</div>
+                  <h5 class="fw-black mb-0">Quote Summary</h5>
+                  <div class="text-muted small">Clean breakdown using tabs.</div>
                 </div>
               </div>
 
-              <span class="soft-badge">Step 2</span>
+              <span class="section-badge">Step 2</span>
             </div>
 
-            <!-- ✅ TABS -->
-            <ul class="nav nav-pills gap-2 mb-3">
-              <li class="nav-item">
-                <button class="nav-link"
-                        [class.active]="activeTab === 'camera'"
-                        (click)="setTab('camera')">
-                  <i class="bi bi-camera-video me-1"></i> Camera Pricing
-                </button>
-              </li>
+            <!-- Summary tiles -->
+            <div class="summary-grid mb-4">
+              <div class="summary-tile">
+                <div class="label">Cameras</div>
+                <div class="value">{{ form.value.cammera || 0 }}</div>
+              </div>
+              <div class="summary-tile">
+                <div class="label">Storage Days</div>
+                <div class="value">{{ form.value.storage_days || 0 }}</div>
+              </div>
+              <div class="summary-tile">
+                <div class="label">AI Selected</div>
+                <div class="value">{{ selectedFeatures.length }}</div>
+              </div>
+              <div class="summary-tile emphasis">
+                <div class="label">Grand Total</div>
+                <div class="value">₹ {{ totalCost || 0 }}</div>
+              </div>
+            </div>
 
-              <li class="nav-item">
-                <button class="nav-link"
-                        [class.active]="activeTab === 'ai'"
-                        (click)="setTab('ai')">
-                  <i class="bi bi-cpu me-1"></i> Selected AI
-                </button>
-              </li>
+            <!-- Tabs -->
+            <div class="premium-tabs mb-3">
+              <button type="button"
+                      class="tab-btn"
+                      [class.active]="activeTab==='camera'"
+                      (click)="setTab('camera')">
+                <i class="bi bi-camera-video me-1"></i> Camera
+              </button>
 
-              <li class="nav-item">
-                <button class="nav-link"
-                        [class.active]="activeTab === 'preview'"
-                        (click)="setTab('preview')">
-                  <i class="bi bi-receipt me-1"></i> Quotation Preview
-                </button>
-              </li>
-            </ul>
+              <button type="button"
+                      class="tab-btn"
+                      [class.active]="activeTab==='storage'"
+                      (click)="setTab('storage')">
+                <i class="bi bi-hdd-stack me-1"></i> Storage
+              </button>
 
-            <!-- CAMERA TAB -->
-            <div *ngIf="activeTab === 'camera'">
+              <button type="button"
+                      class="tab-btn"
+                      [class.active]="activeTab==='compute'"
+                      (click)="setTab('compute')">
+                <i class="bi bi-gpu-card me-1"></i> Compute
+              </button>
 
-              <div class="d-flex justify-content-between align-items-center mb-3">
+              <button type="button"
+                      class="tab-btn"
+                      [class.active]="activeTab==='ai'"
+                      (click)="setTab('ai')">
+                <i class="bi bi-cpu me-1"></i> AI
+              </button>
+
+              <button type="button"
+                      class="tab-btn"
+                      [class.active]="activeTab==='preview'"
+                      (click)="setTab('preview')">
+                <i class="bi bi-receipt me-1"></i> Preview
+              </button>
+            </div>
+
+            <!-- ========================= -->
+            <!-- ✅ CAMERA TAB -->
+            <!-- ========================= -->
+            <div *ngIf="activeTab==='camera'" class="tab-panel">
+              <div class="d-flex justify-content-between align-items-center mb-2">
                 <div class="fw-bold">Camera Pricing Slabs</div>
-
-                <span class="soft-badge">
-                  Selected cameras: {{ form.value.cammera || '-' }}
+                <span class="soft-badge" *ngIf="selectedCameraSlab">
+                  Slab #{{ selectedCameraSlab.id }}
                 </span>
               </div>
 
@@ -274,7 +493,7 @@
                       <td class="fw-semibold">#{{ slab.id }}</td>
                       <td>{{ slab.min_cammera }}</td>
                       <td>{{ slab.max_cammera === null ? '∞' : slab.max_cammera }}</td>
-                      <td class="text-end fw-bold">₹ {{ slab.total_costing }}</td>
+                      <td class="text-end fw-bold">₹ {{ slab.total_costing || slab.costing }}</td>
                       <td class="text-center">
                         <span *ngIf="selectedCameraSlab?.id === slab.id"
                               class="badge rounded-pill text-bg-success">
@@ -295,22 +514,91 @@
                   </tbody>
                 </table>
               </div>
-
-              <div class="text-muted small mt-3">
-                ✅ This table works as <b>enterprise justification</b>.
-              </div>
-
             </div>
 
-            <!-- AI TAB -->
-            <div *ngIf="activeTab === 'ai'">
+            <!-- ========================= -->
+            <!-- ✅ STORAGE TAB -->
+            <!-- ========================= -->
+            <div *ngIf="activeTab==='storage'" class="tab-panel">
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <div class="fw-bold">Storage Costing Slabs</div>
+                <span class="soft-badge">Days: {{ form.value.storage_days || 0 }}</span>
+              </div>
 
-              <div class="d-flex justify-content-between align-items-center mb-3">
+              <div class="table-responsive">
+                <table class="table align-middle mb-0">
+                  <thead class="table-light">
+                    <tr>
+                      <th>Storage/Cam</th>
+                      <th>Storage/Day</th>
+                      <th class="text-end">Cost</th>
+                    </tr>
+                  </thead>
+
+                  <tbody>
+                    <tr *ngFor="let s of storageList; trackBy: trackById">
+                      <td class="fw-semibold">{{ s.storage_per_cam }}</td>
+                      <td>{{ s.storage_perDay }}</td>
+                      <td class="text-end fw-bold">₹ {{ s.costing }}</td>
+                    </tr>
+
+                    <tr *ngIf="storageList.length === 0">
+                      <td colspan="3" class="text-center text-muted py-4">
+                        No storage costing slabs found.
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- ========================= -->
+            <!-- ✅ COMPUTE TAB -->
+            <!-- ========================= -->
+            <div *ngIf="activeTab==='compute'" class="tab-panel">
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <div class="fw-bold">Compute Requirement (CPU/GPU)</div>
+                <span class="soft-badge" *ngIf="selectedHardware">₹ {{ selectedHardware.costing }}</span>
+              </div>
+
+              <div class="table-responsive">
+                <table class="table align-middle mb-0">
+                  <thead class="table-light">
+                    <tr>
+                      <th>Name</th>
+                      <th>CPU</th>
+                      <th>GPU</th>
+                      <th>RAM</th>
+                      <th class="text-end">Cost</th>
+                    </tr>
+                  </thead>
+
+                  <tbody>
+                    <tr *ngIf="selectedHardware">
+                      <td class="fw-semibold">{{ selectedHardware.name }}</td>
+                      <td>{{ selectedHardware.CPU }} ({{ selectedHardware.CPUcores }}C)</td>
+                      <td>{{ selectedHardware.GPU }} ({{ selectedHardware.GPUcores }}C)</td>
+                      <td>{{ selectedHardware.ram_required }}GB</td>
+                      <td class="text-end fw-bold">₹ {{ selectedHardware.costing }}</td>
+                    </tr>
+
+                    <tr *ngIf="!selectedHardware">
+                      <td colspan="5" class="text-center text-muted py-4">
+                        No CPU/GPU profile selected.
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- ========================= -->
+            <!-- ✅ AI TAB -->
+            <!-- ========================= -->
+            <div *ngIf="activeTab==='ai'" class="tab-panel">
+              <div class="d-flex justify-content-between align-items-center mb-2">
                 <div class="fw-bold">Selected AI Features</div>
-
-                <span class="badge rounded-pill text-bg-primary">
-                  {{ selectedFeatures.length }} Selected
-                </span>
+                <span class="soft-badge">₹ {{ totalAiCost }}</span>
               </div>
 
               <div class="table-responsive">
@@ -338,17 +626,12 @@
                   </tbody>
                 </table>
               </div>
-
-              <div class="d-flex justify-content-end mt-3">
-                <div class="fw-bold text-primary">
-                  Total AI Cost: ₹ {{ totalAiCost }}
-                </div>
-              </div>
-
             </div>
 
-            <!-- PREVIEW TAB -->
-            <div *ngIf="activeTab === 'preview'">
+            <!-- ========================= -->
+            <!-- ✅ PREVIEW TAB -->
+            <!-- ========================= -->
+            <div *ngIf="activeTab==='preview'" class="tab-panel">
 
               <!-- Empty -->
               <div *ngIf="!quotationGenerated" class="text-center py-5">
@@ -357,80 +640,42 @@
                 </div>
                 <div class="fw-semibold mt-2">Quotation preview not generated</div>
                 <div class="text-muted small">
-                  Calculate cost → click <b>Generate Quotation</b>.
+                  Complete wizard → calculate cost → generate quotation.
                 </div>
               </div>
 
               <!-- Quotation -->
               <div *ngIf="quotationGenerated && quotation">
 
-                <div class="row g-3 mb-4">
-                  <div class="col-md-4">
-                    <div class="border rounded-4 p-3 h-100 bg-white">
-                      <div class="text-muted small">Cameras</div>
-                      <div class="fw-bold fs-4">{{ quotation.cammera }}</div>
-                      <div class="text-muted small">User input</div>
-                    </div>
+                <div class="metric-grid mb-4">
+                  <div class="metric-card">
+                    <div class="text-muted small">Cameras</div>
+                    <div class="fw-black fs-4">{{ quotation.cammera }}</div>
                   </div>
 
-                  <div class="col-md-4">
-                    <div class="border rounded-4 p-3 h-100 bg-white">
-                      <div class="text-muted small">Camera Cost</div>
-                      <div class="fw-bold fs-4">₹ {{ quotation.camera_cost }}</div>
-                      <div class="text-muted small">From slab</div>
-                    </div>
+                  <div class="metric-card">
+                    <div class="text-muted small">Camera Cost</div>
+                    <div class="fw-black fs-4">₹ {{ quotation.camera_cost }}</div>
                   </div>
 
-                  <div class="col-md-4">
-                    <div class="border rounded-4 p-3 h-100 bg-white">
-                      <div class="text-muted small">Grand Total</div>
-                      <div class="fw-bold fs-4 text-success">₹ {{ quotation.total_costing }}</div>
-                      <div class="text-muted small">Final</div>
-                    </div>
+                  <div class="metric-card">
+                    <div class="text-muted small">Grand Total</div>
+                    <div class="fw-black fs-4 text-success">₹ {{ quotation.total_costing }}</div>
                   </div>
                 </div>
 
-                <div class="fw-bold mb-2">AI Feature Breakdown</div>
+                <div class="d-flex justify-content-end gap-2 flex-wrap">
+                  <button class="btn btn-outline-secondary" type="button" (click)="clearQuotation()">
+                    <i class="bi bi-x-circle me-1"></i> Clear
+                  </button>
 
-                <div class="table-responsive" *ngIf="quotation.ai_features?.length > 0">
-                  <table class="table align-middle mb-0">
-                    <thead class="table-light">
-                      <tr>
-                        <th style="width:70px;">Sr</th>
-                        <th>Feature</th>
-                        <th class="text-end">Cost</th>
-                      </tr>
-                    </thead>
+                  <button class="btn btn-success" type="button" (click)="downloadPdf()">
+                    <i class="bi bi-download me-1"></i> PDF
+                  </button>
 
-                    <tbody>
-                      <tr *ngFor="let ai of quotation.ai_features; let i = index">
-                        <td class="text-muted">{{ i + 1 }}</td>
-                        <td class="fw-semibold">{{ ai.AI_feature }}</td>
-                        <td class="text-end fw-semibold">₹ {{ ai.costing }}</td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-
-                <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mt-4">
-                  <div class="text-muted small">
-                    <i class="bi bi-clock me-1"></i>
-                    Generated: {{ quotation.created_at | date:'medium' }}
-                  </div>
-
-                  <div class="d-flex gap-2">
-                    <button class="btn btn-outline-secondary" type="button" (click)="clearQuotation()">
-                      <i class="bi bi-x-circle me-1"></i> Clear
-                    </button>
-
-                    <button class="btn btn-success" type="button" (click)="downloadPdf()">
-                      <i class="bi bi-download me-1"></i> Download PDF
-                    </button>
-
-                    <button class="btn btn-success" type="button" (click)="sendEmail()">
-                      <i class="bi bi-envelope me-1"></i> Send Email
-                    </button>
-                  </div>
+                  <button class="btn btn-success" type="button" (click)="sendEmail()">
+                    <i class="bi bi-envelope me-1"></i> Email
+                  </button>
                 </div>
 
               </div>
@@ -439,8 +684,8 @@
 
           </div>
         </div>
-      </div>
 
+      </div>
     </div>
 
   </div>

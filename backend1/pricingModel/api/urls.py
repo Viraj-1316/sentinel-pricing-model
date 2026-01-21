@@ -16,7 +16,8 @@ from pricingModel.api.views import (
     AdminUsersListView,
     AdminAllQuotationsView,
     AdminAuditLogsView,
-    aiFeaturesCLDetails
+    aiFeaturesCLDetails,
+    storageCostingDetails,
 )
 
 urlpatterns = [
@@ -68,7 +69,12 @@ urlpatterns = [
         storageCosting.as_view(),
         name='storageCosting'
     ),
-        path(
+     path(
+        'storage-costing/<int:pk>/',
+        storageCostingDetails.as_view(),
+        name='storageCostingDetail'
+    ),
+    path(
         'create-category/',
         creatingCategory.as_view(),
         name='createCategory'

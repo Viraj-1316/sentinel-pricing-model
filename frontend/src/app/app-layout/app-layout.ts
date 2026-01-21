@@ -19,6 +19,7 @@ ngOnInit() {
 }
 
   toggleSidebar() {
+    console.log("Toggling sidebar. Current state:", this.collapsed);
     this.collapsed = !this.collapsed;
   }
   
