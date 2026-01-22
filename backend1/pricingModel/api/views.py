@@ -6,6 +6,7 @@ from rest_framework.exceptions import ValidationError
 from django.http import HttpResponse
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import A4
+from django.views.decorators.clickjacking import xframe_options_exempt
 from rest_framework.decorators import api_view, permission_classes
 # from pricingModel.models import Cammera_Pricing, UserPricing, AI_ENABLED,
 from pricingModel.models import Category, Component, Price,UserPricing,AuditLog
@@ -18,6 +19,7 @@ from rest_framework.response import Response
 from pricingModel.api.tasks import send_quotation_email_task
 from pricingModel.api.utils import generate_enterprise_quotation_pdf
 from io import BytesIO
+from rest_framework import filters
 from pricingModel.api.audit import create_audit_log   
 from pricingModel.api.serializers import (
     AI_ENABLEDserializer,
@@ -41,9 +43,19 @@ class AdminUsersListView(generics.ListAPIView):
 class AdminAllQuotationsView(generics.ListAPIView):
     serializer_class = AdminQuotationSerializer
     permission_classes = [IsAuthenticated, IsAdminUser]
+    filter_backends = [filters.OrderingFilter]
+
+    # ✅ Allow only correct fields
+    ordering_fields = ["created_at", "id"]  # add other valid fields if needed
+    ordering = ["-created_at"]
 
     def get_queryset(self):
-        return UserPricing.objects.select_related("user_name").prefetch_related("ai_features").order_by("-created_at")
+        return (
+            UserPricing.objects
+            .select_related("user_name")
+            .prefetch_related("ai_features")
+            .order_by("-created_at")
+        )
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def send_quotation_email(request, pk):
@@ -64,9 +76,10 @@ def send_quotation_email(request, pk):
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
+@xframe_options_exempt
 def download_quotation_pdf(request, pk):
 
-    # ✅ Admin can download any quotation
+    # ✅ Admin can access any quotation
     if request.user.is_staff:
         quotation = UserPricing.objects.filter(pk=pk).first()
     else:
@@ -77,11 +90,13 @@ def download_quotation_pdf(request, pk):
 
     pdf = generate_enterprise_quotation_pdf(quotation, request.user.username)
 
-
     response = HttpResponse(pdf, content_type="application/pdf")
-    response["Content-Disposition"] = f'attachment; filename="quotation_{quotation.id}.pdf"'
-    return response
 
+    # ✅ IMPORTANT: inline = preview in browser/iframe
+    response["Content-Disposition"] = f'inline; filename="quotation_{quotation.id}.pdf"'
+    response["Content-Length"] = len(pdf)
+
+    return response
 
 class cameraSlabsCS(generics.ListCreateAPIView):
     serializer_class = cameraPricingSerializer

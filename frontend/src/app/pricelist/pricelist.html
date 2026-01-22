@@ -21,12 +21,12 @@
           <i class="bi bi-tags me-2"></i>Categories
         </button>
 
-        <button class="btn rounded-pill px-4"
+        <!-- <button class="btn rounded-pill px-4"
                 [class.btn-primary]="tab==='camera'"
                 [class.btn-light]="tab!=='camera'"
                 (click)="setTab('camera')">
           <i class="bi bi-camera-video me-2"></i>Camera Pricing
-        </button>
+        </button> -->
 
         <button class="btn rounded-pill px-4"
                 [class.btn-primary]="tab==='ai'"
@@ -98,49 +98,7 @@
 
 
           <!-- ✅ CAMERA FORM -->
-          <ng-container *ngIf="tab==='camera'">
-            <div class="fw-bold mb-1">Add Camera Pricing Slab</div>
-            <div class="text-muted small mb-3">Define min/max cameras and slab costing</div>
-
-            <form [formGroup]="cameraForm" (ngSubmit)="saveCameraPricing()">
-
-              <div class="mb-3">
-                <label class="form-label small fw-semibold">Min Cameras</label>
-                <input type="number" class="form-control" formControlName="min_cammera">
-              </div>
-
-              <div class="mb-3">
-                <label class="form-label small fw-semibold">Max Cameras</label>
-                <input type="number" class="form-control"
-                       formControlName="max_cammera"
-                       placeholder="Leave empty for unlimited">
-              </div>
-
-              <div class="mb-3">
-                <label class="form-label small fw-semibold">Cost</label>
-                <div class="input-group">
-                  <span class="input-group-text bg-white">₹</span>
-                  <input type="number" class="form-control" formControlName="costing">
-                </div>
-              </div>
-
-              <button class="btn btn-primary w-100 rounded-3"
-                      [disabled]="saving || cameraForm.invalid">
-                <span *ngIf="saving" class="spinner-border spinner-border-sm me-2"></span>
-                {{ editingCameraId ? 'Update Camera Slab' : 'Save Camera Slab' }}
-              </button>
-
-              <button *ngIf="editingCameraId"
-                      type="button"
-                      class="btn btn-light border w-100 rounded-3 mt-2"
-                      (click)="cancelCameraEdit()">
-                Cancel Edit
-              </button>
-
-            </form>
-          </ng-container>
-
-
+         
           <!-- ✅ AI FORM -->
           <ng-container *ngIf="tab==='ai'">
             <div class="fw-bold mb-1">Add AI Feature Pricing</div>
@@ -326,8 +284,7 @@
               {{
                 tab==='category'
                   ? 'Categories'
-                  : tab==='camera'
-                    ? 'Camera Slabs'
+                  
                     : tab==='ai'
                       ? 'AI Features'
                       : tab==='hardware'
@@ -382,44 +339,7 @@
 
 
           <!-- ✅ CAMERA LIST -->
-          <div *ngIf="tab==='camera'" class="table-responsive list-scroll">
-            <table class="table mb-0 align-middle">
-              <thead class="table-light position-sticky top-0">
-                <tr>
-                  <th>Camera Range</th>
-                  <th class="text-end">Cost</th>
-                  <th class="text-end">Actions</th>
-                </tr>
-              </thead>
-
-              <tbody>
-                <tr *ngFor="let c of cameraList; trackBy: trackById">
-                  <td class="fw-semibold">
-                    {{ c.min_cammera }} - {{ c.max_cammera ?? '∞' }}
-                  </td>
-                  <td class="text-end fw-bold">₹ {{ c.costing }}</td>
-
-                  <td class="text-end">
-                    <button class="btn btn-sm btn-warning me-2"
-                            (click)="editCamera(c)">
-                      <i class="bi bi-pencil-square"></i>
-                    </button>
-
-                    <button class="btn btn-sm btn-danger"
-                            (click)="deleteCamera(c.id)">
-                      <i class="bi bi-trash"></i>
-                    </button>
-                  </td>
-                </tr>
-
-                <tr *ngIf="cameraList.length === 0">
-                  <td colspan="3" class="text-center text-muted py-5">
-                    No camera pricing slabs added.
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
+          
 
 
           <!-- ✅ AI LIST -->

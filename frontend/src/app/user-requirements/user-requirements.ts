@@ -12,6 +12,7 @@ import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../service/auth.service';
 import { ToasterService } from '../service/toaster.service';
 import { ConfirmdialogService } from '../service/confirmdialog.service';
+import { DomSanitizer } from '@angular/platform-browser';
 
 export interface AIEnabled {
   id: number;
@@ -59,7 +60,7 @@ export interface PricingCalculationResponse {
 }
 
 type RightTab = 'camera' | 'ai' | 'compute' | 'storage' | 'preview';
-type WizardStep = 1 | 2 | 3 | 4 | 5;
+type WizardStep = 1 | 2 | 3 | 4 ;
 
 @Component({
   selector: 'app-user-requirements',
@@ -73,7 +74,10 @@ export class UserRequirements implements OnInit {
   // ✅ Wizard step UI
   // ==========================
   step: WizardStep = 1;
-
+pdfUrl: string | null = null;
+safePdfUrl: any = null;
+pdfBlobUrl: string | null = null;
+showPdfOverlay = false; // ✅ controls overlay open/close
   // ✅ which step is allowed
   maxStepReached: WizardStep = 1;
 
@@ -88,7 +92,7 @@ export class UserRequirements implements OnInit {
     const ok = this.validateStep(this.step);
     if (!ok) return;
 
-    if (this.step < 5) {
+    if (this.step < 4) {
       this.step = (this.step + 1) as WizardStep;
       if (this.step > this.maxStepReached) this.maxStepReached = this.step;
       this.syncRightPanel();
@@ -102,13 +106,51 @@ export class UserRequirements implements OnInit {
     }
   }
 
+loadPdfPreview(quotationId: number) {
+  const url = `http://127.0.0.1:8001/pricing-Model/quotation/${quotationId}/pdf/`;
+  const token = localStorage.getItem('access_token');
+
+  if (!token) {
+    this.toaster.error('Token not found. Please login again.');
+    return;
+  }
+
+  this.loading = true;
+
+  this.http.get(url, {
+    responseType: 'blob',
+    headers: { Authorization: `Bearer ${token}` },
+  }).subscribe({
+    next: (blob) => {
+      this.loading = false;
+
+      // cleanup old url
+      if (this.pdfBlobUrl) URL.revokeObjectURL(this.pdfBlobUrl);
+
+      const file = new Blob([blob], { type: 'application/pdf' });
+      this.pdfBlobUrl = URL.createObjectURL(file);
+
+      this.safePdfUrl = this.sanitizer.bypassSecurityTrustResourceUrl(this.pdfBlobUrl);
+
+      // ✅ show pdf overlay on right
+      this.showPdfOverlay = true;
+
+      this.toaster.success('Quotation PDF ready ✅');
+    },
+    error: () => {
+      this.loading = false;
+      this.toaster.error('PDF preview unauthorized ❌');
+    },
+  });
+}
+
+
   // ✅ maps step → right tab
   syncRightPanel() {
     if (this.step === 1) this.activeTab = 'camera';
     if (this.step === 2) this.activeTab = 'storage';
-    if (this.step === 3) this.activeTab = 'compute';
-    if (this.step === 4) this.activeTab = 'ai';
-    if (this.step === 5) this.activeTab = 'preview';
+    if (this.step === 3) this.activeTab = 'ai';
+    if (this.step === 4) this.activeTab = 'preview';
   }
 
   validateStep(step: WizardStep): boolean {
@@ -133,10 +175,10 @@ export class UserRequirements implements OnInit {
     }
 
     // step 3 compute optional
-    if (step === 3) return true;
+    // if (step === 3) return true;
 
-    // step 4 AI optional
-    if (step === 4) return true;
+    // step 3 AI optional
+    if (step === 3) return true;
 
     return true;
   }
@@ -194,7 +236,9 @@ export class UserRequirements implements OnInit {
     private auth: AuthService,
     private confirm: ConfirmdialogService,
     private toaster: ToasterService,
-    private router: Router
+    private router: Router,
+    private sanitizer: DomSanitizer   // ✅ add this
+
   ) {
     this.form = this.fb.group({
       cammera: ['', [Validators.required, Validators.min(1)]],
@@ -426,8 +470,8 @@ export class UserRequirements implements OnInit {
         this.activeTab = 'preview';
 
         // ✅ also allow step 5 (preview)
-        if (this.maxStepReached < 5) this.maxStepReached = 5;
-        this.step = 5;
+        if (this.maxStepReached < 4) this.maxStepReached = 4;
+        this.step = 4;
       },
       error: (err) => {
         this.loading = false;
@@ -440,43 +484,45 @@ export class UserRequirements implements OnInit {
   // ==========================
   // ✅ Step 2: Generate Quotation
   // ==========================
-  generateQuotation(): void {
-    this.errorMsg = null;
+ generateQuotation(): void {
+  this.errorMsg = null;
 
-    if (!this.costCalculated || this.totalCost === null) {
-      this.errorMsg = 'Please calculate cost first.';
-      this.toaster.error('Calculate cost first');
-      return;
-    }
-
-    this.loading = true;
-
-    this.http.get<any[]>(this.QUOTATION_API).subscribe({
-      next: (res: any[]) => {
-        this.loading = false;
-
-        if (!res || res.length === 0) {
-          this.errorMsg = 'No quotation found.';
-          return;
-        }
-
-        // ✅ if your API returns latest quotation first
-        this.quotation = res[0];
-
-        // If quotation has total_costing, prefer it
-        this.totalCost = this.quotation?.total_costing ?? this.totalCost;
-
-        this.quotationGenerated = true;
-        this.activeTab = 'preview';
-        this.toaster.success('Quotation generated ✅');
-      },
-      error: (err) => {
-        this.loading = false;
-        this.errorMsg = err?.error?.detail || 'Failed to load quotation preview.';
-        this.toaster.error('Quotation failed ❌');
-      },
-    });
+  if (!this.costCalculated || !this.costBreakup) {
+    this.toaster.error('Calculate cost first');
+    return;
   }
+
+  this.loading = true;
+
+  this.http.get<any[]>(this.QUOTATION_API).subscribe({
+    next: (res: any[]) => {
+      this.loading = false;
+
+      if (!res || res.length === 0) {
+        this.errorMsg = 'No quotation found.';
+        return;
+      }
+
+      this.quotation = res[0];
+      this.quotationGenerated = true;
+
+      // ✅ switch tab to preview
+      this.activeTab = 'preview';
+
+      // ✅ LOAD PDF + OPEN overlay full right
+      this.loadPdfPreview(this.quotation.id);
+    },
+    error: (err) => {
+      this.loading = false;
+      this.errorMsg = err?.error?.detail || 'Failed to generate quotation.';
+      this.toaster.error('Quotation failed ❌');
+    },
+  });
+}
+openPdfInNewTab() {
+  if (!this.pdfBlobUrl) return;
+  window.open(this.pdfBlobUrl, '_blank');
+}
 
   // ==========================
   // ✅ PDF
@@ -541,23 +587,33 @@ export class UserRequirements implements OnInit {
         },
       });
   }
+closePdfOverlay() {
+  this.showPdfOverlay = false;
+}
 
   // ==========================
   // ✅ Clear
   // ==========================
   clearQuotation(): void {
-    this.quotation = null;
-    this.totalCost = null;
-    this.costBreakup = null;
-    this.errorMsg = null;
+  this.quotation = null;
+  this.totalCost = null;
+  this.errorMsg = null;
 
-    this.costCalculated = false;
-    this.quotationGenerated = false;
+  this.costCalculated = false;
+  this.quotationGenerated = false;
 
-    this.step = 1;
-    this.maxStepReached = 1;
-    this.activeTab = 'camera';
+  // ✅ close overlay
+  this.showPdfOverlay = false;
 
-    this.toaster.info('Cleared ✅');
+  // ✅ cleanup pdf blob
+  if (this.pdfBlobUrl) {
+    URL.revokeObjectURL(this.pdfBlobUrl);
+    this.pdfBlobUrl = null;
+    this.safePdfUrl = null;
   }
+
+  this.activeTab = 'camera';
+  this.toaster.info('Cleared ✅');
+}
+
 }
