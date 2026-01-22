@@ -56,7 +56,7 @@ class userPricingSerializer(serializers.ModelSerializer):
     ai_cost = serializers.IntegerField(read_only=True)
     processor_cost = serializers.IntegerField(read_only=True)
     storage_cost = serializers.IntegerField(read_only=True)
-    storage_used_user = serializers.IntegerField(read_only=True)
+
     storage_days = serializers.IntegerField(write_only=True)
 
     ai_features = serializers.PrimaryKeyRelatedField(
