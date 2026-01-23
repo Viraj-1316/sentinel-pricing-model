@@ -105,52 +105,62 @@ class userRequirementSerializer(serializers.ModelSerializer):
             'ram_required',
             'created_at',
         ]
-        
-class userPricingSerializer(serializers.ModelSerializer):
 
-    total_costing = serializers.IntegerField(read_only=True)
-    camera_cost = serializers.IntegerField(read_only=True)
-    ai_cost = serializers.IntegerField(read_only=True)
-    storage_cost = serializers.IntegerField(read_only=True)
-    storage_used_user = serializers.IntegerField(read_only=True)
-    storage_days =   serializers.IntegerField(write_only=True)
-    vram_required = serializers.IntegerField(read_only=True)
-    cpuCores_required = serializers.IntegerField(read_only=True)
-    ram_required = serializers.IntegerField(read_only=True)
-    
-    ai_features = serializers.PrimaryKeyRelatedField(
-        many=True,
-        queryset=Component.objects.filter(category__name='AI'),
-        required=False
-    )
-
-    class Meta:
-        model = UserPricing
-        fields = [
-            'id',
-            'cammera',
-            'aiEnabledCam',
-            'storage_days',
-            'ai_features',
-            'storage_used_user',
-            'camera_cost',
-            'vram_required',
-            'cpuCores_required',
-            'ram_required',
-            'ai_cost',
-            'storage_cost',
-            'total_costing',
-            'created_at',
-        ]
-        
-# chage is id is removed               
 class AI_ENABLEDserializer(serializers.ModelSerializer):
         costing = serializers.IntegerField(source='price.costing')
         class Meta:
             model = Component
-            fields = ['id','AI_feature', 'costing']          
+            fields = ['id','AI_feature', 'costing']  
+                    
+class ComponentDisplaySerializer(serializers.ModelSerializer):
+    costing = serializers.IntegerField(source="price.costing", read_only=True)
 
+    class Meta:
+        model = Component
+        fields = [
+            "id",
+            "core_hardware", 
+            "CPUcores",
+            "VRAM",
+            "costing",
+        ]
+        
+class UserFinalQuotationSerializer(serializers.ModelSerializer):
+    cpu = ComponentDisplaySerializer(read_only=True)
+    gpu = ComponentDisplaySerializer(read_only=True)
 
+    ai_features = AI_ENABLEDserializer(many=True, read_only=True)
+
+    class Meta:
+        model = UserPricing
+        fields = [
+            "id",
+            "cammera",
+
+            # requirements
+            "cpuCores_required",
+            "ram_required",
+            "vram_required",
+
+            # selected hardware
+            "cpu",
+            "gpu",
+
+            # costs
+            "cpu_cost",
+            "gpu_cost",
+            "ai_cost",
+            "storage_cost",
+            "total_costing",
+
+            # AI
+            "ai_features",
+
+            "created_at",
+        ]
+
+# chage is id is removed               
+        
 class QuotationSerializer(serializers.ModelSerializer):
     ai_features = AI_ENABLEDserializer(many=True, read_only=True)
    

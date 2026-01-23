@@ -24,7 +24,6 @@ from pricingModel.api.audit import create_audit_log
 from pricingModel.api.serializers import (
     AI_ENABLEDserializer,
     cameraPricingSerializer,
-    userPricingSerializer,
     QuotationSerializer,
     storagePricingSerializer,
     categorySerializer,
@@ -32,7 +31,8 @@ from pricingModel.api.serializers import (
     AdminUserSerializer,
     AdminQuotationSerializer,
     AuditLogSerializer,
-    userRequirementSerializer
+    userRequirementSerializer,
+    UserFinalQuotationSerializer
 )
 
 class AdminUsersListView(generics.ListAPIView):
@@ -273,83 +273,68 @@ class pricingCalculate(generics.ListCreateAPIView):
 
 
 class pricingRecomendationview(generics.RetrieveUpdateAPIView):
-        serializer_class = userPricingSerializer
-        permission_classes = [IsAuthenticated]
+    serializer_class = UserFinalQuotationSerializer
+    permission_classes = [IsAuthenticated]
 
-        def get_queryset(self):
-            return UserPricing.objects.filter(user_name=self.request.user)
+    def get_queryset(self):
+        return UserPricing.objects.filter(user_name=self.request.user)
 
-        def perform_update(self, serializer):
+    def perform_update(self, serializer):
+        instance = self.get_object()
 
-            # ---------- SAFE INPUT READING ----------
-            cameras = serializer.validated_data['cammera']
-            storage_days = serializer.validated_data.get('storage_days', 1)
-            ai_features = serializer.validated_data.get('ai_features', [])
-            aiEnabledCam = serializer.validated_data.get('aiEnabledCam')
+        # ---------- AUTO SELECT CPU ----------
+        cpu = Component.objects.filter(
+            category__name="Processor",
+            CPUcores__gte=instance.cpuCores_required
+        ).order_by("CPUcores").first()
 
-            if not cameras:
-                raise ValidationError("Camera count is required")
+        if not cpu or not hasattr(cpu, "price"):
+            raise ValidationError("Suitable CPU not configured")
 
-            # ---------- INITIALIZE VARIABLES (VERY IMPORTANT) ----------
-            vram = 0
-            cpuCores_required = 0
-            ram_required = 0
-            
-            # ---------- STORAGE ----------
-            storage = Component.objects.filter(category__name='Storage').first()
-            if not storage:
-                raise ValidationError("Storage component not configured")
-            if not hasattr(storage, 'price'):
-                raise ValidationError("Storage pricing not configured")
+        cpu_cost = cpu.price.costing
 
-            # ---------- AI COST ----------
-            
-            if aiEnabledCam:
-                aiEnabledCam = aiEnabledCam
-            else :
-                aiEnabledCam = cameras    
+        # ---------- AUTO SELECT GPU ----------
+        gpu = None
+        gpu_cost = 0
 
-            if ai_features :
-                ai_cost = sum(ai.price.costing for ai in ai_features)
-                aiEnabledCam1 = aiEnabledCam
-            else:
-                ai_cost = 0    
-                aiEnabledCam1 = 0
-                
-            # ---------- CPU / RAM ----------
-            vram = int(0.6*aiEnabledCam1)
-            cpuCores_required = int(0.128 * cameras)
-            ram_required = int(0.256 * cameras)
+        if instance.vram_required > 0:
+            gpu = Component.objects.filter(
+                category__name="Processor",
+                VRAM__gte=instance.vram_required
+            ).order_by("VRAM").first()
 
-            # ---------- STORAGE COST ----------
-            storage_used = cameras * storage.storage_per_cam * storage_days
-            storage_cost = storage_used * storage.price.costing
-            storage_used_user = storage_used * 19
+            if not gpu or not hasattr(gpu, "price"):
+                raise ValidationError("Suitable GPU not configured")
 
-            # ---------- TOTAL ----------
-            total_cost = ai_cost + storage_cost
+            gpu_cost = gpu.price.costing
 
-            # ---------- SAVE ----------
-            user_pricing = serializer.save(
-                user_name=self.request.user,
-                aiEnabledCam=aiEnabledCam1,
-                ai_cost=ai_cost,
-                storage_cost=storage_cost,
-                total_costing=total_cost,
-                storage_days=storage_days,
-                storage_used_user=storage_used_user,
-                vram_required=vram,
-                cpuCores_required=cpuCores_required,
-                ram_required=ram_required,
-            )
+        # ---------- AI COST ----------
+        ai_cost = sum(ai.price.costing for ai in instance.ai_features.all())
 
-            user_pricing.ai_features.set(ai_features)
+        # ---------- STORAGE COST ----------
+        storage = Component.objects.filter(category__name="Storage").first()
+        if not storage or not hasattr(storage, "price"):
+            raise ValidationError("Storage pricing not configured")
 
-            create_audit_log(
-                self.request,
-                "CREATE_QUOTATION",
-                f"Generated quotation. Cameras={cameras}, Total={total_cost}"
-            )
+        storage_cost = instance.storage_used * storage.price.costing
+
+        total_cost = cpu_cost + gpu_cost + ai_cost + storage_cost
+
+        serializer.save(
+            cpu=cpu,
+            gpu=gpu,
+            cpu_cost=cpu_cost,
+            gpu_cost=gpu_cost,
+            ai_cost=ai_cost,
+            storage_cost=storage_cost,
+            total_costing=total_cost,
+        )
+
+        create_audit_log(
+            self.request,
+            "UPDATE_PRICING",
+            f"Final pricing calculated. Total={total_cost}"
+        )
 
 
 class UserQuotationList(generics.ListAPIView):
