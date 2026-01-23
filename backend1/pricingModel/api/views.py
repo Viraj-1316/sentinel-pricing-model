@@ -34,6 +34,9 @@ from pricingModel.api.serializers import (
     userRequirementSerializer,
     UserFinalQuotationSerializer
 )
+import math
+
+
 
 class AdminUsersListView(generics.ListAPIView):
     serializer_class = AdminUserSerializer
@@ -281,40 +284,81 @@ class pricingRecomendationview(generics.RetrieveUpdateAPIView):
 
     def perform_update(self, serializer):
         instance = self.get_object()
-# CPU selection
+        vramUser = instance.vram_required
+
+        # ---------- CPU ----------
         cpu = Component.objects.filter(
             category__name="Processor",
+            CPUcores__isnull=False,
             CPUcores__gte=instance.cpuCores_required
         ).order_by("CPUcores").first()
 
-        if not cpu or not hasattr(cpu, "price"):
-            raise ValidationError("Suitable CPU not configured")
+        if not cpu:
+            raise ValidationError("No CPU meets required core count")
 
-        cpu_cost = cpu.price.costing
+        cpu_price = Price.objects.filter(component=cpu).first()
+        if not cpu_price:
+            raise ValidationError(f"Price not configured for CPU: {cpu.core_hardware}")
 
-# GPU selection
+        cpu_cost = cpu_price.costing
+
+        # ---------- GPU ----------
         gpu = None
         gpu_cost = 0
 
-        if instance.vram_required > 0:
-            gpu = Component.objects.filter(
-                category__name="Processor",
-                VRAM__gte=instance.vram_required
-            ).order_by("VRAM").first()
+        if vramUser > 0:
+            if vramUser <= 48:
+                gpu = Component.objects.filter(
+                    category__name="Processor",
+                    VRAM__isnull=False,
+                    VRAM__gte=vramUser
+                ).order_by("VRAM").first()
 
-            if not gpu or not hasattr(gpu, "price"):
-                raise ValidationError("Suitable GPU not configured")
+                if not gpu:
+                    raise ValidationError("No GPU meets VRAM requirement")
 
-            gpu_cost = gpu.price.costing
+                gpu_price = Price.objects.filter(component=gpu).first()
+                
+                if not gpu_price:
+                    raise ValidationError("GPU price not configured")
 
-        ai_cost = sum(ai.price.costing for ai in instance.ai_features.all())
+                gpu_cost = gpu_price.costing
+            else:
+                gpu_units = math.ceil(vramUser / 48)
+                gpu = Component.objects.filter(
+                    category__name="Processor",
+                    VRAM__isnull=False
+                ).order_by("-VRAM").first()
 
+                if not gpu:
+                    raise ValidationError("No GPU configured")
+
+                gpu_price = Price.objects.filter(component=gpu).first()
+                if not gpu_price:
+                    raise ValidationError("GPU price not configured")
+
+                gpu_cost = gpu_price.costing * gpu_units
+
+        # ---------- AI FEATURES ----------
+        ai_cost = 0
+        for ai in instance.ai_features.all():
+            ai_price = Price.objects.filter(component=ai).first()
+            if not ai_price:
+                raise ValidationError(f"Price not configured for AI feature: {ai.AI_feature}")
+            ai_cost += ai_price.costing
+
+        # ---------- STORAGE ----------
         storage = Component.objects.filter(category__name="Storage").first()
-        if not storage or not hasattr(storage, "price"):
-            raise ValidationError("Storage pricing not configured")
+        if not storage:
+            raise ValidationError("Storage component not configured")
 
-        storage_cost = ((instance.storage_used_user)/19) * storage.price.costing
+        storage_price = Price.objects.filter(component=storage).first()
+        if not storage_price:
+            raise ValidationError("Storage price not configured")
 
+        storage_cost = (instance.storage_used_user / 19) * storage_price.costing
+
+        # ---------- TOTAL ----------
         total_cost = cpu_cost + gpu_cost + ai_cost + storage_cost
 
         serializer.save(
