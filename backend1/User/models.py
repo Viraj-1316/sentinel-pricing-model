@@ -9,10 +9,10 @@ class UserProfile(models.Model):
 
     def __str__(self):
         return self.user.username
-
-class PhoneOTP(models.Model):
-    phone = models.CharField(max_length=15, unique=True)  # +91xxxxxxxxxx
+class EmailOTP(models.Model):
+    email = models.EmailField(unique=True)   # example: user@gmail.com
     otp_hash = models.CharField(max_length=128)
+
     created_at = models.DateTimeField(auto_now_add=True)
     expires_at = models.DateTimeField()
 
@@ -25,3 +25,6 @@ class PhoneOTP(models.Model):
 
     def is_expired(self):
         return timezone.now() > self.expires_at
+
+    def __str__(self):
+        return self.email

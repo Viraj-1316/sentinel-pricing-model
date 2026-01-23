@@ -418,7 +418,19 @@ class creatingCategory(generics.ListCreateAPIView):
     def perform_create(self, serializer):
         
         serializer.save()
-
+class creatingCategoryRUD(generics.RetrieveUpdateDestroyAPIView):
+    
+    queryset = Category.objects.all()
+    serializer_class = categorySerializer
+    
+    permission_classes = [IsAdminUser]
+    
+    def perform_update(self, serializer):
+        
+        serializer.save()       
+    def perform_destroy(self, instance):
+        instance.delete()   
+            
 
 class processorUnit(generics.ListCreateAPIView):
     

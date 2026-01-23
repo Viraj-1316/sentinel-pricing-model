@@ -34,7 +34,7 @@ export class Registration {
   showPassword = false;
   showConfirmPassword = false;
 
-  private SEND_OTP_URL = 'http://127.0.0.1:8001/accounts/send-phone-otp/';
+  private SEND_OTP_URL = 'http://127.0.0.1:8001/accounts/send-email-otp/';
 
   constructor(
     private fb: FormBuilder,
@@ -86,17 +86,16 @@ onRegister(): void {
 
   this.loading = true;
 
-  const phone = this.registerForm.value.phone_number;
+  const email = this.registerForm.value.email;
 
-  // ✅ 1) Send OTP API call
-  this.http.post(this.SEND_OTP_URL, { phone: phone }).subscribe({
+  // ✅ 1) Send OTP API call (Email)
+  this.http.post(this.SEND_OTP_URL, { email: email }).subscribe({
     next: (res: any) => {
       this.loading = false;
 
       // ✅ 2) Store registration data temporarily for OTP verify page
       sessionStorage.setItem("reg_username", this.registerForm.value.username);
-      sessionStorage.setItem("reg_email", this.registerForm.value.email);
-      sessionStorage.setItem("reg_phone", phone);
+      sessionStorage.setItem("reg_email", email);
       sessionStorage.setItem("reg_password", this.registerForm.value.password);
 
       // ✅ 3) Redirect to OTP page
@@ -108,6 +107,5 @@ onRegister(): void {
     },
   });
 }
-
 
 }

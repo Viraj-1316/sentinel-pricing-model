@@ -40,7 +40,7 @@ EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 
 EMAIL_HOST_USER = 'sujit2004raut@gmail.com'
-EMAIL_HOST_PASSWORD = 'lykl lldl jzuq dnql'
+EMAIL_HOST_PASSWORD = 'kwmc dnek aovo puuq'
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 FAST2SMS_API_KEY = 'Po1aZXKrqbvUfN4xdDcWgAFSJQuYmh8RHyMk9si35I672O0zwEkEFdAifV9laCn1szexjOTIB3XtqLYr'
 FAST2SMS_OTP_ROUTE = "otp"
@@ -118,27 +118,27 @@ WSGI_APPLICATION = 'backend.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'pricing_model',
-        'USER': 'viraj',
-        'PASSWORD': 'viraj123',
-        'HOST': 'localhost',
-        'PORT': '5432',
-    }
-}
-
 # DATABASES = {
 #     'default': {
 #         'ENGINE': 'django.db.backends.postgresql',
-#         'NAME': 'sentinel_db',
-#         'USER': 'sentinel_user',
-#         'PASSWORD': 'Sentinel@123',
+#         'NAME': 'pricing_model',
+#         'USER': 'viraj',
+#         'PASSWORD': 'viraj123',
 #         'HOST': 'localhost',
 #         'PORT': '5432',
 #     }
 # }
+
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'sentinel_db',
+        'USER': 'sentinel_user',
+        'PASSWORD': 'Sentinel@123',
+        'HOST': 'localhost',
+        'PORT': '5432',
+    }
+}
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators

@@ -15,27 +15,35 @@ export class Otp {
   loading = false;
   errorMsg: string | null = null;
 
-  private VERIFY_OTP_URL = 'http://127.0.0.1:8001/accounts/verify-phone-otp/';
-  private RESEND_OTP_URL = 'http://127.0.0.1:8001/accounts/send-phone-otp/';
+  private VERIFY_OTP_URL = 'http://127.0.0.1:8001/accounts/verify-email-otp/';
+  private RESEND_OTP_URL = 'http://127.0.0.1:8001/accounts/send-email-otp/';
 
-  phone = sessionStorage.getItem("reg_phone");
+  email = sessionStorage.getItem("reg_email");   // ✅ changed
 
   constructor(private http: HttpClient, private router: Router) {}
 
   verifyOtp() {
     this.errorMsg = null;
 
-    if (!this.otp || this.otp.length !== 6) {
+    const otpClean = (this.otp || '').replace(/\s+/g, ''); // ✅ remove spaces
+
+    if (!otpClean || otpClean.length !== 6) {
       this.errorMsg = "Please enter 6 digit OTP";
+      return;
+    }
+
+    if (!this.email) {
+      this.errorMsg = "Email not found. Please register again.";
       return;
     }
 
     this.loading = true;
 
     const payload = {
-      phone: sessionStorage.getItem("reg_phone"),
-      otp: this.otp,
-      full_name: sessionStorage.getItem("reg_username"), // OR your full name field
+      email: this.email, // ✅ changed
+      otp: otpClean,     // ✅ cleaned otp
+      full_name: sessionStorage.getItem("reg_username"),
+      username: sessionStorage.getItem("reg_username"),  
       password: sessionStorage.getItem("reg_password"),
     };
 
@@ -46,11 +54,9 @@ export class Otp {
         // ✅ clear session
         sessionStorage.removeItem("reg_username");
         sessionStorage.removeItem("reg_email");
-        sessionStorage.removeItem("reg_phone");
         sessionStorage.removeItem("reg_password");
 
         alert("Account created successfully ✅");
-
         this.router.navigateByUrl("/login");
       },
       error: (err) => {
@@ -61,9 +67,12 @@ export class Otp {
   }
 
   resendOtp() {
-    if (!this.phone) return;
+    if (!this.email) {
+      alert("Email not found. Please register again.");
+      return;
+    }
 
-    this.http.post(this.RESEND_OTP_URL, { phone: this.phone }).subscribe({
+    this.http.post(this.RESEND_OTP_URL, { email: this.email }).subscribe({
       next: () => alert("OTP resent ✅"),
       error: () => alert("Failed to resend OTP"),
     });

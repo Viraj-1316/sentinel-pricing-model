@@ -18,6 +18,7 @@ from pricingModel.api.views import (
     AdminAuditLogsView,
     aiFeaturesCLDetails,
     storageCostingDetails,
+    creatingCategoryRUD,
 )
 
 urlpatterns = [
@@ -79,6 +80,7 @@ urlpatterns = [
         creatingCategory.as_view(),
         name='createCategory'
     ),
+    path('create-category/<int:pk>/', creatingCategoryRUD.as_view(), name='createCategoryRUD'),
     path(
         'processorUnit/',
         processorUnit.as_view(),

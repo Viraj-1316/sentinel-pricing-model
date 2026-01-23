@@ -9,10 +9,10 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from django.contrib.auth import get_user_model
-from User.models import PhoneOTP
-from User.api.utils import generate_otp, normalize_phone, hash_otp
-from User.api.sms import send_otp_sms_fast2sms
-from .utils import verify_otp
+
+from User.models import EmailOTP
+from User.api.utils import generate_otp, hash_otp, verify_otp, send_otp_email, normalize_email
+User= get_user_model()
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def me(request):
@@ -75,76 +75,96 @@ class ChangePassword(APIView):
         request.user.save()
 
         return Response({"message": "Password updated successfully"}, status=200)
-class RegisterSendPhoneOTP(APIView):
+class RegisterSendEmailOTP(APIView):
     def post(self, request):
-        phone = request.data.get("phone") or request.data.get("phone_number")
+        email = request.data.get("email")
 
         try:
-            phone = normalize_phone(phone)
+            email = normalize_email(email)
         except ValueError as e:
-            return Response({"message": str(e)}, status=400)
+            return Response({"message": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
-        if User.objects.filter(username=phone).exists():
-            return Response({"message": "Phone already registered"}, status=400)
+        # ✅ check already registered
+        if User.objects.filter(username=email).exists():
+            return Response({"message": "Email already registered"}, status=status.HTTP_400_BAD_REQUEST)
 
         otp = generate_otp()
 
-        # reset old OTP
-        PhoneOTP.objects.update_or_create(
-            phone=phone,
+        # ✅ reset old OTP
+        EmailOTP.objects.update_or_create(
+            email=email,
             defaults={
                 "otp_hash": hash_otp(otp),
                 "attempts": 0,
             }
         )
 
-        # send sms
-        resp = send_otp_sms_fast2sms(phone, otp)
+        # ✅ send email
+        resp = send_otp_email(email, otp)
 
         return Response({
             "message": "OTP sent",
             "gateway_response": resp
-        }, status=200)
+        }, status=status.HTTP_200_OK)
 
-User = get_user_model()
 
-from .utils import verify_otp
 
-class RegisterVerifyPhoneOTP(APIView):
+class RegisterVerifyEmailOTP(APIView):
     def post(self, request):
-        phone = request.data.get("phone")
+        email = request.data.get("email")
         otp = request.data.get("otp")
         password = request.data.get("password")
         full_name = request.data.get("full_name")
+        username = request.data.get("username")   # ✅ ADD THIS
 
+        # ✅ Validate email
         try:
-            phone = normalize_phone(phone)
+            email = normalize_email(email)
         except ValueError as e:
-            return Response({"message": str(e)}, status=400)
+            return Response({"message": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
-        otp_obj = PhoneOTP.objects.filter(phone=phone).first()
+        # ✅ Validate username
+        if not username:
+            return Response({"message": "Username is required"}, status=status.HTTP_400_BAD_REQUEST)
+
+        username = str(username).strip()
+
+        if User.objects.filter(username=username).exists():
+            return Response({"message": "Username already taken"}, status=status.HTTP_400_BAD_REQUEST)
+
+        if User.objects.filter(email=email).exists():
+            return Response({"message": "Email already registered"}, status=status.HTTP_400_BAD_REQUEST)
+
+        # ✅ Find OTP
+        otp_obj = EmailOTP.objects.filter(email=email).first()
         if not otp_obj:
-            return Response({"message": "OTP not found"}, status=400)
+            return Response({"message": "OTP not found"}, status=status.HTTP_400_BAD_REQUEST)
 
         if otp_obj.is_expired():
             otp_obj.delete()
-            return Response({"message": "OTP expired"}, status=400)
+            return Response({"message": "OTP expired"}, status=status.HTTP_400_BAD_REQUEST)
 
         if otp_obj.attempts >= 5:
-            return Response({"message": "Too many attempts. Please resend OTP."}, status=429)
+            return Response(
+                {"message": "Too many attempts. Please resend OTP."},
+                status=status.HTTP_429_TOO_MANY_REQUESTS
+            )
 
-        if not verify_otp(str(otp), otp_obj.otp_hash):
+        # ✅ Verify OTP
+        otp_clean = str(otp).strip().replace(" ", "")
+        if not verify_otp(otp_clean, otp_obj.otp_hash):
             otp_obj.attempts += 1
             otp_obj.save()
-            return Response({"message": "Invalid OTP"}, status=400)
+            return Response({"message": "Invalid OTP"}, status=status.HTTP_400_BAD_REQUEST)
 
         # ✅ Create user after OTP success
         user = User.objects.create_user(
-            username=phone,         # store phone in username OR use custom model
+            username=username,       # ✅ REAL USERNAME
+            email=email,             # ✅ EMAIL
             password=password,
             first_name=full_name
         )
 
         otp_obj.delete()
 
-        return Response({"message": "Account created successfully"}, status=201)
+        return Response({"message": "Account created successfully"}, status=status.HTTP_201_CREATED)

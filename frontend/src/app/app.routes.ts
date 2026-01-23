@@ -18,6 +18,12 @@ export const routes: Routes = [
     loadComponent: () => import('./registration/registration').then(m => m.Registration),
     data: { breadcrumb: { root: 'Auth', current: 'Registration' } }
   },
+  {
+    path: 'otp',
+    canActivate: [guestGuard],
+    loadComponent: () => import('./otp/otp').then(m => m.Otp),
+    data: { breadcrumb: { root: 'Auth', current: 'OTP Verification' } }
+  },
 
   // Protected layout
   {
