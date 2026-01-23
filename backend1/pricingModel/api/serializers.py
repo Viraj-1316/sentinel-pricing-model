@@ -29,7 +29,7 @@ class AdminQuotationSerializer(serializers.ModelSerializer):
             "id",
             "username",
             "cammera",
-            "camera_cost",
+          
             "ai_cost",
             "total_costing",
             "ai_features",
@@ -63,7 +63,7 @@ class AdminQuotationSerializer(serializers.ModelSerializer):
             "id",
             "username",
             "cammera",
-            "camera_cost",
+         
             "ai_cost",
             "total_costing",
             "ai_features",
@@ -164,12 +164,12 @@ class QuotationSerializer(serializers.ModelSerializer):
         fields = [
             "id",
             'cammera',
-            'camera_cost',
+          
             'ai_cost',
             'ai_features',
-            'processor',
+           
             'storage_days',
-            'processor_cost',
+           
             'total_costing',
             'created_at'
         ]

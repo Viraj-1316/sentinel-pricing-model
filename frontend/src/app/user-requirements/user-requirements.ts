@@ -18,7 +18,6 @@ export interface AIEnabled {
   costing: number;
 }
 
-/** ✅ Response from Pricingcalculation API */
 export interface PricingCalculationResponse {
   camera_cost: number;
   storage_cost: number;
@@ -28,7 +27,7 @@ export interface PricingCalculationResponse {
 
 function aiEnabledCameraValidator(group: AbstractControl): ValidationErrors | null {
   const total = Number(group.get('cammera')?.value || 0);
-  const aiCam = Number(group.get('ai_enabled_cameras')?.value || 0);
+  const aiCam = Number(group.get('aiEnabledCam')?.value || 0);
 
   if (aiCam > total) return { aiCamMoreThanTotal: true };
   return null;
@@ -56,9 +55,9 @@ export class UserRequirements implements OnInit {
   totalCost: number | null = null;
   costBreakup: PricingCalculationResponse | null = null;
 
-  /** ✅ APIs */
   private AI_API = 'http://127.0.0.1:8001/pricing-Model/ai-feature/';
   private QUOTE_API = 'http://127.0.0.1:8001/pricing-Model/Pricingcalculation/';
+  private GENERATE_API = 'http://127.0.0.1:8001/pricing-Model/user-quotations/';
 
   constructor(
     private fb: FormBuilder,
@@ -69,7 +68,7 @@ export class UserRequirements implements OnInit {
       {
         cammera: [null, [Validators.required, Validators.min(1)]],
         storage_days: [30, [Validators.required, Validators.min(1)]],
-        ai_enabled_cameras: [0, [Validators.required, Validators.min(0)]],
+        aiEnabledCam: [0, [Validators.required, Validators.min(0)]],
         ai_features: [[]],
       },
       { validators: aiEnabledCameraValidator }
@@ -79,12 +78,10 @@ export class UserRequirements implements OnInit {
   ngOnInit(): void {
     this.fetchAIFeatures();
 
-    // ✅ AI selection changes -> update AI total
     this.form.get('ai_features')?.valueChanges.subscribe((ids: number[]) => {
       this.totalAiCost = this.calculateAiCost(ids || []);
     });
 
-    // ✅ Reset results if user edits
     this.form.valueChanges.subscribe(() => {
       this.costCalculated = false;
       this.costBreakup = null;
@@ -93,16 +90,10 @@ export class UserRequirements implements OnInit {
     });
   }
 
-  // ==========================
-  // ✅ NAV
-  // ==========================
   onback() {
     this.router.navigateByUrl('/dashboard');
   }
 
-  // ==========================
-  // ✅ AI FEATURES
-  // ==========================
   fetchAIFeatures(): void {
     this.http.get<AIEnabled[]>(this.AI_API).subscribe({
       next: (data) => {
@@ -122,9 +113,7 @@ export class UserRequirements implements OnInit {
     const current: number[] = this.form.value.ai_features || [];
 
     const updated = checked
-      ? current.includes(id)
-        ? current
-        : [...current, id]
+      ? current.includes(id) ? current : [...current, id]
       : current.filter((x) => x !== id);
 
     this.form.patchValue({ ai_features: updated });
@@ -146,9 +135,6 @@ export class UserRequirements implements OnInit {
     return this.aiFeatures.filter((ai) => ids.includes(ai.id));
   }
 
-  // ==========================
-  // ✅ VALIDATION HELPERS
-  // ==========================
   isInvalid(controlName: string): boolean {
     const c = this.form.get(controlName);
     return !!(c && c.invalid && (c.dirty || c.touched));
@@ -157,14 +143,11 @@ export class UserRequirements implements OnInit {
   get aiCamMoreThanTotal(): boolean {
     return !!(
       this.form.errors?.['aiCamMoreThanTotal'] &&
-      (this.form.get('ai_enabled_cameras')?.touched ||
-        this.form.get('ai_enabled_cameras')?.dirty)
+      (this.form.get('aiEnabledCam')?.touched ||
+        this.form.get('aiEnabledCam')?.dirty)
     );
   }
 
-  // ==========================
-  // ✅ CALCULATE COST
-  // ==========================
   calculateCost(): void {
     this.errorMsg = null;
     this.totalCost = null;
@@ -187,9 +170,7 @@ export class UserRequirements implements OnInit {
       cammera: Number(this.form.value.cammera),
       storage_days: Number(this.form.value.storage_days),
       ai_features: this.form.value.ai_features || [],
-
-      // ✅ include if your backend supports it
-      ai_enabled_cameras: Number(this.form.value.ai_enabled_cameras || 0),
+      aiEnabledCam: Number(this.form.value.aiEnabledCam || 0),
     };
 
     this.loading = true;
@@ -215,14 +196,22 @@ export class UserRequirements implements OnInit {
     });
   }
 
-  // ==========================
-  // ✅ CLEAR FORM
-  // ==========================
+  generateQuotation(): void {
+    if (!this.costCalculated || !this.costBreakup) {
+      this.errorMsg = 'Calculate cost first.';
+      return;
+    }
+
+    // ✅ Your backend likely generates quotation after calculate
+    // If you have endpoint for generate -> call it here
+    this.router.navigateByUrl('/quotations');
+  }
+
   clearQuotation(): void {
     this.form.reset({
       cammera: null,
       storage_days: 30,
-      ai_enabled_cameras: 0,
+      aiEnabledCam: 0,
       ai_features: [],
     });
 

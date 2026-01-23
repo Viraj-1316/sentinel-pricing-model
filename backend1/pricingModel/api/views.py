@@ -456,7 +456,7 @@ class creatingCategoryRUD(generics.RetrieveUpdateDestroyAPIView):
         serializer.save()       
     def perform_destroy(self, instance):
         instance.delete()   
-            
+
 
 class processorUnit(generics.ListCreateAPIView):
     

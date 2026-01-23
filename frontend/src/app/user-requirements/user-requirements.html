@@ -24,10 +24,11 @@
       {{ errorMsg }}
     </div>
 
-    <!-- ✅ Single Input Form Card -->
+    <!-- ✅ Form + Result -->
     <div class="row justify-content-center">
-      <div class="col-12 col-lg-8 col-xl-7">
+      <div class="col-12 col-lg-10 col-xl-9">
 
+        <!-- ✅ FORM CARD -->
         <div class="premium-card">
           <div class="card-body p-4 p-lg-5">
 
@@ -38,7 +39,9 @@
               </div>
               <div>
                 <h5 class="fw-black mb-0">Requirements Form</h5>
-                <div class="text-muted small">Fill inputs below and calculate quotation cost.</div>
+                <div class="text-muted small">
+                  Fill inputs below and calculate compute requirements and storage.
+                </div>
               </div>
             </div>
 
@@ -62,7 +65,7 @@
 
               <!-- Storage Days -->
               <div class="mb-4">
-                <label class="form-label fw-semibold">How many storage days ?</label>
+                <label class="form-label fw-semibold">How many storage days?</label>
                 <div class="input-group input-group-lg">
                   <span class="input-group-text bg-white">
                     <i class="bi bi-calendar3"></i>
@@ -85,12 +88,16 @@
                   <input type="number"
                          class="form-control"
                          placeholder="Enter AI enabled camera count (ex: 10)"
-                         formControlName="ai_enabled_cameras"
+                         formControlName="aiEnabledCam"
                          min="0" />
                 </div>
 
                 <div class="hint mt-2">
                   AI enabled cameras must be ≤ total cameras.
+                </div>
+
+                <div *ngIf="aiCamMoreThanTotal" class="text-danger small mt-2">
+                  AI enabled cameras must be less than or equal to total cameras.
                 </div>
               </div>
 
@@ -139,11 +146,6 @@
                         <span class="soft-badge">₹ {{ ai.costing }}</span>
                       </div>
                     </li>
-
-                    <li *ngIf="aiFeatures.length === 0"
-                        class="px-3 py-2 text-muted small">
-                      No AI Features found.
-                    </li>
                   </ul>
                 </div>
 
@@ -168,7 +170,8 @@
                         [disabled]="loading"
                         (click)="calculateCost()">
                   <span *ngIf="!loading">
-                    <i class="bi bi-calculator me-2"></i> Calculate the compute Requirements and storage
+                    <i class="bi bi-calculator me-2"></i>
+                    Calculate the compute Requirements and storage
                   </span>
                   <span *ngIf="loading">
                     <span class="spinner-border spinner-border-sm me-2"></span>
@@ -176,8 +179,64 @@
                   </span>
                 </button>
               </div>
-
             </form>
+
+          </div>
+        </div>
+
+        <!-- ✅ RESULT TABLES (THIS WAS MISSING) -->
+        <div *ngIf="costCalculated && costBreakup" class="premium-card mt-4">
+          <div class="card-body p-4 p-lg-5">
+
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+              <div>
+                <h5 class="fw-black mb-0">Storage & Compute Requirements</h5>
+                <div class="text-muted small">Generated after calculation</div>
+              </div>
+
+              <span class="badge rounded-pill text-bg-light border px-3 py-2">
+                Total: ₹ {{ costBreakup.total_costing }}
+              </span>
+            </div>
+
+            <div class="table-responsive">
+              <table class="table align-middle mb-0">
+                <thead class="table-light">
+                  <tr>
+                    <th>Component</th>
+                    <th>Input</th>
+                    <th class="text-end">Cost</th>
+                  </tr>
+                </thead>
+
+                <tbody>
+                  <tr>
+                    <td class="fw-semibold">Cameras</td>
+                    <td>{{ form.value.cammera }} Cameras</td>
+                    <td class="text-end fw-bold">₹ {{ costBreakup.camera_cost }}</td>
+                  </tr>
+
+                  <tr>
+                    <td class="fw-semibold">Storage</td>
+                    <td>{{ form.value.storage_days }} Days</td>
+                    <td class="text-end fw-bold">₹ {{ costBreakup.storage_cost }}</td>
+                  </tr>
+
+                  <tr>
+                    <td class="fw-semibold">AI Features</td>
+                    <td>{{ selectedFeatures.length }} selected</td>
+                    <td class="text-end fw-bold">₹ {{ costBreakup.ai_cost }}</td>
+                  </tr>
+
+                  <tr class="table-success">
+                    <td colspan="2" class="fw-black text-uppercase">Grand Total</td>
+                    <td class="text-end fw-black fs-5">
+                      ₹ {{ costBreakup.total_costing }}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
 
           </div>
         </div>
