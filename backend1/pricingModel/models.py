@@ -20,7 +20,7 @@ class Component(models.Model):
     # ---- Camera pricing without ai model----
     min_cammera = models.IntegerField(null=True, blank=True)
     max_cammera = models.IntegerField(null=True, blank=True)
-    # core_hardware = models.CharField(max_length=100)
+    core_hardware = models.CharField(max_length=100, null=True, blank=True)
     CPUcores = models.PositiveIntegerField(null=True, blank=True)
     ram_required = models.PositiveIntegerField(
         null=True,
@@ -35,7 +35,7 @@ class Component(models.Model):
     # ---- Camera pricing with ai model ----
     min_cammeraA = models.IntegerField(null=True, blank=True)
     max_cammeraA = models.IntegerField(null=True, blank=True)
-    # AI_Component = models.CharField(max_length=100)
+    AI_Component = models.CharField(max_length=100, null=True, blank=True)
     VRAM = models.CharField(max_length=50, blank=True)
     
     # ---- Storage ----
@@ -77,28 +77,68 @@ class Price(models.Model):
 
    
 class UserPricing(models.Model):
-    
-        user_name = models.ForeignKey(User, on_delete=models.CASCADE)      
-        cammera = models.IntegerField()
-        ai_features = models.ManyToManyField(Component, blank=True, related_name='user_pricings')
-        # processor = models.ForeignKey(Component, on_delete=models.SET_NULL, related_name='user_processing_unit', null=True)
-        # storage = models.ForeignKey(Component, on_delete=models.SET_NULL, related_name='user_storage', null=True)
-        aiEnabledCam = models.IntegerField(null=True, blank=True, default=0)
-        vram_required = models.IntegerField()
-        cpuCores_required = models.IntegerField()
-        ram_required = models.IntegerField()
-        storage_used_user = models.IntegerField(default=19)
-        storage_days = models.IntegerField(default=1)
-        # camera_cost = models.IntegerField(default=0)
-        ai_cost = models.IntegerField(default=0)
-        # processor_cost = models.IntegerField(default=0)
-        storage_cost = models.IntegerField(default=0)
-        
-        total_costing = models.IntegerField(default=0)
 
-        created_at = models.DateTimeField(auto_now_add=True)
-        def __str__(self):
-            return f"{self.user_name} -{self.total_costing}"
+    user_name = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="pricings"
+    )
+
+    cammera = models.PositiveIntegerField()
+
+    # AI features selected by user
+    ai_features = models.ManyToManyField(
+        Component,
+        blank=True,
+        related_name="user_pricings"
+    )
+
+    # AI enabled cameras
+    aiEnabledCam = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+        default=0
+    )
+
+    # ---------- REQUIREMENTS (SYSTEM GENERATED) ----------
+    vram_required = models.PositiveIntegerField(default=0)
+    cpuCores_required = models.PositiveIntegerField(default=0)
+    ram_required = models.PositiveIntegerField(default=0)
+
+    # ---------- STORAGE ----------
+    storage_used_user = models.PositiveIntegerField(default=0)
+    storage_days = models.PositiveIntegerField(default=1)
+
+    # ---------- COSTS ----------
+    ai_cost = models.PositiveIntegerField(default=0)
+    storage_cost = models.PositiveIntegerField(default=0)
+    cpu_cost = models.PositiveIntegerField(default=0)
+    gpu_cost = models.PositiveIntegerField(default=0)
+
+    total_costing = models.PositiveIntegerField(default=0)
+
+    # ---------- AUTO SELECTED HARDWARE ----------
+    cpu = models.ForeignKey(
+        Component,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="cpu_usages"
+    )
+
+    gpu = models.ForeignKey(
+        Component,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="gpu_usages"
+    )
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.user_name.username} - ₹{self.total_costing}"
+
            
 
 class AuditLog(models.Model):

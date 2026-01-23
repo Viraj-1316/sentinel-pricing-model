@@ -22,7 +22,7 @@ from pricingModel.api.views import (
 )
 
 urlpatterns = [
-
+    
      path(
         'cameraPricing/',
         cameraSlabsCS.as_view(),
@@ -47,6 +47,11 @@ urlpatterns = [
         'Pricingcalculation/',
         pricingCalculate.as_view(),
         name='cal'
+    ),
+    path(
+        'Pricingcalculation/<int:pk>/',
+        pricingRecomendationview.as_view(),
+        name = 'calDet'  
     ),
     path(
         'user-quotations/',
@@ -97,9 +102,4 @@ urlpatterns = [
     
     path('admin/audit-logs/', AdminAuditLogsView.as_view(), name='admin-audit-logs'),
 
-
-    
-    
-
-   
 ]
