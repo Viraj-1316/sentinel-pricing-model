@@ -123,6 +123,8 @@ class ComponentDisplaySerializer(serializers.ModelSerializer):
             "CPUcores",
             "VRAM",
             "costing",
+            "AI_Component",
+            "ram_required",
         ]
         
 class UserFinalQuotationSerializer(serializers.ModelSerializer):
@@ -136,30 +138,23 @@ class UserFinalQuotationSerializer(serializers.ModelSerializer):
         fields = [
             "id",
             "cammera",
-
             # requirements
             "cpuCores_required",
             "ram_required",
             "vram_required",
-
             # selected hardware
             "cpu",
             "gpu",
-
             # costs
             "cpu_cost",
             "gpu_cost",
             "ai_cost",
             "storage_cost",
             "total_costing",
-
             # AI
             "ai_features",
-
             "created_at",
-        ]
-
-# chage is id is removed               
+        ]             
         
 class QuotationSerializer(serializers.ModelSerializer):
     ai_features = AI_ENABLEDserializer(many=True, read_only=True)

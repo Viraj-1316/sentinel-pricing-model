@@ -20,7 +20,7 @@ class Component(models.Model):
     # ---- Camera pricing without ai model----
     min_cammera = models.IntegerField(null=True, blank=True)
     max_cammera = models.IntegerField(null=True, blank=True)
-    core_hardware = models.CharField(max_length=100, null=True)
+    core_hardware = models.CharField(max_length=100, null=True, blank=True)
     CPUcores = models.PositiveIntegerField(null=True, blank=True)
     ram_required = models.PositiveIntegerField(
         null=True,
@@ -35,7 +35,7 @@ class Component(models.Model):
     # ---- Camera pricing with ai model ----
     min_cammeraA = models.IntegerField(null=True, blank=True)
     max_cammeraA = models.IntegerField(null=True, blank=True)
-    AI_Component = models.CharField(max_length=100, null=True)
+    AI_Component = models.CharField(max_length=100, null=True, blank=True)
     VRAM = models.CharField(max_length=50, blank=True)
     
     # ---- Storage ----

@@ -49,7 +49,7 @@ urlpatterns = [
         name='cal'
     ),
     path(
-        'Pricingcalculation/<int:pk>',
+        'Pricingcalculation/<int:pk>/',
         pricingRecomendationview.as_view(),
         name = 'calDet'  
     ),

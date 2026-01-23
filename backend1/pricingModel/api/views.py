@@ -281,8 +281,7 @@ class pricingRecomendationview(generics.RetrieveUpdateAPIView):
 
     def perform_update(self, serializer):
         instance = self.get_object()
-
-        # ---------- AUTO SELECT CPU ----------
+# CPU selection
         cpu = Component.objects.filter(
             category__name="Processor",
             CPUcores__gte=instance.cpuCores_required
@@ -293,7 +292,7 @@ class pricingRecomendationview(generics.RetrieveUpdateAPIView):
 
         cpu_cost = cpu.price.costing
 
-        # ---------- AUTO SELECT GPU ----------
+# GPU selection
         gpu = None
         gpu_cost = 0
 
@@ -308,15 +307,13 @@ class pricingRecomendationview(generics.RetrieveUpdateAPIView):
 
             gpu_cost = gpu.price.costing
 
-        # ---------- AI COST ----------
         ai_cost = sum(ai.price.costing for ai in instance.ai_features.all())
 
-        # ---------- STORAGE COST ----------
         storage = Component.objects.filter(category__name="Storage").first()
         if not storage or not hasattr(storage, "price"):
             raise ValidationError("Storage pricing not configured")
 
-        storage_cost = instance.storage_used * storage.price.costing
+        storage_cost = ((instance.storage_used_user)/19) * storage.price.costing
 
         total_cost = cpu_cost + gpu_cost + ai_cost + storage_cost
 
