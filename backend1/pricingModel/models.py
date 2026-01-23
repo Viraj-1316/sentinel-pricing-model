@@ -154,18 +154,18 @@ class AuditLog(models.Model):
 #         def __str__(self):
 #             uname = self.user.username if self.user else "Unknown"
 #             return f"{uname} - {self.action} @ {self.created_at}"
-class PhoneOTP(models.Model):
-    phone = models.CharField(max_length=15, unique=True)  # +91xxxxxxxxxx
-    otp_hash = models.CharField(max_length=128)
-    created_at = models.DateTimeField(auto_now_add=True)
-    expires_at = models.DateTimeField()
+# class PhoneOTP(models.Model):
+#     phone = models.CharField(max_length=15, unique=True)  # +91xxxxxxxxxx
+#     otp_hash = models.CharField(max_length=128)
+#     created_at = models.DateTimeField(auto_now_add=True)
+#     expires_at = models.DateTimeField()
 
-    attempts = models.IntegerField(default=0)  # wrong OTP attempts
+#     attempts = models.IntegerField(default=0)  # wrong OTP attempts
 
-    def save(self, *args, **kwargs):
-        if not self.expires_at:
-            self.expires_at = timezone.now() + timedelta(minutes=5)
-        super().save(*args, **kwargs)
+#     def save(self, *args, **kwargs):
+#         if not self.expires_at:
+#             self.expires_at = timezone.now() + timedelta(minutes=5)
+#         super().save(*args, **kwargs)
 
-    def is_expired(self):
-        return timezone.now() > self.expires_at
+#     def is_expired(self):
+#         return timezone.now() > self.expires_at
