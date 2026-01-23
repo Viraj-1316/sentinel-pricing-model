@@ -4,7 +4,7 @@ import {
   FormBuilder,
   FormGroup,
   ReactiveFormsModule,
-  Validators
+  Validators,
 } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../service/auth.service';
@@ -16,9 +16,11 @@ import { ToasterService } from '../service/toaster.service';
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, RouterLink],
   templateUrl: './login.html',
+  styleUrls: ['./login.css'],
 })
 export class Login {
   loginForm: FormGroup;
+
   loading = false;
   errorMsg: string | null = null;
   showPassword = false;
@@ -37,23 +39,31 @@ export class Login {
     });
   }
 
+  // ✅ field error helper
   isInvalid(controlName: string): boolean {
     const c = this.loginForm.get(controlName);
     return !!(c && c.invalid && (c.touched || c.dirty));
   }
 
+  // ✅ show/hide password
   togglePassword(): void {
     this.showPassword = !this.showPassword;
   }
 
-  onregister() {
-    console.log('✅ Navigate to registration');
+  // ✅ register route
+  onregister(): void {
     this.router.navigateByUrl('/registration');
   }
 
-  onSubmit(): void {
-    console.log('✅ Login submit clicked');
+  // ✅ forgot password (optional)
+  onForgotPassword(): void {
+    // you can route to forgot-password page if available
+    // this.router.navigateByUrl('/forgot-password');
+    this.toaster.info('Forgot password clicked');
+  }
 
+  // ✅ login submit
+  onSubmit(): void {
     this.errorMsg = null;
 
     if (this.loginForm.invalid) {
@@ -73,12 +83,8 @@ export class Login {
     this.auth.login(payload).subscribe({
       next: (res) => {
         // ✅ Save token properly (rememberMe based)
-        if (res?.access) {
-          this.auth.saveToken(res.access, remember);
-        }
-        if (res?.refresh) {
-          this.auth.saveRefreshToken(res.refresh, remember);
-        }
+        if (res?.access) this.auth.saveToken(res.access, remember);
+        if (res?.refresh) this.auth.saveRefreshToken(res.refresh, remember);
 
         // ✅ IMPORTANT: Fetch /me API to load role (Admin/User)
         this.auth.getMe().subscribe({
@@ -95,7 +101,6 @@ export class Login {
           },
         });
       },
-
       error: (err) => {
         this.loading = false;
 
@@ -105,6 +110,8 @@ export class Login {
           this.errorMsg =
             err?.error?.detail || 'Something went wrong. Please try again.';
         }
+
+        this.toaster.error(this.errorMsg ?? 'An error occurred');
       },
     });
   }

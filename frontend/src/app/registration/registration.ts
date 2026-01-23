@@ -34,7 +34,7 @@ export class Registration {
   showPassword = false;
   showConfirmPassword = false;
 
-  private API_URL = 'http://127.0.0.1:8001/accounts/register/';
+  private SEND_OTP_URL = 'http://127.0.0.1:8001/accounts/send-phone-otp/';
 
   constructor(
     private fb: FormBuilder,
@@ -76,46 +76,38 @@ export class Registration {
     this.showConfirmPassword = !this.showConfirmPassword;
   }
 
-  onRegister(): void {
-    this.errorMsg = null;
+onRegister(): void {
+  this.errorMsg = null;
 
-    if (this.registerForm.invalid) {
-      this.registerForm.markAllAsTouched();
-      return;
-    }
-
-    this.loading = true;
-
-    const payload = {
-      username: this.registerForm.value.username,
-      email: this.registerForm.value.email,
-      phone_number: this.registerForm.value.phone_number,
-      password: this.registerForm.value.password,
-      password2: this.registerForm.value.password2,
-    };
-
-    this.http.post(this.API_URL, payload).subscribe({
-      next: (res: any) => {
-        this.loading = false;
-
-        // ✅ optional token save
-        if (res?.access) localStorage.setItem('access', res.access);
-        if (res?.refresh) localStorage.setItem('refresh', res.refresh);
-
-        // ✅ redirect
-        this.router.navigateByUrl('/login');
-      },
-      error: (err) => {
-        this.loading = false;
-
-        if (err?.error) {
-          const firstKey = Object.keys(err.error)?.[0];
-          const firstMsg = err.error[firstKey]?.[0];
-          this.errorMsg = firstMsg ? `${firstKey}: ${firstMsg}` : 'Registration failed.';
-        } else {
-          this.errorMsg = 'Registration failed. Please try again.';
-        }
-      },
-    });
+  if (this.registerForm.invalid) {
+    this.registerForm.markAllAsTouched();
+    return;
   }
+
+  this.loading = true;
+
+  const phone = this.registerForm.value.phone_number;
+
+  // ✅ 1) Send OTP API call
+  this.http.post(this.SEND_OTP_URL, { phone: phone }).subscribe({
+    next: (res: any) => {
+      this.loading = false;
+
+      // ✅ 2) Store registration data temporarily for OTP verify page
+      sessionStorage.setItem("reg_username", this.registerForm.value.username);
+      sessionStorage.setItem("reg_email", this.registerForm.value.email);
+      sessionStorage.setItem("reg_phone", phone);
+      sessionStorage.setItem("reg_password", this.registerForm.value.password);
+
+      // ✅ 3) Redirect to OTP page
+      this.router.navigateByUrl("/otp");
+    },
+    error: (err) => {
+      this.loading = false;
+      this.errorMsg = err?.error?.message || "Failed to send OTP. Try again.";
+    },
+  });
+}
+
+
 }

@@ -1,74 +1,109 @@
 <div
-  class="bg-white border-end shadow-sm d-flex flex-column"
+  class="bg-white border-end shadow-sm d-flex flex-column sidebar-shell"
   [style.width]="collapsed ? '80px' : '260px'"
   style="transition: all .2s;"
 >
 
   <!-- Logo -->
-  <div class="p-3 border-bottom d-flex align-items-center gap-2">
+  <div class="p-3 pb-2 d-flex align-items-center gap-3">
     <div class="bg-primary text-white fw-bold rounded-3 d-flex align-items-center justify-content-center"
          style="width:42px;height:42px;">
       SP
     </div>
 
-    <div *ngIf="!collapsed">
+    <div *ngIf="!collapsed" class="lh-sm">
       <div class="fw-bold">Sentinel Pricing</div>
       <div class="text-muted small">Enterprise Panel</div>
     </div>
   </div>
 
+  <!-- Divider -->
+  <div class="px-0">
+    <div class="border-bottom"></div>
+  </div>
+
   <!-- Nav -->
   <div class="p-3 flex-grow-1">
 
-    <div class="text-uppercase text-muted small fw-semibold mb-2" *ngIf="!collapsed">Main</div>
+    <div class="text-uppercase text-muted small fw-semibold mb-2" *ngIf="!collapsed">
+      Main
+    </div>
 
-    <a routerLink="/dashboard" routerLinkActive="active"
-       class="nav-link d-flex align-items-center gap-2 rounded-3 px-3 py-2">
-      <i class="bi bi-house"></i>
+    <!-- Dashboard -->
+    <a
+      routerLink="/dashboard"
+      routerLinkActive="active"
+      [routerLinkActiveOptions]="{ exact: true }"
+      class="nav-link sidebar-link d-flex align-items-center gap-2 rounded-3 px-3 py-2"
+    >
+      <i class="bi bi-house-door"></i>
       <span *ngIf="!collapsed">Dashboard</span>
     </a>
 
-    <a routerLink="/quotations" routerLinkActive="active"
-       class="nav-link d-flex align-items-center gap-2 rounded-3 px-3 py-2">
+    <!-- Quotations -->
+    <a
+      routerLink="/quotations"
+      routerLinkActive="active"
+      class="nav-link sidebar-link d-flex align-items-center gap-2 rounded-3 px-3 py-2"
+    >
       <i class="bi bi-receipt"></i>
       <span *ngIf="!collapsed">Quotations</span>
     </a>
 
-    <a routerLink="/profile" routerLinkActive="active"
-       class="nav-link d-flex align-items-center gap-2 rounded-3 px-3 py-2">
-      <i class="bi bi-person"></i>
+    <!-- Profile -->
+    <a
+      routerLink="/profile"
+      routerLinkActive="active"
+      class="nav-link sidebar-link d-flex align-items-center gap-2 rounded-3 px-3 py-2"
+    >
+      <i class="bi bi-person-circle"></i>
       <span *ngIf="!collapsed">Profile</span>
     </a>
 
-     <!-- ✅ Admin Only -->
-     <div *ngIf="isAdmin">
-      <!-- <div class="text-uppercase text-muted small fw-semibold mt-4 mb-2" *ngIf="!collapsed">
-        System (Admin)
-      </div>  -->
+    <!-- Settings -->
+    <a
+      routerLink="/settings"
+      routerLinkActive="active"
+      class="nav-link sidebar-link d-flex align-items-center gap-2 rounded-3 px-3 py-2"
+    >
+      <i class="bi bi-gear"></i>
+      <span *ngIf="!collapsed">Settings</span>
+    </a>
 
-      <a routerLink="/admin/pricelist" routerLinkActive="active"
-         class="nav-link d-flex align-items-center gap-2 rounded-3 px-3 py-2">
-        <i class="bi bi-camera-video"></i>
-        <span *ngIf="!collapsed">PriceList</span>
+    <!-- ✅ Admin Only -->
+    <div *ngIf="isAdmin">
+
+     
+      <!-- Price List -->
+      <a
+        routerLink="/admin/pricelist"
+        routerLinkActive="active"
+        class="nav-link sidebar-link d-flex align-items-center gap-2 rounded-3 px-3 py-2"
+      >
+        <i class="bi bi-tags"></i>
+        <span *ngIf="!collapsed">Price List</span>
       </a>
 
-      <!-- <a routerLink="/ai-features" routerLinkActive="active"
-         class="nav-link d-flex align-items-center gap-2 rounded-3 px-3 py-2">
-        <i class="bi bi-cpu"></i>
-        <span *ngIf="!collapsed">AI Features</span>
-      </a> -->
-
-      <a routerLink="/admin/user-management" routerLinkActive="active"
-         class="nav-link d-flex align-items-center gap-2 rounded-3 px-3 py-2">
+      <!-- User Management -->
+      <a
+        routerLink="/admin/user-management"
+        routerLinkActive="active"
+        class="nav-link sidebar-link d-flex align-items-center gap-2 rounded-3 px-3 py-2"
+      >
         <i class="bi bi-people"></i>
         <span *ngIf="!collapsed">User Management</span>
       </a>
 
-      <a routerLink="/admin/logs" routerLinkActive="active"
-         class="nav-link d-flex align-items-center gap-2 rounded-3 px-3 py-2">
+      <!-- Audit Logs -->
+      <a
+        routerLink="/admin/logs"
+        routerLinkActive="active"
+        class="nav-link sidebar-link d-flex align-items-center gap-2 rounded-3 px-3 py-2"
+      >
         <i class="bi bi-journal-text"></i>
-        <span *ngIf="!collapsed">Logs / Audit</span>
+        <span *ngIf="!collapsed">Audit Logs</span>
       </a>
+
     </div>
 
   </div>
@@ -80,6 +115,7 @@
            style="width:38px;height:38px;">
         <i class="bi bi-person"></i>
       </div>
+
       <div *ngIf="!collapsed">
         <div class="fw-semibold small">{{ username || 'User' }}</div>
         <div class="text-muted small">{{ isAdmin ? 'Admin' : 'User' }}</div>

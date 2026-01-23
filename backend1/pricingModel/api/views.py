@@ -79,7 +79,6 @@ def send_quotation_email(request, pk):
 @xframe_options_exempt
 def download_quotation_pdf(request, pk):
 
-    # ✅ Admin can access any quotation
     if request.user.is_staff:
         quotation = UserPricing.objects.filter(pk=pk).first()
     else:
@@ -413,6 +412,7 @@ class AdminAuditLogsView(generics.ListAPIView):
 class AdminAuditLogsView(generics.ListAPIView):
     serializer_class = AuditLogSerializer
     permission_classes = [IsAuthenticated, IsAdminUser]
-
+    
     def get_queryset(self):
         return AuditLog.objects.select_related("user").all().order_by("-created_at")
+      

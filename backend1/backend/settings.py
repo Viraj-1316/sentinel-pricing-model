@@ -42,8 +42,8 @@ EMAIL_USE_TLS = True
 EMAIL_HOST_USER = 'sujit2004raut@gmail.com'
 EMAIL_HOST_PASSWORD = 'lykl lldl jzuq dnql'
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
-
-
+FAST2SMS_API_KEY = 'Po1aZXKrqbvUfN4xdDcWgAFSJQuYmh8RHyMk9si35I672O0zwEkEFdAifV9laCn1szexjOTIB3XtqLYr'
+FAST2SMS_OTP_ROUTE = "otp"
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
