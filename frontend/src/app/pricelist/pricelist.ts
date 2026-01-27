@@ -33,7 +33,7 @@ interface HardwarePricing {
   templateUrl: './pricelist.html',
   styleUrl: './pricelist.css',
 })
-export class PriceList implements OnInit {
+export class Pricelist implements OnInit {
 
   // ✅ Active tab
   tab: TabKey = 'camera';

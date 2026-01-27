@@ -14,7 +14,7 @@ export const routes: Routes = [
     loadComponent: () => import('./login/login').then(m => m.Login),
   },
   {
-    path: 'register',
+    path: 'registration',
     canActivate: [guestGuard],
     loadComponent: () => import('./registration/registration').then(m => m.Registration),
   },
@@ -69,7 +69,7 @@ export const routes: Routes = [
           {
             path: 'pricelist',
             loadComponent: () =>
-              import('./pricelist/pricelist').then(m => m.PriceList),
+              import('./pricelist/pricelist').then(m => m.Pricelist),
           },
 
           {

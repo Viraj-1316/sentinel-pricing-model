@@ -7,11 +7,12 @@ import {
   Validators,
 } from '@angular/forms';
 import { HttpClient, HttpClientModule } from '@angular/common/http';
-import { Router, RouterLink } from '@angular/router';
+import { Router } from '@angular/router';
 import { AuthService } from '../service/auth.service';
 import { ToasterService } from '../service/toaster.service';
 import { ConfirmdialogService } from '../service/confirmdialog.service';
-
+import { RouterLink } from '@angular/router';
+import { RouterModule } from '@angular/router';
 export interface AIEnabled {
   id: number;
   AI_feature: string;
@@ -30,7 +31,7 @@ type RightTab = 'camera' | 'ai' | 'preview';
 @Component({
   selector: 'app-user-requirements',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, HttpClientModule, RouterLink],
+  imports: [CommonModule, ReactiveFormsModule, HttpClientModule, RouterLink,RouterModule],
   templateUrl: './user-requirements.html',
 })
 export class UserRequirements implements OnInit {
