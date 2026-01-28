@@ -71,6 +71,8 @@ def generate_enterprise_quotation_pdf(quotation, username: str) -> bytes:
         ["Item", "Value"],
         ["Cameras", str(quotation.cammera)],
         ["Camera Cost", f"₹ {quotation.camera_cost}"],
+        ["Storage Cost", f"₹ {getattr(quotation, 'storage_cost', 0)}"],
+        ["Processor Cost", f"₹ {getattr(quotation, 'processor_cost', 0)}"],
         ["AI Cost", f"₹ {quotation.ai_cost}"],
         ["Grand Total", f"₹ {quotation.total_costing}"],
     ]
@@ -93,11 +95,14 @@ def generate_enterprise_quotation_pdf(quotation, username: str) -> bytes:
     ai_data = [["Sr No", "Feature", "Cost"]]
 
     features = quotation.ai_features.all()
+
     if features.count() == 0:
         ai_data.append(["-", "No AI features selected", "-"])
     else:
         for i, ai in enumerate(features, start=1):
-            ai_data.append([str(i), ai.AI_feature, f"₹ {ai.costing}"])
+            # ✅ FIXED: costing comes from related price model
+            ai_cost_value = ai.price.costing if getattr(ai, "price", None) else 0
+            ai_data.append([str(i), ai.AI_feature, f"₹ {ai_cost_value}"])
 
     ai_table = Table(ai_data, colWidths=[60, 270, 110])
     ai_table.setStyle(TableStyle([

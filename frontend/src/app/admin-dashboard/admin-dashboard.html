@@ -101,7 +101,7 @@
             <table class="table align-middle">
               <thead>
                 <tr class="text-muted small">
-                  <th>#</th>
+                  <!-- <th>#</th> -->
                   <th>Username</th>
                   <th>Email</th>
                   <th>Joined</th>
@@ -109,7 +109,7 @@
               </thead>
               <tbody>
                 <tr *ngFor="let u of users; trackBy: trackById">
-                  <td class="fw-semibold">#{{ u.id }}</td>
+                  <!-- <td class="fw-semibold">#{{ u.id }}</td> -->
                   <td class="fw-semibold">{{ u.username }}</td>
                   <td>{{ u.email || '—' }}</td>
                   <td class="text-muted small">{{ u.date_joined || '—' }}</td>
@@ -126,7 +126,7 @@
     <table class="table align-middle">
       <thead>
         <tr class="text-muted small">
-          <th>#</th>
+          <!-- <th>#</th> -->
           <th>Username</th>
           <th>Cameras</th>
           <th>AI Cost</th>
@@ -136,7 +136,7 @@
       </thead>
       <tbody>
         <tr *ngFor="let q of quotations; trackBy: trackById">
-          <td class="fw-semibold">#{{ q.id }}</td>
+          <!-- <td class="fw-semibold">#{{ q.id }}</td> -->
           <td class="fw-semibold">{{ q.username || '—' }}</td>
           <td>{{ q.cammera }}</td>
           <td>₹{{ q.ai_cost }}</td>
@@ -162,7 +162,7 @@
             <table class="table align-middle">
               <thead>
                 <tr class="text-muted small">
-                  <th>#</th>
+                  <!-- <th>#</th> -->
                   <th>Action</th>
                   <th>Username</th>
                   <th>Date</th>
@@ -170,7 +170,7 @@
               </thead>
               <tbody>
                 <tr *ngFor="let l of logs; trackBy: trackById">
-                  <td class="fw-semibold">#{{ l.id }}</td>
+                  <!-- <td class="fw-semibold">#{{ l.id }}</td> -->
                   <td class="fw-semibold">{{ l.action }}</td>
                   <td>{{ l.username || '—' }}</td>
                   <td class="text-muted small">{{ l.created_at }}</td>

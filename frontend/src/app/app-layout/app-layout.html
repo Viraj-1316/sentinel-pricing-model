@@ -1,28 +1,21 @@
-<div class="layout">
+<div class="layout" [class.sidebar-collapsed]="collapsed">
 
-  <!-- ✅ fixed sidebar -->
   <aside class="layout-sidebar">
-    <app-sidebar></app-sidebar>
+    <app-sidebar [collapsed]="collapsed"></app-sidebar>
   </aside>
 
-  <!-- ✅ right side (topbar + content + footer) -->
   <div class="layout-main">
-
-    <!-- ✅ fixed topbar -->
     <header class="layout-topbar">
       <app-topbar (toggleSidebar)="toggleSidebar()"></app-topbar>
     </header>
 
-    <!-- ✅ content (no scrolling page, fits height) -->
     <main class="layout-content">
       <router-outlet></router-outlet>
     </main>
 
-    <!-- ✅ fixed footer -->
     <footer class="layout-footer">
       <app-footer></app-footer>
     </footer>
-
   </div>
 
 </div>

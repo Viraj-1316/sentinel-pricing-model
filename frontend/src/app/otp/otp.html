@@ -1,0 +1,13 @@
+<div class="otp-card">
+  <h3>OTP Verification</h3>
+  <p>OTP sent to: {{ email }}</p>
+
+  <input
+    type="text"
+    maxlength="6"
+    [(ngModel)]="otp"
+    placeholder="Enter 6 digit OTP"
+  />
+
+  <button (click)="verifyOtp()">Verify OTP</button>
+</div>

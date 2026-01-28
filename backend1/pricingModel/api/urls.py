@@ -10,11 +10,20 @@ from pricingModel.api.views import (
     storageCosting,
     creatingCategory,
     processorUnit,
-    processorUnitDetail
+    processorUnitDetail,
+    send_quotation_email,
+    download_quotation_pdf,
+    AdminUsersListView,
+    AdminAllQuotationsView,
+    AdminAuditLogsView,
+    aiFeaturesCLDetails,
+    storageCostingDetails,
+    creatingCategoryRUD,
+    pricingRecomendationview
 )
 
 urlpatterns = [
-
+    
      path(
         'cameraPricing/',
         cameraSlabsCS.as_view(),
@@ -31,9 +40,19 @@ urlpatterns = [
         name='ai'
     ),
     path(
+        'ai-feature/<int:pk>/',
+        aiFeaturesCLDetails.as_view(),
+        name='ai'
+    ),
+    path(
         'Pricingcalculation/',
         pricingCalculate.as_view(),
         name='cal'
+    ),
+    path(
+        'Pricingcalculation/<int:pk>/',
+        pricingRecomendationview.as_view(),
+        name = 'calDet'  
     ),
     path(
         'user-quotations/',
@@ -57,11 +76,17 @@ urlpatterns = [
         storageCosting.as_view(),
         name='storageCosting'
     ),
-        path(
+     path(
+        'storage-costing/<int:pk>/',
+        storageCostingDetails.as_view(),
+        name='storageCostingDetail'
+    ),
+    path(
         'create-category/',
         creatingCategory.as_view(),
         name='createCategory'
     ),
+    path('create-category/<int:pk>/', creatingCategoryRUD.as_view(), name='createCategoryRUD'),
     path(
         'processorUnit/',
         processorUnit.as_view(),
@@ -72,7 +97,10 @@ urlpatterns = [
         processorUnitDetail.as_view(),
         name='processorRUD'
     ),
+    path('admin/users/', AdminUsersListView.as_view(), name='admin-users'),
     
+    path('admin/quotations/', AdminAllQuotationsView.as_view(), name='admin-quotations'),
     
+    path('admin/audit-logs/', AdminAuditLogsView.as_view(), name='admin-audit-logs'),
 
 ]

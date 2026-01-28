@@ -1,18 +1,13 @@
 <div class="page-shell">
-  <div class="bg-blob blob-1"></div>
-  <div class="bg-blob blob-2"></div>
-  <div class="bg-blob blob-3"></div>
-
   <div class="container-fluid page-content py-4 px-3 px-lg-4">
 
-    <!-- ✅ Premium Header -->
+    <!-- ✅ Header -->
     <div class="premium-header d-flex align-items-center justify-content-between flex-wrap gap-3 mb-4">
-
       <div class="d-flex align-items-center gap-3">
         <div class="brand-pill">SP</div>
         <div>
           <h4 class="header-title mb-0">User Requirements</h4>
-          <div class="header-subtitle">Build requirements → enterprise quotation</div>
+          <div class="header-subtitle">Enter requirements to generate quotation</div>
         </div>
       </div>
 
@@ -20,96 +15,105 @@
         <button class="btn btn-outline-primary" (click)="onback()">
           <i class="bi bi-arrow-left me-1"></i> Dashboard
         </button>
-
-        <!-- <button class="btn btn-outline-danger" (click)="PromiseLogout()">
-          <i class="bi bi-box-arrow-right me-1"></i> Logout
-        </button> -->
       </div>
-
     </div>
 
-    <!-- Alert -->
-    <div *ngIf="errorMsg" class="alert alert-danger rounded-3" role="alert">
+    <!-- Error Alert -->
+    <div *ngIf="errorMsg" class="alert alert-danger rounded-3 mb-4">
       <i class="bi bi-exclamation-triangle me-2"></i>
       {{ errorMsg }}
     </div>
 
-    <!-- GRID -->
-    <div class="row g-4">
+    <!-- ✅ Single Input Form Card -->
+    <div class="row justify-content-center">
+      <div class="col-12 col-lg-8 col-xl-7">
 
-      <!-- LEFT PANEL -->
-      <div class="col-12 col-xl-5">
         <div class="premium-card">
-          <div class="card-body p-4">
+          <div class="card-body p-4 p-lg-5">
 
-            <div class="premium-card-header">
-              <div class="d-flex align-items-center gap-2">
-                <div class="section-icon primary">
-                  <i class="bi bi-ui-checks-grid fs-5"></i>
-                </div>
-
-                <div>
-                  <h5 class="fw-bold mb-0">Enter Requirements</h5>
-                  <div class="text-muted small">Cameras & AI Modules</div>
-                </div>
+            <!-- Title -->
+            <div class="d-flex align-items-center gap-2 mb-4">
+              <div class="section-icon primary">
+                <i class="bi bi-ui-checks-grid fs-5"></i>
               </div>
-
-              <span class="section-badge">Step 1</span>
+              <div>
+                <h5 class="fw-black mb-0">Requirements Form</h5>
+                <div class="text-muted small">Fill inputs below and calculate quotation cost.</div>
+              </div>
             </div>
 
+            <!-- ✅ FORM -->
             <form [formGroup]="form">
 
               <!-- Cameras -->
-              <div class="mb-3">
-                <label class="form-label">No. of Cameras</label>
-
+              <div class="mb-4">
+                <label class="form-label fw-semibold">How many cameras?</label>
                 <div class="input-group input-group-lg">
                   <span class="input-group-text bg-white">
                     <i class="bi bi-camera-video"></i>
                   </span>
-
                   <input type="number"
                          class="form-control"
                          placeholder="Enter camera count (ex: 40)"
                          formControlName="cammera"
-                         [class.is-invalid]="isInvalid('cammera')" />
-
-                  <div class="invalid-feedback">
-                    Camera count is required.
-                  </div>
-                </div>
-
-                <div class="text-muted small mt-1">
-                  Camera pricing slab auto highlights on right panel.
+                         min="1" />
                 </div>
               </div>
 
-              <!-- AI Dropdown -->
-              <div class="mb-2">
-                <label class="form-label">AI Features</label>
+              <!-- Storage Days -->
+              <div class="mb-4">
+                <label class="form-label fw-semibold">How many storage days ?</label>
+                <div class="input-group input-group-lg">
+                  <span class="input-group-text bg-white">
+                    <i class="bi bi-calendar3"></i>
+                  </span>
+                  <input type="number"
+                         class="form-control"
+                         placeholder="Enter storage days (ex: 30)"
+                         formControlName="storage_days"
+                         min="1" />
+                </div>
+              </div>
+
+              <!-- AI Enabled Cameras -->
+              <div class="mb-4">
+                <label class="form-label fw-semibold">How many AI enabled cameras?</label>
+                <div class="input-group input-group-lg">
+                  <span class="input-group-text bg-white">
+                    <i class="bi bi-cpu"></i>
+                  </span>
+                  <input type="number"
+                         class="form-control"
+                         placeholder="Enter AI enabled camera count (ex: 10)"
+                         formControlName="ai_enabled_cameras"
+                         min="0" />
+                </div>
+
+                <div class="hint mt-2">
+                  AI enabled cameras must be ≤ total cameras.
+                </div>
+              </div>
+
+              <!-- AI Features Dropdown -->
+              <div class="mb-4">
+                <label class="form-label fw-semibold">Which AI Features you want?</label>
 
                 <div class="dropdown w-100">
                   <button class="btn btn-light border w-100 d-flex justify-content-between align-items-center py-3"
                           type="button"
-                          data-bs-toggle="dropdown"
-                          aria-expanded="false">
-
+                          data-bs-toggle="dropdown">
                     <div class="d-flex align-items-center gap-2 flex-wrap" style="max-width: 90%;">
                       <i class="bi bi-cpu"></i>
 
-                      <!-- empty -->
                       <span *ngIf="selectedFeatures.length === 0" class="text-muted">
                         Select AI Features
                       </span>
 
-                      <!-- chips -->
                       <div *ngIf="selectedFeatures.length > 0" class="d-flex flex-wrap gap-2">
                         <span *ngFor="let ai of selectedFeatures"
-                              class="ai-chip"
+                              class="chip"
                               (click)="$event.stopPropagation()">
-
                           {{ ai.AI_feature }}
-
                           <i class="bi bi-x-circle-fill chip-remove"
                              (click)="removeFeature(ai.id); $event.stopPropagation()"></i>
                         </span>
@@ -119,328 +123,66 @@
                     <i class="bi bi-chevron-down"></i>
                   </button>
 
-                  <!-- menu -->
-                  <ul class="dropdown-menu w-100 shadow-sm" style="max-height: 280px; overflow-y: auto;">
+                  <ul class="dropdown-menu w-100 shadow-sm"
+                      style="max-height: 280px; overflow-y:auto;">
                     <li *ngFor="let ai of aiFeatures" class="px-2 py-2">
                       <div class="form-check d-flex align-items-center justify-content-between">
                         <div class="d-flex align-items-center gap-2">
                           <input class="form-check-input"
                                  type="checkbox"
-                                 [id]="'ai-' + ai.id"
                                  [checked]="form.value.ai_features?.includes(ai.id)"
-                                 (change)="onToggleFeature(ai.id, $event)" />
-
-                          <label class="form-check-label fw-semibold" [for]="'ai-' + ai.id">
+                                 (change)="onToggleFeature(ai.id, $event)">
+                          <label class="form-check-label fw-semibold">
                             {{ ai.AI_feature }}
                           </label>
                         </div>
-
-                        <span class="soft-badge">
-                          ₹ {{ ai.costing }}
-                        </span>
+                        <span class="soft-badge">₹ {{ ai.costing }}</span>
                       </div>
                     </li>
 
-                    <li *ngIf="aiFeatures.length === 0" class="px-3 py-2 text-muted small">
-                      No AI Features found
+                    <li *ngIf="aiFeatures.length === 0"
+                        class="px-3 py-2 text-muted small">
+                      No AI Features found.
                     </li>
                   </ul>
                 </div>
 
                 <div class="d-flex justify-content-between mt-2">
                   <div class="text-muted small">Multiple selection enabled</div>
-                  <div class="fw-semibold text-primary small">AI Total: ₹ {{ totalAiCost }}</div>
+                  <div class="fw-semibold text-primary small">
+                    AI Total: ₹ {{ totalAiCost }}
+                  </div>
                 </div>
               </div>
 
-              <!-- ACTIONS -->
-              <div class="d-flex align-items-center justify-content-between gap-3 mt-4 flex-wrap">
+              <!-- ✅ Actions -->
+              <div class="d-flex justify-content-end gap-2 flex-wrap mt-4">
+                <button type="button"
+                        class="btn btn-outline-secondary px-4"
+                        (click)="clearQuotation()">
+                  <i class="bi bi-x-circle me-1"></i> Clear
+                </button>
 
-                <div class="d-flex gap-2 flex-wrap">
-                  <button type="button"
-                          class="btn btn-outline-primary btn-lg"
-                          [disabled]="loading"
-                          (click)="calculateCost()">
-
-                    <span *ngIf="!loading">
-                      <i class="bi bi-calculator me-2"></i> Calculate Cost
-                    </span>
-
-                    <span *ngIf="loading">
-                      <span class="spinner-border spinner-border-sm me-2"></span>
-                      Processing...
-                    </span>
-                  </button>
-
-                  <button type="button"
-                          class="btn btn-primary btn-lg"
-                          [disabled]="loading || !costCalculated"
-                          (click)="generateQuotation()">
-                    <i class="bi bi-file-earmark-text me-2"></i> Generate Quotation
-                  </button>
-                </div>
-
-                <div *ngIf="totalCost !== null" class="fw-semibold text-success fs-5">
-                  Total: ₹ {{ totalCost }}
-                </div>
-              </div>
-
-              <div class="text-center text-muted small mt-3" *ngIf="!costCalculated">
-                Step 1: Calculate cost to unlock quotation generation.
-              </div>
-
-              <div class="text-center text-muted small mt-3" *ngIf="costCalculated">
-                Step 2: Generate quotation preview for enterprise output.
+                <button type="button"
+                        class="btn btn-primary px-5"
+                        [disabled]="loading"
+                        (click)="calculateCost()">
+                  <span *ngIf="!loading">
+                    <i class="bi bi-calculator me-2"></i> Calculate the compute Requirements and storage
+                  </span>
+                  <span *ngIf="loading">
+                    <span class="spinner-border spinner-border-sm me-2"></span>
+                    Processing...
+                  </span>
+                </button>
               </div>
 
             </form>
 
           </div>
         </div>
+
       </div>
-
-      <!-- RIGHT PANEL -->
-      <div class="col-12 col-xl-7">
-        <div class="premium-card">
-          <div class="card-body p-4">
-
-            <div class="premium-card-header">
-              <div class="d-flex align-items-center gap-2">
-                <div class="section-icon success">
-                  <i class="bi bi-window-stack fs-5"></i>
-                </div>
-                <div>
-                  <h5 class="fw-bold mb-0">Enterprise Panel</h5>
-                  <div class="text-muted small">Pricing justification + preview</div>
-                </div>
-              </div>
-
-              <span class="soft-badge">Step 2</span>
-            </div>
-
-            <!-- ✅ TABS -->
-            <ul class="nav nav-pills gap-2 mb-3">
-              <li class="nav-item">
-                <button class="nav-link"
-                        [class.active]="activeTab === 'camera'"
-                        (click)="setTab('camera')">
-                  <i class="bi bi-camera-video me-1"></i> Camera Pricing
-                </button>
-              </li>
-
-              <li class="nav-item">
-                <button class="nav-link"
-                        [class.active]="activeTab === 'ai'"
-                        (click)="setTab('ai')">
-                  <i class="bi bi-cpu me-1"></i> Selected AI
-                </button>
-              </li>
-
-              <li class="nav-item">
-                <button class="nav-link"
-                        [class.active]="activeTab === 'preview'"
-                        (click)="setTab('preview')">
-                  <i class="bi bi-receipt me-1"></i> Quotation Preview
-                </button>
-              </li>
-            </ul>
-
-            <!-- CAMERA TAB -->
-            <div *ngIf="activeTab === 'camera'">
-
-              <div class="d-flex justify-content-between align-items-center mb-3">
-                <div class="fw-bold">Camera Pricing Slabs</div>
-
-                <span class="soft-badge">
-                  Selected cameras: {{ form.value.cammera || '-' }}
-                </span>
-              </div>
-
-              <div class="table-responsive">
-                <table class="table align-middle mb-0">
-                  <thead class="table-light">
-                    <tr>
-                      <th style="width:80px;">ID</th>
-                      <th>Min</th>
-                      <th>Max</th>
-                      <th class="text-end">Price</th>
-                      <th class="text-center" style="width:110px;">Match</th>
-                    </tr>
-                  </thead>
-
-                  <tbody>
-                    <tr *ngFor="let slab of cameraPricing"
-                        [class.table-success]="selectedCameraSlab?.id === slab.id">
-                      <td class="fw-semibold">#{{ slab.id }}</td>
-                      <td>{{ slab.min_cammera }}</td>
-                      <td>{{ slab.max_cammera === null ? '∞' : slab.max_cammera }}</td>
-                      <td class="text-end fw-bold">₹ {{ slab.total_costing }}</td>
-                      <td class="text-center">
-                        <span *ngIf="selectedCameraSlab?.id === slab.id"
-                              class="badge rounded-pill text-bg-success">
-                          Selected
-                        </span>
-                        <span *ngIf="selectedCameraSlab?.id !== slab.id"
-                              class="badge rounded-pill text-bg-light border">
-                          -
-                        </span>
-                      </td>
-                    </tr>
-
-                    <tr *ngIf="cameraPricing.length === 0">
-                      <td colspan="5" class="text-center text-muted py-4">
-                        Pricing slabs not available.
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-
-              <div class="text-muted small mt-3">
-                ✅ This table works as <b>enterprise justification</b>.
-              </div>
-
-            </div>
-
-            <!-- AI TAB -->
-            <div *ngIf="activeTab === 'ai'">
-
-              <div class="d-flex justify-content-between align-items-center mb-3">
-                <div class="fw-bold">Selected AI Features</div>
-
-                <span class="badge rounded-pill text-bg-primary">
-                  {{ selectedFeatures.length }} Selected
-                </span>
-              </div>
-
-              <div class="table-responsive">
-                <table class="table align-middle mb-0">
-                  <thead class="table-light">
-                    <tr>
-                      <th style="width:70px;">Sr</th>
-                      <th>Feature</th>
-                      <th class="text-end">Cost</th>
-                    </tr>
-                  </thead>
-
-                  <tbody>
-                    <tr *ngFor="let ai of selectedFeatures; let i = index">
-                      <td class="text-muted">{{ i + 1 }}</td>
-                      <td class="fw-semibold">{{ ai.AI_feature }}</td>
-                      <td class="text-end fw-bold">₹ {{ ai.costing }}</td>
-                    </tr>
-
-                    <tr *ngIf="selectedFeatures.length === 0">
-                      <td colspan="3" class="text-center text-muted py-4">
-                        No AI features selected.
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-
-              <div class="d-flex justify-content-end mt-3">
-                <div class="fw-bold text-primary">
-                  Total AI Cost: ₹ {{ totalAiCost }}
-                </div>
-              </div>
-
-            </div>
-
-            <!-- PREVIEW TAB -->
-            <div *ngIf="activeTab === 'preview'">
-
-              <!-- Empty -->
-              <div *ngIf="!quotationGenerated" class="text-center py-5">
-                <div class="display-6 text-muted">
-                  <i class="bi bi-file-earmark-text"></i>
-                </div>
-                <div class="fw-semibold mt-2">Quotation preview not generated</div>
-                <div class="text-muted small">
-                  Calculate cost → click <b>Generate Quotation</b>.
-                </div>
-              </div>
-
-              <!-- Quotation -->
-              <div *ngIf="quotationGenerated && quotation">
-
-                <div class="row g-3 mb-4">
-                  <div class="col-md-4">
-                    <div class="border rounded-4 p-3 h-100 bg-white">
-                      <div class="text-muted small">Cameras</div>
-                      <div class="fw-bold fs-4">{{ quotation.cammera }}</div>
-                      <div class="text-muted small">User input</div>
-                    </div>
-                  </div>
-
-                  <div class="col-md-4">
-                    <div class="border rounded-4 p-3 h-100 bg-white">
-                      <div class="text-muted small">Camera Cost</div>
-                      <div class="fw-bold fs-4">₹ {{ quotation.camera_cost }}</div>
-                      <div class="text-muted small">From slab</div>
-                    </div>
-                  </div>
-
-                  <div class="col-md-4">
-                    <div class="border rounded-4 p-3 h-100 bg-white">
-                      <div class="text-muted small">Grand Total</div>
-                      <div class="fw-bold fs-4 text-success">₹ {{ quotation.total_costing }}</div>
-                      <div class="text-muted small">Final</div>
-                    </div>
-                  </div>
-                </div>
-
-                <div class="fw-bold mb-2">AI Feature Breakdown</div>
-
-                <div class="table-responsive" *ngIf="quotation.ai_features?.length > 0">
-                  <table class="table align-middle mb-0">
-                    <thead class="table-light">
-                      <tr>
-                        <th style="width:70px;">Sr</th>
-                        <th>Feature</th>
-                        <th class="text-end">Cost</th>
-                      </tr>
-                    </thead>
-
-                    <tbody>
-                      <tr *ngFor="let ai of quotation.ai_features; let i = index">
-                        <td class="text-muted">{{ i + 1 }}</td>
-                        <td class="fw-semibold">{{ ai.AI_feature }}</td>
-                        <td class="text-end fw-semibold">₹ {{ ai.costing }}</td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-
-                <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mt-4">
-                  <div class="text-muted small">
-                    <i class="bi bi-clock me-1"></i>
-                    Generated: {{ quotation.created_at | date:'medium' }}
-                  </div>
-
-                  <div class="d-flex gap-2">
-                    <button class="btn btn-outline-secondary" type="button" (click)="clearQuotation()">
-                      <i class="bi bi-x-circle me-1"></i> Clear
-                    </button>
-
-                    <button class="btn btn-success" type="button" (click)="downloadPdf()">
-                      <i class="bi bi-download me-1"></i> Download PDF
-                    </button>
-
-                    <button class="btn btn-success" type="button" (click)="sendEmail()">
-                      <i class="bi bi-envelope me-1"></i> Send Email
-                    </button>
-                  </div>
-                </div>
-
-              </div>
-
-            </div>
-
-          </div>
-        </div>
-      </div>
-
     </div>
 
   </div>
