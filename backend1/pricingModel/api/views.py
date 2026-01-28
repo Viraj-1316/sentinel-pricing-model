@@ -105,7 +105,7 @@ class cameraSlabsCS(generics.ListCreateAPIView):
     serializer_class = cameraPricingSerializer
 
     def get_queryset(self):
-        return Component.objects.filter(category__name='Camera')
+        return Component.objects.filter(category__name='Processor')
     
     def get_permissions(self):
         if self.request.method == "GET":
@@ -130,7 +130,7 @@ class cameraSlabRUD(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = cameraPricingSerializer
  
     def get_queryset(self):
-        return Component.objects.filter(category__name='Camera')
+        return Component.objects.filter(category__name='Processor')
     
     def get_permissions(self):
         if self.request.method == "GET":
@@ -163,7 +163,7 @@ class aiFeaturesCL(generics.ListCreateAPIView):
         return [IsAuthenticated(), IsAdminUser()]
     
     def get_queryset(self):
-        return Component.objects.filter(category__name='AI')
+        return Component.objects.filter(category__name='Processor')
     
     def perform_create(self, serializer):
         costing = serializer.validated_data.pop('price')['costing']
@@ -183,7 +183,7 @@ class aiFeaturesCLDetails(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = cameraPricingSerializer
 
     def get_queryset(self):
-        return Component.objects.filter(category__name='AI')
+        return Component.objects.filter(category__name='Processor')
     
     def get_permissions(self):
         if self.request.method == "GET":
