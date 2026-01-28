@@ -9,8 +9,8 @@ from pricingModel.api.views import (
     UserQuotationList,
     storageCosting,
     creatingCategory,
-    processorUnit,
-    processorUnitDetail,
+    # processorUnit,
+    # processorUnitDetail,
     send_quotation_email,
     download_quotation_pdf,
     AdminUsersListView,
@@ -87,16 +87,16 @@ urlpatterns = [
         name='createCategory'
     ),
     path('create-category/<int:pk>/', creatingCategoryRUD.as_view(), name='createCategoryRUD'),
-    path(
-        'processorUnit/',
-        processorUnit.as_view(),
-        name='processor'
-    ),
-    path(
-        'processorUnit/<int:pk>/',
-        processorUnitDetail.as_view(),
-        name='processorRUD'
-    ),
+    # path(
+    #     'processorUnit/',
+    #     processorUnit.as_view(),
+    #     name='processor'
+    # ),
+    # path(
+    #     'processorUnit/<int:pk>/',
+    #     processorUnitDetail.as_view(),
+    #     name='processorRUD'
+    # ),
     path('admin/users/', AdminUsersListView.as_view(), name='admin-users'),
     
     path('admin/quotations/', AdminAllQuotationsView.as_view(), name='admin-quotations'),

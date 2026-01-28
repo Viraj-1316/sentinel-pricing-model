@@ -27,7 +27,6 @@ from pricingModel.api.serializers import (
     QuotationSerializer,
     storagePricingSerializer,
     categorySerializer,
-    processorSerializer,
     AdminUserSerializer,
     AdminQuotationSerializer,
     AuditLogSerializer,
@@ -458,52 +457,52 @@ class creatingCategoryRUD(generics.RetrieveUpdateDestroyAPIView):
         instance.delete()   
             
 
-class processorUnit(generics.ListCreateAPIView):
+# class processorUnit(generics.ListCreateAPIView):
     
-    serializer_class = processorSerializer
+#     serializer_class = processorSerializer
     
-    def get_permissions(self):
-        if self.request.method == "GET":
-            return [IsAuthenticated()]
-        return [IsAuthenticated(), IsAdminUser()]
+#     def get_permissions(self):
+#         if self.request.method == "GET":
+#             return [IsAuthenticated()]
+#         return [IsAuthenticated(), IsAdminUser()]
     
-    def get_queryset(self):
-        return Component.objects.filter(category__name='Processor')
+#     def get_queryset(self):
+#         return Component.objects.filter(category__name='Processor')
     
-    def perform_create(self, serializer):
+#     def perform_create(self, serializer):
         
-        costing = serializer.validated_data.pop('price')['costing']
+#         costing = serializer.validated_data.pop('price')['costing']
         
-        processor = serializer.save(
-            category = Category.objects.get(name='Processor')
-        )
+#         processor = serializer.save(
+#             category = Category.objects.get(name='Processor')
+#         )
 
-        Price.objects.create(
-            component = processor,
-            costing = costing
-        )
+#         Price.objects.create(
+#             component = processor,
+#             costing = costing
+#         )
 
-class  processorUnitDetail(generics.RetrieveUpdateDestroyAPIView):
+# class  processorUnitDetail(generics.RetrieveUpdateDestroyAPIView):
     
-    serializer_class = processorSerializer
+#     serializer_class = processorSerializer
     
-    queryset = Component.objects.filter(category__name='Processor')
+#     queryset = Component.objects.filter(category__name='Processor')
 
-    permission_classes = [IsAdminUser]
+#     permission_classes = [IsAdminUser]
     
-    def perform_update(self, serializer):
-        costing = serializer.validated_data.pop('price', None)['costing']
+#     def perform_update(self, serializer):
+#         costing = serializer.validated_data.pop('price', None)['costing']
 
-        processor = serializer.save()
+#         processor = serializer.save()
 
-        if costing is not None:
-            Price.objects.update_or_create(
-                component=processor,
-                defaults={'costing': costing}
-            )
-    def perform_destroy(self, instance):
-        Price.objects.filter(component=instance).delete()
-        instance.delete()
+#         if costing is not None:
+#             Price.objects.update_or_create(
+#                 component=processor,
+#                 defaults={'costing': costing}
+#             )
+#     def perform_destroy(self, instance):
+#         Price.objects.filter(component=instance).delete()
+#         instance.delete()
         
         
 class AdminAuditLogsView(generics.ListAPIView):
