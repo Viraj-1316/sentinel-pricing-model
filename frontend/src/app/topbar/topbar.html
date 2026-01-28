@@ -1,10 +1,12 @@
-<nav class="navbar bg-white border-bottom px-3 py-2 shadow-sm">
+<nav class="navbar bg-white border-bottom px-2 py-2 shadow-sm">
   <div class="d-flex align-items-center gap-3">
 
     <!-- Sidebar Toggle -->
-    <button class="btn btn-light border" type="button" (click)="toggleSidebar.emit()">
-      <i class="bi bi-list"></i>
-    </button>
+  <button class="btn btn-light"
+        (click)="toggleSidebar.emit(); $event.stopPropagation()">
+  <i class="bi bi-list"></i>
+</button>
+
 
     <!-- Breadcrumb -->
     <div class="d-none d-md-flex flex-column lh-1">

@@ -34,15 +34,16 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 
 EMAIL_HOST_USER = 'sujit2004raut@gmail.com'
-EMAIL_HOST_PASSWORD = 'kavbrlxcaygtpqnb'   # ✅ use Gmail App Password
+EMAIL_HOST_PASSWORD = 'kwmc dnek aovo puuq'
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
-
-
+FAST2SMS_API_KEY = 'Po1aZXKrqbvUfN4xdDcWgAFSJQuYmh8RHyMk9si35I672O0zwEkEFdAifV9laCn1szexjOTIB3XtqLYr'
+FAST2SMS_OTP_ROUTE = "otp"
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
@@ -126,6 +127,7 @@ WSGI_APPLICATION = 'backend.wsgi.application'
 #         'HOST': 'localhost',
 #         'PORT': '5432',
 #     }
+# }
 
 DATABASES = {
     'default': {
@@ -137,9 +139,6 @@ DATABASES = {
         'PORT': '5432',
     }
 }
-
-
-
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators

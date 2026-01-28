@@ -4,6 +4,9 @@ import { Router, RouterModule } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { ToasterService } from '../service/toaster.service';
 import { ConfirmdialogService } from '../service/confirmdialog.service';
+import { ActivatedRoute, NavigationEnd } from '@angular/router';
+import { filter } from 'rxjs/operators';
+
 export interface Quotation {
   id: number;
   cammera: number;
@@ -54,22 +57,49 @@ export class Topbar implements OnInit {
   loading = false;
   errorMsg: string | null = null;
 
-  constructor(private router: Router, private http: HttpClient, private toast: ToasterService, private confirm: ConfirmdialogService  ) {}
+  constructor(private router: Router, private http: HttpClient, private toast: ToasterService, private confirm: ConfirmdialogService ,  private route: ActivatedRoute ) {}
 
-  ngOnInit(): void {
-    // ✅ load user details
-    const savedUsername = localStorage.getItem('username');
-    if (savedUsername) {
-      this.username = savedUsername;
-      this.userInitial = savedUsername.charAt(0).toUpperCase();
-    }
+private getDeepestRoute(route: ActivatedRoute): ActivatedRoute {
+  let currentRoute = route;
 
-    const savedRole = localStorage.getItem('role');
-    if (savedRole) this.role = savedRole;
-
-    // ✅ Load dashboard data to show notifications
-    this.loadDashboard();
+  while (currentRoute.firstChild) {
+    currentRoute = currentRoute.firstChild;
   }
+
+  return currentRoute;
+}
+  ngOnInit(): void {
+  // ✅ load user details
+  const savedUsername = localStorage.getItem('username');
+  if (savedUsername) {
+    this.username = savedUsername;
+    this.userInitial = savedUsername.charAt(0).toUpperCase();
+  }
+
+  const savedRole = localStorage.getItem('role');
+  if (savedRole) this.role = savedRole;
+
+  // ✅ breadcrumb listener
+ this.router.events
+  .pipe(filter(event => event instanceof NavigationEnd))
+  .subscribe(() => {
+    const activeRoute = this.getDeepestRoute(this.router.routerState.root);
+    const breadcrumb = activeRoute.snapshot.data['breadcrumb'];
+
+    if (breadcrumb) {
+      this.breadcrumbRoot = breadcrumb.root;
+      this.breadcrumbCurrent = breadcrumb.current;
+    } else {
+      this.breadcrumbRoot = 'Dashboard';
+      this.breadcrumbCurrent = 'Home';
+    }
+  });
+
+
+  // ✅ Load dashboard data
+  this.loadDashboard();
+}
+
 
   loadDashboard(): void {
     this.loading = true;

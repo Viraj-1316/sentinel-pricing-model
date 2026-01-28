@@ -74,7 +74,7 @@
         <div class="row g-3 mb-4">
 
           <div class="col-12 col-md-6 col-xl-3">
-            <div class="card border-0 shadow-sm rounded-4">
+            <div class="card border-0 shadow-sm rounded-4 h-100">
               <div class="card-body p-4">
                 <div class="d-flex justify-content-between align-items-start">
                   <div>
@@ -90,7 +90,7 @@
           </div>
 
           <div class="col-12 col-md-6 col-xl-3">
-            <div class="card border-0 shadow-sm rounded-4">
+            <div class="card border-0 shadow-sm rounded-4 h-100">
               <div class="card-body p-4">
                 <div class="d-flex justify-content-between align-items-start">
                   <div>
@@ -108,7 +108,7 @@
           </div>
 
           <div class="col-12 col-md-6 col-xl-3">
-            <div class="card border-0 shadow-sm rounded-4">
+            <div class="card border-0 shadow-sm rounded-4 h-100">
               <div class="card-body p-4">
                 <div class="d-flex justify-content-between align-items-start">
                   <div>
@@ -126,7 +126,7 @@
           </div>
 
           <div class="col-12 col-md-6 col-xl-3">
-            <div class="card border-0 shadow-sm rounded-4">
+            <div class="card border-0 shadow-sm rounded-4 h-100">
               <div class="card-body p-4">
                 <div class="d-flex justify-content-between align-items-start">
                   <div>
@@ -166,7 +166,7 @@
                   <table class="table table-hover align-middle mb-0">
                     <thead class="table-light">
                       <tr>
-                        <th style="width:90px;">ID</th>
+                        <!-- <th style="width:90px;">ID</th> -->
                         <th>Cameras</th>
                         <th>Total</th>
                         <th>Date</th>
@@ -175,7 +175,7 @@
 
                     <tbody>
                       <tr *ngFor="let q of recent">
-                        <td class="fw-semibold">#{{ q.id }}</td>
+                        <!-- <td class="fw-semibold">#{{ q.id }}</td> -->
                         <td>{{ q.cammera }}</td>
                         <td class="fw-bold text-success">₹ {{ q.total_costing }}</td>
                         <td class="text-muted">{{ q.created_at | date:'medium' }}</td>

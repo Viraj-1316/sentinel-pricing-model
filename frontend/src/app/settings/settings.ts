@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { HttpClient } from '@angular/common/http';
 
 type ActiveTab = 'account' | 'security' | 'preferences' | 'notifications' | 'admin';
 
@@ -24,6 +25,9 @@ export class Settings implements OnInit {
   username = 'User';
   role: 'Admin' | 'User' = 'User';
   isAdmin = false;
+currentPasswordVerified = false;
+verifyingPassword = false;
+savingPassword = false;
 
   // Settings model (Enterprise-style grouped object)
   settings = {
@@ -64,7 +68,8 @@ export class Settings implements OnInit {
     }
   };
 
-  constructor(private router: Router) {}
+  constructor(private router: Router, private http: HttpClient) {}
+  VERIFY_PASSWORD_API = "http://127.0.0.1:8001/accounts/verify-password/";
 
   ngOnInit(): void {
     this.username = localStorage.getItem('username') || 'User';
@@ -87,6 +92,79 @@ export class Settings implements OnInit {
     // apply theme/accent immediately (premium feel)
     this.applyAppearance();
   }
+  UPDATE_PASSWORD_API = "http://127.0.0.1:8001/accounts/change-password/";
+
+updatePassword() {
+  this.resetMessages();
+
+  if (!this.currentPasswordVerified) {
+    this.errorMsg = "Verify current password first.";
+    return;
+  }
+
+  if (this.settings.security.newPassword.length < 6) {
+    this.errorMsg = "New password must be at least 6 characters.";
+    return;
+  }
+
+  if (this.settings.security.newPassword !== this.settings.security.confirmPassword) {
+    this.errorMsg = "New password and confirm password do not match.";
+    return;
+  }
+
+  this.savingPassword = true;
+
+  const payload = {
+    current_password: this.settings.security.currentPassword,
+    new_password: this.settings.security.newPassword,
+  };
+
+  this.http.post(this.UPDATE_PASSWORD_API, payload).subscribe({
+    next: () => {
+      this.savingPassword = false;
+      this.successMsg = "Password updated successfully ✅";
+
+      // ✅ reset fields
+      this.settings.security.currentPassword = '';
+      this.settings.security.newPassword = '';
+      this.settings.security.confirmPassword = '';
+
+      this.currentPasswordVerified = false;
+    },
+    error: (err) => {
+      this.savingPassword = false;
+      this.errorMsg = err?.error?.message || "Failed to update password.";
+    }
+  });
+}
+
+verifyCurrentPassword() {
+  this.resetMessages();
+
+  const currentPassword = this.settings.security.currentPassword;
+
+  if (!currentPassword) {
+    this.errorMsg = "Please enter current password first.";
+    return;
+  }
+
+  this.verifyingPassword = true;
+
+  this.http.post(this.VERIFY_PASSWORD_API, { password: currentPassword }).subscribe({
+    next: (res: any) => {
+      this.verifyingPassword = false;
+
+      // ✅ verified
+      this.currentPasswordVerified = true;
+      this.successMsg = "Current password verified ✅";
+    },
+    error: (err) => {
+      this.verifyingPassword = false;
+      this.currentPasswordVerified = false;
+      this.errorMsg = err?.error?.message || "Wrong current password ❌";
+    }
+  });
+}
 
   initials(): string {
     const u = (this.username || 'U').trim();
