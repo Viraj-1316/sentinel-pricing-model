@@ -19,6 +19,7 @@ from pricingModel.api.views import (
     aiFeaturesCLDetails,
     storageCostingDetails,
     creatingCategoryRUD,
+    pricingRecomendationview
 )
 
 urlpatterns = [
