@@ -9,9 +9,12 @@
       <app-topbar (toggleSidebar)="toggleSidebar()"></app-topbar>
     </header>
 
-    <main class="layout-content">
-      <router-outlet></router-outlet>
-    </main>
+   <main class="layout-content">
+  <div class="layout-content-inner">
+    <router-outlet></router-outlet>
+  </div>
+</main>
+
 
     <footer class="layout-footer">
       <app-footer></app-footer>

@@ -12,31 +12,59 @@ import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { Router, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 
+/* =========================
+   INTERFACES
+========================= */
+
 export interface AIEnabled {
   id: number;
   AI_feature: string;
   costing: number;
 }
 
-export interface PricingCalculationResponse {
-  camera_cost: number;
-  storage_cost: number;
-  ai_cost: number;
-  total_costing: number;
+export interface RequirementCalculationResponse {
+  id?: number;
+  cammera: number;
+  storage_days: number;
+  aiEnabledCam: number;
+  ai_features: number[];
+  storage_used_user: number;
+  vram_required: number;
+  cpuCores_required: number;
+  ram_required: number;
+  created_at?: string;
 }
 
-function aiEnabledCameraValidator(group: AbstractControl): ValidationErrors | null {
+/* =========================
+   VALIDATOR
+========================= */
+
+function aiEnabledCameraValidator(
+  group: AbstractControl
+): ValidationErrors | null {
   const total = Number(group.get('cammera')?.value || 0);
   const aiCam = Number(group.get('aiEnabledCam')?.value || 0);
 
-  if (aiCam > total) return { aiCamMoreThanTotal: true };
+  if (aiCam > total) {
+    return { aiCamMoreThanTotal: true };
+  }
   return null;
 }
+
+/* =========================
+   COMPONENT
+========================= */
 
 @Component({
   selector: 'app-user-requirements',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, HttpClientModule, RouterLink, FormsModule],
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    HttpClientModule,
+    RouterLink,
+    FormsModule,
+  ],
   templateUrl: './user-requirements.html',
   styleUrl: './user-requirements.css',
 })
@@ -46,18 +74,15 @@ export class UserRequirements implements OnInit {
   loading = false;
   errorMsg: string | null = null;
 
-  // AI Features
   aiFeatures: AIEnabled[] = [];
-  totalAiCost = 0;
 
-  // cost summary
   costCalculated = false;
-  totalCost: number | null = null;
-  costBreakup: PricingCalculationResponse | null = null;
+  requirements: RequirementCalculationResponse | null = null;
 
-  private AI_API = 'http://127.0.0.1:8001/pricing-Model/ai-feature/';
-  private QUOTE_API = 'http://127.0.0.1:8001/pricing-Model/Pricingcalculation/';
-  private GENERATE_API = 'http://127.0.0.1:8001/pricing-Model/user-quotations/';
+  private AI_API =
+    'http://127.0.0.1:8001/pricing-Model/ai-feature/';
+  private QUOTE_API =
+    'http://127.0.0.1:8001/pricing-Model/Pricingcalculation/';
 
   constructor(
     private fb: FormBuilder,
@@ -75,35 +100,38 @@ export class UserRequirements implements OnInit {
     );
   }
 
+  /* =========================
+     INIT
+  ========================= */
+
   ngOnInit(): void {
     this.fetchAIFeatures();
 
-    this.form.get('ai_features')?.valueChanges.subscribe((ids: number[]) => {
-      this.totalAiCost = this.calculateAiCost(ids || []);
-    });
-
     this.form.valueChanges.subscribe(() => {
       this.costCalculated = false;
-      this.costBreakup = null;
-      this.totalCost = null;
+      this.requirements = null;
       this.errorMsg = null;
     });
   }
 
-  onback() {
+  /* =========================
+     NAVIGATION
+  ========================= */
+
+  onback(): void {
     this.router.navigateByUrl('/dashboard');
   }
 
+  /* =========================
+     AI FEATURES
+  ========================= */
+
   fetchAIFeatures(): void {
     this.http.get<AIEnabled[]>(this.AI_API).subscribe({
-      next: (data) => {
-        this.aiFeatures = data || [];
-        const ids: number[] = this.form.value.ai_features || [];
-        this.totalAiCost = this.calculateAiCost(ids);
-      },
+      next: (res) => (this.aiFeatures = res || []),
       error: () => {
         this.aiFeatures = [];
-        this.errorMsg = 'Failed to load AI features.';
+        this.errorMsg = 'Failed to load AI features';
       },
     });
   }
@@ -113,7 +141,9 @@ export class UserRequirements implements OnInit {
     const current: number[] = this.form.value.ai_features || [];
 
     const updated = checked
-      ? current.includes(id) ? current : [...current, id]
+      ? current.includes(id)
+        ? current
+        : [...current, id]
       : current.filter((x) => x !== id);
 
     this.form.patchValue({ ai_features: updated });
@@ -121,24 +151,19 @@ export class UserRequirements implements OnInit {
 
   removeFeature(id: number): void {
     const current: number[] = this.form.value.ai_features || [];
-    this.form.patchValue({ ai_features: current.filter((x) => x !== id) });
-  }
-
-  private calculateAiCost(selectedIds: number[]): number {
-    return this.aiFeatures
-      .filter((ai) => selectedIds.includes(ai.id))
-      .reduce((sum, ai) => sum + Number(ai.costing || 0), 0);
+    this.form.patchValue({
+      ai_features: current.filter((x) => x !== id),
+    });
   }
 
   get selectedFeatures(): AIEnabled[] {
     const ids: number[] = this.form.value.ai_features || [];
-    return this.aiFeatures.filter((ai) => ids.includes(ai.id));
+    return this.aiFeatures.filter((x) => ids.includes(x.id));
   }
 
-  isInvalid(controlName: string): boolean {
-    const c = this.form.get(controlName);
-    return !!(c && c.invalid && (c.dirty || c.touched));
-  }
+  /* =========================
+     VALIDATION HELPERS
+  ========================= */
 
   get aiCamMoreThanTotal(): boolean {
     return !!(
@@ -148,64 +173,67 @@ export class UserRequirements implements OnInit {
     );
   }
 
+  /* =========================
+     MAIN CALCULATION
+  ========================= */
+
   calculateCost(): void {
     this.errorMsg = null;
-    this.totalCost = null;
-    this.costBreakup = null;
     this.costCalculated = false;
+    this.requirements = null;
 
     if (this.form.invalid) {
       this.form.markAllAsTouched();
-
-      if (this.form.errors?.['aiCamMoreThanTotal']) {
-        this.errorMsg = 'AI enabled cameras must be less than or equal to total cameras.';
-        return;
-      }
-
-      this.errorMsg = 'Please fill all required fields correctly.';
+      this.errorMsg =
+        'Please fill all required fields correctly.';
       return;
     }
 
     const payload = {
       cammera: Number(this.form.value.cammera),
       storage_days: Number(this.form.value.storage_days),
+      aiEnabledCam: Number(this.form.value.aiEnabledCam),
       ai_features: this.form.value.ai_features || [],
-      aiEnabledCam: Number(this.form.value.aiEnabledCam || 0),
     };
 
     this.loading = true;
 
-    this.http.post<PricingCalculationResponse>(this.QUOTE_API, payload).subscribe({
-      next: (res) => {
-        this.loading = false;
+    this.http
+      .post<RequirementCalculationResponse>(
+        this.QUOTE_API,
+        payload
+      )
+      .subscribe({
+        next: (res) => {
+          this.loading = false;
 
-        this.costBreakup = {
-          camera_cost: Number(res?.camera_cost || 0),
-          storage_cost: Number(res?.storage_cost || 0),
-          ai_cost: Number(res?.ai_cost || 0),
-          total_costing: Number(res?.total_costing || 0),
-        };
+          this.requirements = {
+            id: res?.id,
+            cammera: res?.cammera ?? payload.cammera,
+            storage_days: payload.storage_days,
+            aiEnabledCam: res?.aiEnabledCam ?? payload.aiEnabledCam,
+            ai_features: res?.ai_features ?? payload.ai_features,
+            storage_used_user: res?.storage_used_user ?? 0,
+            vram_required: res?.vram_required ?? 0,
+            cpuCores_required: res?.cpuCores_required ?? 0,
+            ram_required: res?.ram_required ?? 0,
+            created_at: res?.created_at ?? new Date().toISOString(),
+          };
 
-        this.totalCost = this.costBreakup.total_costing;
-        this.costCalculated = true;
-      },
-      error: (err) => {
-        this.loading = false;
-        this.errorMsg = err?.error?.detail || 'Failed to calculate cost.';
-      },
-    });
+          this.costCalculated = true;
+        },
+        error: (err) => {
+          this.loading = false;
+          this.errorMsg =
+            err?.error?.detail ||
+            'Failed to calculate requirements';
+        },
+      });
   }
 
-  generateQuotation(): void {
-    if (!this.costCalculated || !this.costBreakup) {
-      this.errorMsg = 'Calculate cost first.';
-      return;
-    }
-
-    // ✅ Your backend likely generates quotation after calculate
-    // If you have endpoint for generate -> call it here
-    this.router.navigateByUrl('/quotations');
-  }
+  /* =========================
+     CLEAR
+  ========================= */
 
   clearQuotation(): void {
     this.form.reset({
@@ -215,10 +243,18 @@ export class UserRequirements implements OnInit {
       ai_features: [],
     });
 
-    this.totalAiCost = 0;
     this.costCalculated = false;
-    this.costBreakup = null;
-    this.totalCost = null;
+    this.requirements = null;
     this.errorMsg = null;
+  }
+
+  /* =========================
+     HELPERS
+  ========================= */
+
+  get storageInTB(): number {
+    return this.requirements
+      ? this.requirements.storage_used_user / 1024
+      : 0;
   }
 }
