@@ -56,12 +56,11 @@ class Component(models.Model):
                 max_cam = self.max_cammera or "∞"
                 return f"{min_cam} - {max_cam} cameras"
 
-            if self.category and self.category.name.lower() == "processor":
-                return self.name or "Processor Component"
-
             if self.category and self.category.name.lower() == "storage":
-                return f"{self.storage_per_cam or 0} GB/day Storage"
+                return f"{self.storage_perDay or 0} GB/day Storage"
 
+            if self.category and self.category.name.lower() == "processor":
+                return f"{self.core_hardware or self.AI_Component}"
 
         except Exception:
             return f"Component #{self.id}"
