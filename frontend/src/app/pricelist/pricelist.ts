@@ -55,7 +55,6 @@ interface StorageCosting {
   styleUrl: './pricelist.css',
 })
 export class Pricelist implements OnInit {
-
   // ✅ Active tab
   tab: TabKey = 'camera';
 

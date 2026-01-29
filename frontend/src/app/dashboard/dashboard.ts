@@ -22,6 +22,7 @@ export class Dashboard implements OnInit {
     // ✅ Call /me and decide role
     this.auth.getMe().subscribe({
       next: (res) => {
+        console.log('User info:', res);
         this.isAdmin = res.is_staff || res.is_superuser;
         this.loading = false;
       },
