@@ -65,7 +65,7 @@ export class Pricelist implements OnInit {
 
   // ✅ Lists
   categoryList: Category[] = [];
-  cameraList: CameraPricing[] = [];
+  // cameraList: CameraPricing[] = [];
   aiList: AiPricing[] = [];
   hardwareList: HardwarePricing[] = [];
   storageList: StorageCosting[] = [];
@@ -148,7 +148,7 @@ export class Pricelist implements OnInit {
   // ✅ Load list based on tab
   loadCurrentTabData() {
     if (this.tab === 'category') this.loadCategoryList();
-    if (this.tab === 'camera') this.loadCameraPricing();
+    // if (this.tab === 'camera') this.loadCameraPricing();
     if (this.tab === 'ai') this.loadAiPricing();
     if (this.tab === 'hardware') this.loadHardwarePricing();
     if (this.tab === 'storage') this.loadStorageCosting();
@@ -270,19 +270,19 @@ export class Pricelist implements OnInit {
   // ==========================================================
   // ✅ CAMERA CRUD
   // ==========================================================
-  loadCameraPricing() {
-    this.loading = true;
-    this.http.get<CameraPricing[]>(this.CAMERA_API).subscribe({
-      next: (res) => {
-        this.loading = false;
-        this.cameraList = res || [];
-      },
-      error: (err) => {
-        this.loading = false;
-        this.errorMsg = err?.error?.detail || 'Failed to load camera pricing.';
-      },
-    });
-  }
+  // loadCameraPricing() {
+  //   this.loading = true;
+  //   this.http.get<CameraPricing[]>(this.CAMERA_API).subscribe({
+  //     next: (res) => {
+  //       this.loading = false;
+  //       this.cameraList = res || [];
+  //     },
+  //     error: (err) => {
+  //       this.loading = false;
+  //       this.errorMsg = err?.error?.detail || 'Failed to load camera pricing.';
+  //     },
+  //   });
+  // }
 
   editCamera(item: CameraPricing) {
     this.editingCameraId = item.id;
@@ -325,7 +325,7 @@ export class Pricelist implements OnInit {
         this.saving = false;
         this.toast.success('Camera pricing added ✅');
         this.cancelCameraEdit();
-        this.loadCameraPricing();
+        // this.loadCameraPricing();
       },
       error: (err) => {
         this.saving = false;
@@ -345,7 +345,7 @@ export class Pricelist implements OnInit {
           this.saving = false;
           this.toast.success('Camera updated ✅');
           this.cancelCameraEdit();
-          this.loadCameraPricing();
+          // this.loadCameraPricing();
         },
         error: (err) => {
           this.saving = false;
@@ -365,7 +365,7 @@ export class Pricelist implements OnInit {
           this.saving = false;
           this.toast.success('Camera updated ✅');
           this.cancelCameraEdit();
-          this.loadCameraPricing();
+          // this.loadCameraPricing();
         },
         error: (err) => {
           this.saving = false;
@@ -383,7 +383,7 @@ export class Pricelist implements OnInit {
         this.saving = false;
         this.toast.success('Camera deleted ✅');
         if (this.editingCameraId === id) this.cancelCameraEdit();
-        this.loadCameraPricing();
+        // this.loadCameraPricing();
       },
       error: (err) => {
         this.saving = false;

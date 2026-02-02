@@ -75,7 +75,7 @@ class userRequirementSerializer(serializers.ModelSerializer):
             "include_cpu",
             "include_gpu",
             "include_storage",
-            "Duration",
+            # "Duration",
             'created_at',
         ]
 
@@ -129,8 +129,8 @@ class UserFinalQuotationSerializer(serializers.ModelSerializer):
             "ai_features",
             # Licence Duration
             "Duration",
-            "licence",
-            "licenceCostU"
+            # "licence",
+            # "licenceCostU"
             "created_at",
         ]             
         
