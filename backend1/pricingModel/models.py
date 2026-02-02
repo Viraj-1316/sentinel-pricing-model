@@ -147,6 +147,7 @@ class UserPricing(models.Model):
         null=True,        
         blank=True
     )
+    
     licenceCostU = models.IntegerField(null=True, blank=True) 
     Duration = models.IntegerField(default=1)
     created_at = models.DateTimeField(auto_now_add=True)

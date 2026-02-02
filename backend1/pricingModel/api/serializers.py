@@ -130,6 +130,7 @@ class UserFinalQuotationSerializer(serializers.ModelSerializer):
             # Licence Duration
             "Duration",
             "licence",
+            "licenceCostU"
             "created_at",
         ]             
         

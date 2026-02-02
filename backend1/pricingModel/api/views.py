@@ -392,7 +392,7 @@ class pricingRecomendationview(generics.RetrieveUpdateAPIView):
             gpu_cost=gpu_cost,
             ai_cost=ai_cost,
             storage_cost=storage_cost,
-            
+            licenceCostU = licenseCost,
             total_costing=total_cost,
             
         )
