@@ -392,7 +392,7 @@ class pricingRecomendationview(generics.RetrieveUpdateAPIView):
 
 
 class UserQuotationList(generics.ListAPIView):
-            serializer_class = QuotationSerializer
+            serializer_class = UserFinalQuotationSerializer
             permission_classes = [IsAuthenticated]
 
             def get_queryset(self):

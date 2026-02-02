@@ -122,6 +122,7 @@ class UserFinalQuotationSerializer(serializers.ModelSerializer):
             "gpu_cost",
             "ai_cost",
             "storage_cost",
+            "storage_used_user",
             "total_costing",
             # AI
             "ai_features",
