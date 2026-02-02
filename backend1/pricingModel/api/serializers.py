@@ -129,25 +129,25 @@ class UserFinalQuotationSerializer(serializers.ModelSerializer):
             "created_at",
         ]             
         
-class QuotationSerializer(serializers.ModelSerializer):
-    ai_features = AI_ENABLEDserializer(many=True, read_only=True)
+# class QuotationSerializer(serializers.ModelSerializer):
+#     ai_features = AI_ENABLEDserializer(many=True, read_only=True)
    
-    class Meta:
-        model = UserPricing
-        fields = [
-            "id",
-            'cammera',
+#     class Meta:
+#         model = UserPricing
+#         fields = [
+#             "id",
+#             'cammera',
           
-            'ai_cost',
-            'ai_features',
-            'cpu_cost',
-            'gpu_cost',
-            'storage_cost',
-            'storage_days',
+#             'ai_cost',
+#             'ai_features',
+#             'cpu_cost',
+#             'gpu_cost',
+#             'storage_cost',
+#             'storage_days',
            
-            'total_costing',
-            'created_at'
-        ]
+#             'total_costing',
+#             'created_at'
+#         ]
 
 
 class categorySerializer(serializers.ModelSerializer):

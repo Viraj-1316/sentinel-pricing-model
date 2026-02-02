@@ -180,40 +180,44 @@
                         <th>Date</th>
                       </tr>
                     </thead>
- 
- 
- 
+
+
+
                     <tbody>
   <tr *ngFor="let q of recent">
- 
+
     <td>{{ q.cammera }}</td>
- 
+
     <td>{{ q.cpuName }}</td>
     <td class="fw-bold text-success">₹ {{ q.cpu_cost }}</td>
- 
+
     <td>{{ q.gpuName }}</td>
     <td class="fw-bold text-success">₹ {{ q.gpu_cost }}</td>
- 
+
     <td>{{ q.aiFeatureNames }}</td>
     <td class="fw-bold text-success">₹ {{ q.ai_cost }}</td>
- 
+
     <td class="fw-bold text-success">
   {{ q.storage_used_user !== null ? q.storage_used_user : '—' }}
 </td>
- 
+
     <td class="fw-bold text-success">₹ {{ q.storage_cost }}</td>
- 
+
     <td class="fw-bold text-success">₹ {{ q.total_costing }}</td>
     <td class="text-muted">{{ q.created_at | date:'medium' }}</td>
   </tr>
- 
+
   <tr *ngIf="recent.length === 0">
     <td colspan="11" class="text-center text-muted py-4">
       No quotations available.
     </td>
   </tr>
 </tbody>
+<<<<<<< HEAD
  
+=======
+
+>>>>>>> 87d2f82 (full working code saved)
                   </table>
                 </div>
  

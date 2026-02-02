@@ -24,7 +24,7 @@ from pricingModel.api.audit import create_audit_log
 from pricingModel.api.serializers import (
     AI_ENABLEDserializer,
     cameraPricingSerializer,
-    QuotationSerializer,
+    # QuotationSerializer,
     storagePricingSerializer,
     categorySerializer,
     processorSerializer,
