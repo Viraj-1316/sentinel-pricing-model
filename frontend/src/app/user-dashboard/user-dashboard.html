@@ -168,6 +168,14 @@
                       <tr>
                         <!-- <th style="width:90px;">ID</th> -->
                         <th>Cameras</th>
+                        <th>CPU</th>
+                        <th>CPU Cost</th>
+                        <th>GPU</th>
+                        <th>GPU Cost</th>
+                        <th>AI Models</th>
+                        <th>AI Models Cost</th>
+                        <th>Storage Used</th>
+                        <th>Storage Cost</th>
                         <th>Total</th>
                         <th>Date</th>
                       </tr>
@@ -177,6 +185,14 @@
                       <tr *ngFor="let q of recent">
                         <!-- <td class="fw-semibold">#{{ q.id }}</td> -->
                         <td>{{ q.cammera }}</td>
+                        <td class="fw-bold text-success">₹ {{ q.cpu }}</td>
+                        <td class="fw-bold text-success">₹ {{ q.total_costing }}</td>
+                        <td class="fw-bold text-success">₹ {{ q.total_costing }}</td>
+                        <td class="fw-bold text-success">₹ {{ q.total_costing }}</td>
+                        <td class="fw-bold text-success">₹ {{ q.total_costing }}</td>
+                        <td class="fw-bold text-success">₹ {{ q.total_costing }}</td>
+                        <td class="fw-bold text-success">₹ {{ q.total_costing }}</td>
+                        <td class="fw-bold text-success">₹ {{ q.total_costing }}</td>
                         <td class="fw-bold text-success">₹ {{ q.total_costing }}</td>
                         <td class="text-muted">{{ q.created_at | date:'medium' }}</td>
                       </tr>

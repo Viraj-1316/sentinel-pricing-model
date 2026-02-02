@@ -30,7 +30,7 @@ export class UserDashboard implements OnInit {
 
   notifications: { title: string; message: string; time: string }[] = [];
 
-  private QUOTATION_API = 'http://127.0.0.1:8001/pricing-Model/user-quotations/';
+  private QUOTATION_API = 'http://127.0.0.1:8001/pricing-Model/Pricingcalculation/<int:pk>/';
 
   constructor(
     private http: HttpClient,
