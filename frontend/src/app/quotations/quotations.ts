@@ -12,10 +12,18 @@ export interface QuotationRow {
   ai_cost: number;
   total_costing: number;
   created_at: string;
-
+  cpu_cost: number;
+  gpu_cost: number;
+  storage_cost: number;
+  ai_features: AiFeature[];
   // admin fields
   username?: string;
   email?: string;
+}
+export interface AiFeature {
+  id: number;
+  AI_feature: string;
+  costing: number;
 }
 
 @Component({

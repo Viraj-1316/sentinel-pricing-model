@@ -53,6 +53,11 @@ export const routes: Routes = [
         loadComponent: () => import('./quotations/quotations').then(m => m.Quotations),
         data: { breadcrumb: { root: 'Dashboard', current: 'Quotations' } }
       },
+      {
+        path: 'qoutation-form/:id',
+        loadComponent: () => import('./qoutation-form/qoutation-form').then(m => m.QoutationForm),
+        data: { breadcrumb: { root: 'Dashboard', current: 'Quotation Form' } }
+      },
 
       {
         path: 'profile',

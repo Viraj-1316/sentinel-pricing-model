@@ -29,8 +29,11 @@ class AdminQuotationSerializer(serializers.ModelSerializer):
             "id",
             "username",
             "cammera",
-          
+            "ai_features",
             "ai_cost",
+            "cpu_cost",
+            "gpu_cost",
+             "storage_cost",
             "total_costing",
             "ai_features",
             "created_at",
@@ -40,41 +43,7 @@ class AdminQuotationSerializer(serializers.ModelSerializer):
         return obj.user_name.username if obj.user_name else None
 
     def get_ai_features(self, obj):
-        return list(obj.ai_features.values("AI_feature", "costing"))
-
-class AdminUserSerializer(serializers.ModelSerializer):
-    role = serializers.SerializerMethodField()
-
-    class Meta:
-        model = User
-        fields = ['id', 'username', 'email', 'is_staff', 'date_joined', 'last_login', 'role']
-
-    def get_role(self, obj):
-        return "Admin" if obj.is_staff else "User"
-
-
-class AdminQuotationSerializer(serializers.ModelSerializer):
-    username = serializers.SerializerMethodField()
-    ai_features = serializers.SerializerMethodField()
-
-    class Meta:
-        model = UserPricing
-        fields = [
-            "id",
-            "username",
-            "cammera",
-         
-            "ai_cost",
-            "total_costing",
-            "ai_features",
-            "created_at",
-        ]
-
-    def get_username(self, obj):
-        return obj.user_name.username if obj.user_name else None
-
-    def get_ai_features(self, obj):
-        return list(obj.ai_features.values("AI_feature", "costing"))
+        return list(obj.ai_features.values("AI_feature", "price"))
 
                         
 class userRequirementSerializer(serializers.ModelSerializer):
@@ -170,7 +139,9 @@ class QuotationSerializer(serializers.ModelSerializer):
           
             'ai_cost',
             'ai_features',
-           
+            'cpu_cost',
+            'gpu_cost',
+            'storage_cost',
             'storage_days',
            
             'total_costing',

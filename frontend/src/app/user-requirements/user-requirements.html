@@ -1,268 +1,134 @@
 <div class="page-shell">
 
-  <!-- ===== PAGE CONTENT WRAPPER (CENTERS CONTENT) ===== -->
   <div class="page-content-wrapper py-4">
-
-    <!-- ===== MAX WIDTH CONTAINER ===== -->
     <div class="container-xl px-3 px-lg-4">
 
-      <!-- ================= HEADER ================= -->
-      <div
-        class="premium-header d-flex align-items-center justify-content-between flex-wrap gap-3 mb-4"
-      >
-        <div class="d-flex align-items-center gap-3">
+      <!-- HEADER -->
+      <div class="premium-header d-flex justify-content-between mb-4">
+        <div class="d-flex gap-3">
           <div class="brand-pill">SP</div>
           <div>
-            <h4 class="header-title mb-0">User Requirements</h4>
-            <div class="header-subtitle">
-              Enter requirements to generate quotation
-            </div>
+            <h4 class="mb-0">User Requirements</h4>
+            <small>Enter requirements to generate quotation</small>
           </div>
         </div>
 
         <button class="btn btn-outline-primary" (click)="onback()">
-          <i class="bi bi-arrow-left me-1"></i> Dashboard
+          ← Dashboard
         </button>
       </div>
 
-      <!-- ================= ERROR ================= -->
-      <div *ngIf="errorMsg" class="alert alert-danger rounded-3 mb-4">
-        <i class="bi bi-exclamation-triangle me-2"></i>
+      <!-- ERROR -->
+      <div *ngIf="errorMsg" class="alert alert-danger">
         {{ errorMsg }}
       </div>
 
-      <!-- ================= FORM + RESULT ================= -->
       <div class="row g-4">
 
-        <!-- ========== LEFT : FORM ========== -->
-        <div class="col-12 col-lg-6">
-          <div class="premium-card h-100">
-            <div class="card-body p-4">
+        <!-- LEFT FORM -->
+        <div class="col-lg-6">
+          <div class="card p-4">
 
-              <h5 class="fw-bold mb-4">Requirements Form</h5>
+            <form [formGroup]="form">
 
-              <form [formGroup]="form">
+              <div class="mb-3">
+                <label>Total Cameras</label>
+                <input type="number" class="form-control"
+                       formControlName="cammera">
+              </div>
 
-                <!-- Cameras -->
-                <div class="mb-3">
-                  <label class="form-label fw-semibold">Total Cameras</label>
+              <div class="mb-3">
+                <label>Storage Days</label>
+                <input type="number" class="form-control"
+                       formControlName="storage_days">
+              </div>
+
+              <div class="mb-3">
+                <label>AI Enabled Cameras</label>
+                <input type="number" class="form-control"
+                       formControlName="aiEnabledCam">
+                <small *ngIf="aiCamMoreThanTotal" class="text-danger">
+                  AI cameras must be ≤ total cameras
+                </small>
+              </div>
+
+              <!-- AI FEATURES -->
+              <div class="mb-4">
+                <label>AI Features</label>
+
+                <div *ngFor="let ai of aiFeatures" class="form-check">
                   <input
-                    type="number"
-                    class="form-control form-control-lg"
-                    formControlName="cammera"
-                    placeholder="Ex: 40"
+                    type="checkbox"
+                    class="form-check-input"
+                    [checked]="form.value.ai_features.includes(ai.id)"
+                    (change)="onToggleFeature(ai.id, $event)"
                   />
-                </div>
-
-                <!-- Storage Days -->
-                <div class="mb-3">
-                  <label class="form-label fw-semibold">Storage Days</label>
-                  <input
-                    type="number"
-                    class="form-control form-control-lg"
-                    formControlName="storage_days"
-                    placeholder="Ex: 30"
-                  />
-                </div>
-
-                <!-- AI Cameras -->
-                <div class="mb-3">
-                  <label class="form-label fw-semibold">
-                    AI Enabled Cameras
+                  <label class="form-check-label">
+                    {{ ai.AI_feature }} (₹{{ ai.costing }})
                   </label>
-                  <input
-                    type="number"
-                    class="form-control form-control-lg"
-                    formControlName="aiEnabledCam"
-                    placeholder="Ex: 10"
-                  />
-
-                  <div
-                    *ngIf="aiCamMoreThanTotal"
-                    class="text-danger small mt-1"
-                  >
-                    AI enabled cameras must be ≤ total cameras
-                  </div>
                 </div>
+              </div>
 
-                <!-- ================= AI FEATURES ================= -->
-                <div class="mb-4">
-                  <label class="form-label fw-semibold">AI Features</label>
+              <div class="d-flex justify-content-end gap-2">
+                <button type="button"
+                        class="btn btn-secondary"
+                        (click)="clearQuotation()">
+                  Clear
+                </button>
 
-                  <div class="dropdown w-100">
-                    <button
-                      class="btn btn-light border w-100 d-flex justify-content-between align-items-center py-3"
-                      type="button"
-                      data-bs-toggle="dropdown"
-                    >
-                      <div class="d-flex align-items-center gap-2 flex-wrap">
-                        <i class="bi bi-cpu"></i>
+                <button type="button"
+                        class="btn btn-primary"
+                        [disabled]="loading"
+                        (click)="calculateCost()">
+                  {{ loading ? 'Calculating...' : 'Calculate' }}
+                </button>
+              </div>
 
-                        <span
-                          *ngIf="selectedFeatures.length === 0"
-                          class="text-muted"
-                        >
-                          Select AI Features
-                        </span>
-
-                        <div
-                          *ngIf="selectedFeatures.length > 0"
-                          class="d-flex flex-wrap gap-2"
-                        >
-                          <span
-                            *ngFor="let ai of selectedFeatures"
-                            class="badge bg-primary-subtle text-primary"
-                          >
-                            {{ ai.AI_feature }}
-                            <i
-                              class="bi bi-x-circle-fill ms-1"
-                              style="cursor:pointer"
-                              (click)="removeFeature(ai.id); $event.stopPropagation()"
-                            ></i>
-                          </span>
-                        </div>
-                      </div>
-
-                      <i class="bi bi-chevron-down"></i>
-                    </button>
-
-                    <ul
-                      class="dropdown-menu w-100 shadow-sm"
-                      style="max-height:280px; overflow-y:auto;"
-                    >
-                      <li *ngFor="let ai of aiFeatures" class="px-3 py-2">
-                        <div
-                          class="form-check d-flex justify-content-between align-items-center"
-                        >
-                          <div>
-                            <input
-                              class="form-check-input me-2"
-                              type="checkbox"
-                              [checked]="form.value.ai_features?.includes(ai.id)"
-                              (change)="onToggleFeature(ai.id, $event)"
-                            />
-                            <label class="form-check-label fw-semibold">
-                              {{ ai.AI_feature }}
-                            </label>
-                          </div>
-                          <span class="badge bg-light text-dark">
-                            ₹ {{ ai.costing }}
-                          </span>
-                        </div>
-                      </li>
-                    </ul>
-                  </div>
-
-                  <div class="text-muted small mt-1">
-                    Multiple selection allowed
-                  </div>
-                </div>
-
-                <!-- ACTIONS -->
-                <div class="d-flex justify-content-end gap-2">
-                  <button
-                    type="button"
-                    class="btn btn-outline-secondary"
-                    (click)="clearQuotation()"
-                  >
-                    Clear
-                  </button>
-
-                  <button
-                    type="button"
-                    class="btn btn-primary px-4"
-                    [disabled]="loading"
-                    (click)="calculateCost()"
-                  >
-                    <span *ngIf="!loading">
-                      <i class="bi bi-calculator me-2"></i>
-                      Calculate
-                    </span>
-                    <span *ngIf="loading">
-                      <span class="spinner-border spinner-border-sm me-2"></span>
-                      Calculating...
-                    </span>
-                  </button>
-                </div>
-
-              </form>
-            </div>
+            </form>
           </div>
         </div>
 
-        <!-- ========== RIGHT : RESULT ========== -->
-        <div class="col-12 col-lg-6">
-          <div *ngIf="costCalculated && requirements" class="premium-card h-100">
-            <div class="card-body p-4">
+        <!-- RIGHT RESULT -->
+        <div class="col-lg-6">
+          <div *ngIf="costCalculated && requirements" class="card p-4">
 
-              <h5 class="fw-bold mb-3">
-                Storage & Compute Requirements
-              </h5>
+            <h5>Storage & Compute Requirements</h5>
 
-              <table class="table table-bordered align-middle mb-0">
-                <tbody>
-                  <tr>
-                    <td class="fw-semibold">Total Cameras</td>
-                    <td class="text-end">{{ requirements.cammera }}</td>
-                  </tr>
+            <table class="table table-bordered">
+              <tr>
+                <td>Total Cameras</td>
+                <td class="text-end">{{ requirements.cammera }}</td>
+              </tr>
+  <tr>
+  <td>Total Storage</td>
+  <td class="text-end">
+    {{ storageInTB | number:'1.2-2' }} TB
+  </td>
+</tr>
 
-                  <tr>
-                    <td class="fw-semibold">Storage Days</td>
-                    <td class="text-end">{{ requirements.storage_days }}</td>
-                  </tr>
+              <tr>
+                <td>CPU</td>
+                <td class="text-end">{{ requirements.cpuCores_required }}</td>
+              </tr>
+              <tr>
+                <td>RAM</td>
+                <td class="text-end">{{ requirements.ram_required }} GB</td>
+              </tr>
+              <tr>
+                <td>GPU VRAM</td>
+                <td class="text-end">{{ requirements.vram_required }} GB</td>
+              </tr>
+  
 
-                  <tr>
-                    <td class="fw-semibold">Storage Required</td>
-                    <td class="text-end fw-bold">
-                      {{ requirements.storage_used_user | number }} GB
-                      <div class="text-muted small">
-                        (~ {{ storageInTB | number:'1.2-2' }} TB)
-                      </div>
-                    </td>
-                  </tr>
+            </table>
 
-                  <tr>
-                    <td class="fw-semibold">CPU Cores</td>
-                    <td class="text-end fw-bold">
-                      {{ requirements.cpuCores_required }}
-                    </td>
-                  </tr>
-
-                  <tr>
-                    <td class="fw-semibold">RAM</td>
-                    <td class="text-end fw-bold">
-                      {{ requirements.ram_required }} GB
-                    </td>
-                  </tr>
-
-                  <tr>
-                    <td class="fw-semibold">GPU VRAM</td>
-                    <td class="text-end fw-bold">
-                      {{ requirements.vram_required }} GB
-                    </td>
-                  </tr>
-
-                  <tr>
-                    <td class="fw-semibold">AI Features Selected</td>
-                    <td class="text-end fw-bold">
-                      {{ requirements.ai_features?.length || 0 }}
-                    </td>
-                  </tr>
-
-                  <tr class="table-light">
-                    <td class="fw-semibold">Calculated On</td>
-                    <td class="text-end">
-                      {{ requirements.created_at | date:'medium' }}
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-
+            <div class="text-end">
+              <button class="btn btn-success"
+                      (click)="goToQuotationForm()">
+                Generate Quotation
+              </button>
             </div>
-          </div>
 
-          <div *ngIf="!costCalculated" class="text-muted text-center mt-5">
-            Fill the form and click <b>Calculate</b> to see requirements
           </div>
         </div>
 

@@ -1,260 +1,183 @@
 import { Component, OnInit } from '@angular/core';
+import { Router } from '@angular/router';
+import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
-import {
-  FormBuilder,
-  FormGroup,
-  ReactiveFormsModule,
-  Validators,
-  AbstractControl,
-  ValidationErrors,
-} from '@angular/forms';
 import { HttpClient, HttpClientModule } from '@angular/common/http';
-import { Router, RouterLink } from '@angular/router';
-import { FormsModule } from '@angular/forms';
-
-/* =========================
-   INTERFACES
-========================= */
-
-export interface AIEnabled {
-  id: number;
-  AI_feature: string;
-  costing: number;
-}
-
-export interface RequirementCalculationResponse {
-  id?: number;
-  cammera: number;
-  storage_days: number;
-  aiEnabledCam: number;
-  ai_features: number[];
-  storage_used_user: number;
-  vram_required: number;
-  cpuCores_required: number;
-  ram_required: number;
-  created_at?: string;
-}
-
-/* =========================
-   VALIDATOR
-========================= */
-
-function aiEnabledCameraValidator(
-  group: AbstractControl
-): ValidationErrors | null {
-  const total = Number(group.get('cammera')?.value || 0);
-  const aiCam = Number(group.get('aiEnabledCam')?.value || 0);
-
-  if (aiCam > total) {
-    return { aiCamMoreThanTotal: true };
-  }
-  return null;
-}
-
-/* =========================
-   COMPONENT
-========================= */
 
 @Component({
   selector: 'app-user-requirements',
   standalone: true,
-  imports: [
-    CommonModule,
-    ReactiveFormsModule,
-    HttpClientModule,
-    RouterLink,
-    FormsModule,
-  ],
+  imports: [CommonModule, ReactiveFormsModule, HttpClientModule],
   templateUrl: './user-requirements.html',
-  styleUrl: './user-requirements.css',
 })
 export class UserRequirements implements OnInit {
-  form: FormGroup;
 
+  // ---------- FORM ----------
+  form!: FormGroup;
+
+  // ---------- UI STATE ----------
   loading = false;
-  errorMsg: string | null = null;
-
-  aiFeatures: AIEnabled[] = [];
-
   costCalculated = false;
-  requirements: RequirementCalculationResponse | null = null;
+  errorMsg = '';
 
-  private AI_API =
+  // ---------- RESULT ----------
+  requirements: any = null;
+  storageInTB = 0;
+
+  // ---------- AI ----------
+  aiFeatures: any[] = [];
+  selectedFeatures: any[] = [];
+  aiCamMoreThanTotal = false;
+
+  // ---------- API ----------
+  private AI_FEATURES_API =
     'http://127.0.0.1:8001/pricing-Model/ai-feature/';
-  private QUOTE_API =
+
+  private CALCULATE_API =
     'http://127.0.0.1:8001/pricing-Model/Pricingcalculation/';
 
   constructor(
     private fb: FormBuilder,
-    private http: HttpClient,
-    private router: Router
-  ) {
-    this.form = this.fb.group(
-      {
-        cammera: [null, [Validators.required, Validators.min(1)]],
-        storage_days: [30, [Validators.required, Validators.min(1)]],
-        aiEnabledCam: [0, [Validators.required, Validators.min(0)]],
-        ai_features: [[]],
-      },
-      { validators: aiEnabledCameraValidator }
-    );
-  }
+    private router: Router,
+    private http: HttpClient
+  ) {}
 
-  /* =========================
-     INIT
-  ========================= */
-
+  // ================= INIT =================
   ngOnInit(): void {
-    this.fetchAIFeatures();
+    this.initForm();
+    this.loadAiFeatures();
+  }
 
-    this.form.valueChanges.subscribe(() => {
-      this.costCalculated = false;
-      this.requirements = null;
-      this.errorMsg = null;
+  // ================= FORM INIT =================
+  private initForm(): void {
+    this.form = this.fb.group({
+      cammera: [null],
+      storage_days: [null],
+      aiEnabledCam: [null],
+      ai_features: [[]],
+      storage_used_user: [null] // <-- for future use if needed
     });
   }
 
-  /* =========================
-     NAVIGATION
-  ========================= */
-
-  onback(): void {
-    this.router.navigateByUrl('/dashboard');
-  }
-
-  /* =========================
-     AI FEATURES
-  ========================= */
-
-  fetchAIFeatures(): void {
-    this.http.get<AIEnabled[]>(this.AI_API).subscribe({
-      next: (res) => (this.aiFeatures = res || []),
-      error: () => {
-        this.aiFeatures = [];
-        this.errorMsg = 'Failed to load AI features';
+  // ================= LOAD AI FEATURES =================
+  loadAiFeatures(): void {
+    this.http.get<any[]>(this.AI_FEATURES_API).subscribe({
+      next: (res) => {
+        this.aiFeatures = res || [];
       },
+      error: () => {
+        this.errorMsg = 'Failed to load AI features';
+      }
     });
   }
 
-  onToggleFeature(id: number, event: Event): void {
-    const checked = (event.target as HTMLInputElement).checked;
-    const current: number[] = this.form.value.ai_features || [];
-
-    const updated = checked
-      ? current.includes(id)
-        ? current
-        : [...current, id]
-      : current.filter((x) => x !== id);
-
-    this.form.patchValue({ ai_features: updated });
-  }
-
-  removeFeature(id: number): void {
-    const current: number[] = this.form.value.ai_features || [];
-    this.form.patchValue({
-      ai_features: current.filter((x) => x !== id),
-    });
-  }
-
-  get selectedFeatures(): AIEnabled[] {
-    const ids: number[] = this.form.value.ai_features || [];
-    return this.aiFeatures.filter((x) => ids.includes(x.id));
-  }
-
-  /* =========================
-     VALIDATION HELPERS
-  ========================= */
-
-  get aiCamMoreThanTotal(): boolean {
-    return !!(
-      this.form.errors?.['aiCamMoreThanTotal'] &&
-      (this.form.get('aiEnabledCam')?.touched ||
-        this.form.get('aiEnabledCam')?.dirty)
-    );
-  }
-
-  /* =========================
-     MAIN CALCULATION
-  ========================= */
-
+  // ================= CALCULATE =================
   calculateCost(): void {
-    this.errorMsg = null;
-    this.costCalculated = false;
-    this.requirements = null;
+    this.errorMsg = '';
+    this.loading = true;
 
-    if (this.form.invalid) {
-      this.form.markAllAsTouched();
-      this.errorMsg =
-        'Please fill all required fields correctly.';
+    const cam = Number(this.form.value.cammera);
+    const days = Number(this.form.value.storage_days);
+    const aiCam = Number(this.form.value.aiEnabledCam || 0);
+
+    // ---- VALIDATION ----
+    if (cam <= 0 || days <= 0) {
+      this.errorMsg = 'Please enter valid camera count and storage days';
+      this.loading = false;
       return;
     }
 
-    const payload = {
-      cammera: Number(this.form.value.cammera),
-      storage_days: Number(this.form.value.storage_days),
-      aiEnabledCam: Number(this.form.value.aiEnabledCam),
-      ai_features: this.form.value.ai_features || [],
-    };
+    this.aiCamMoreThanTotal = aiCam > cam;
+    if (this.aiCamMoreThanTotal) {
+      this.loading = false;
+      return;
+    }
 
-    this.loading = true;
+    // ---- API CALL ----
+    this.http.post<any>(this.CALCULATE_API, this.form.value).subscribe({
+      next: (res) => {
+        // Store full response
+        this.requirements = res;
 
-    this.http
-      .post<RequirementCalculationResponse>(
-        this.QUOTE_API,
-        payload
-      )
-      .subscribe({
-        next: (res) => {
-          this.loading = false;
+        // Patch storage into form (optional but safe)
+        this.form.patchValue({
+          storage_used_user: res.storage_used_user
+        });
 
-          this.requirements = {
-            id: res?.id,
-            cammera: res?.cammera ?? payload.cammera,
-            storage_days: payload.storage_days,
-            aiEnabledCam: res?.aiEnabledCam ?? payload.aiEnabledCam,
-            ai_features: res?.ai_features ?? payload.ai_features,
-            storage_used_user: res?.storage_used_user ?? 0,
-            vram_required: res?.vram_required ?? 0,
-            cpuCores_required: res?.cpuCores_required ?? 0,
-            ram_required: res?.ram_required ?? 0,
-            created_at: res?.created_at ?? new Date().toISOString(),
-          };
+        // Convert to TB for UI
+        this.storageInTB = res.storage_used_user
+          ? res.storage_used_user / 1024
+          : 0;
 
-          this.costCalculated = true;
-        },
-        error: (err) => {
-          this.loading = false;
-          this.errorMsg =
-            err?.error?.detail ||
-            'Failed to calculate requirements';
-        },
-      });
+        this.costCalculated = true;
+        this.loading = false;
+      },
+      error: () => {
+        this.errorMsg = 'Calculation failed';
+        this.loading = false;
+      }
+    });
   }
 
-  /* =========================
-     CLEAR
-  ========================= */
-
+  // ================= CLEAR =================
   clearQuotation(): void {
     this.form.reset({
       cammera: null,
-      storage_days: 30,
-      aiEnabledCam: 0,
+      storage_days: null,
+      aiEnabledCam: null,
       ai_features: [],
+      storage_used_user: null
     });
 
-    this.costCalculated = false;
+    this.selectedFeatures = [];
     this.requirements = null;
-    this.errorMsg = null;
+    this.costCalculated = false;
+    this.aiCamMoreThanTotal = false;
+    this.errorMsg = '';
+    this.storageInTB = 0;
   }
 
-  /* =========================
-     HELPERS
-  ========================= */
+  // ================= NAVIGATION =================
+  goToQuotationForm(): void {
+    if (!this.costCalculated || !this.requirements?.id) return;
 
-  get storageInTB(): number {
-    return this.requirements
-      ? this.requirements.storage_used_user / 1024
-      : 0;
+    this.router.navigate([
+      '/qoutation-form',
+      this.requirements.id
+    ]);
+  }
+
+  onback(): void {
+    this.router.navigate(['/dashboard']);
+  }
+
+  // ================= AI FEATURE LOGIC =================
+  onToggleFeature(id: number, event: any): void {
+    const selectedIds: number[] = this.form.value.ai_features || [];
+
+    if (event.target.checked) {
+      const feature = this.aiFeatures.find(f => f.id === id);
+      if (feature && !selectedIds.includes(id)) {
+        this.selectedFeatures.push(feature);
+        this.form.patchValue({
+          ai_features: [...selectedIds, id]
+        });
+      }
+    } else {
+      this.removeFeature(id);
+    }
+  }
+
+  removeFeature(id: number): void {
+    this.selectedFeatures =
+      this.selectedFeatures.filter(f => f.id !== id);
+
+    const updatedIds =
+      (this.form.value.ai_features as number[])
+        .filter(fid => fid !== id);
+
+    this.form.patchValue({
+      ai_features: updatedIds
+    });
   }
 }

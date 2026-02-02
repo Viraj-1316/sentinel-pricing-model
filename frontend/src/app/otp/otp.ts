@@ -9,6 +9,7 @@ import { Router } from '@angular/router';
   standalone: true,
   imports: [CommonModule, FormsModule, HttpClientModule],
   templateUrl: './otp.html',
+  styleUrls: ['./otp.css'],
 })
 export class Otp {
   otp = '';
