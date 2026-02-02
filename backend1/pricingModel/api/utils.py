@@ -66,7 +66,7 @@ def generate_enterprise_quotation_pdf(quotation, username: str) -> bytes:
     elements.append(Paragraph("Enterprise Quotation", subtitle))
 
     # ==========================
-    # CLIENT INFO
+    # CLIENT / QUOTATION INFO
     # ==========================
     info_table = Table(
         [[
@@ -90,16 +90,19 @@ def generate_enterprise_quotation_pdf(quotation, username: str) -> bytes:
     elements.append(info_table)
 
     # ==========================
-    # DATA
+    # SAFE DATA FETCH
     # ==========================
-    storage_used_user = getattr(quotation, "storage_used_user", 0)  # GB/TB
+    storage_used_user = getattr(quotation, "storage_used_user", 0)   # GB / TB
     storage_days = getattr(quotation, "storage_days", 7)
     storage_cost = getattr(quotation, "storage_cost", 0)
 
     cpu_name = getattr(quotation, "cpu", "CPU")
+    cpu_cores = getattr(quotation, "cpu_cores", "-")
+    ram_required = getattr(quotation, "ram_required", "-")  # GB
     cpu_cost = getattr(quotation, "cpu_cost", 0)
 
     gpu_name = getattr(quotation, "gpu", "GPU")
+    gpu_vram = getattr(quotation, "gpu_vram", "-")  # GB
     gpu_cost = getattr(quotation, "gpu_cost", 0)
 
     ai_cost = getattr(quotation, "ai_cost", 0)
@@ -136,15 +139,21 @@ def generate_enterprise_quotation_pdf(quotation, username: str) -> bytes:
     elements.append(Paragraph("CPU Breakdown", section))
 
     cpu_table = Table(
-        [["Component", "Qty", "Cost"], [cpu_name, "1", f"₹ {cpu_cost}"]],
-        colWidths=[300, 80, 120]
+        [
+            ["CPU Model", "Cores", "RAM Required (GB)", "Cost"],
+            [cpu_name, cpu_cores, ram_required, f"₹ {cpu_cost}"],
+        ],
+        colWidths=[200, 80, 140, 100]
     )
 
     cpu_table.setStyle(TableStyle([
         ("BACKGROUND", (0, 0), (-1, 0), colors.lightgrey),
         ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+        ("FONTSIZE", (0, 0), (-1, -1), 10),
         ("GRID", (0, 0), (-1, -1), 0.5, colors.grey),
-        ("ALIGN", (1, 1), (-1, -1), "CENTER"),
+        ("ALIGN", (1, 1), (-2, -1), "CENTER"),
+        ("ALIGN", (-1, 1), (-1, -1), "RIGHT"),
+        ("PADDING", (0, 0), (-1, -1), 8),
     ]))
 
     elements.append(cpu_table)
@@ -155,15 +164,21 @@ def generate_enterprise_quotation_pdf(quotation, username: str) -> bytes:
     elements.append(Paragraph("GPU Breakdown", section))
 
     gpu_table = Table(
-        [["Component", "Qty", "Cost"], [gpu_name, "1", f"₹ {gpu_cost}"]],
-        colWidths=[300, 80, 120]
+        [
+            ["GPU Model", "VRAM (GB)", "Cost"],
+            [gpu_name, gpu_vram, f"₹ {gpu_cost}"],
+        ],
+        colWidths=[280, 120, 120]
     )
 
     gpu_table.setStyle(TableStyle([
         ("BACKGROUND", (0, 0), (-1, 0), colors.lightgrey),
         ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+        ("FONTSIZE", (0, 0), (-1, -1), 10),
         ("GRID", (0, 0), (-1, -1), 0.5, colors.grey),
-        ("ALIGN", (1, 1), (-1, -1), "CENTER"),
+        ("ALIGN", (1, 1), (1, -1), "CENTER"),
+        ("ALIGN", (2, 1), (2, -1), "RIGHT"),
+        ("PADDING", (0, 0), (-1, -1), 8),
     ]))
 
     elements.append(gpu_table)
@@ -190,6 +205,7 @@ def generate_enterprise_quotation_pdf(quotation, username: str) -> bytes:
         ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
         ("GRID", (0, 0), (-1, -1), 0.5, colors.grey),
         ("ALIGN", (2, 1), (-1, -1), "RIGHT"),
+        ("PADDING", (0, 0), (-1, -1), 8),
     ]))
 
     elements.append(ai_table)

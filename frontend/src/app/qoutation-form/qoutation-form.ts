@@ -21,7 +21,7 @@ includeGPU = true;
 includeAI = true;
 
   private PATCH_API =
-    'http://127.0.0.1:8001/pricing-Model/Pricingcalculation';
+    'http://127.0.0.1:8001/pricing-Model/Pricingcalculation/<int:pk>';
 
   constructor(
     private route: ActivatedRoute,
