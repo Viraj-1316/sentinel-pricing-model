@@ -95,7 +95,7 @@ def download_quotation_pdf(request, pk):
 
     response = HttpResponse(pdf, content_type="application/pdf")
 
-    # ✅ IMPORTANT: inline = preview in browser/iframe
+    # inline = preview in browser / iframe
     response["Content-Disposition"] = f'inline; filename="quotation_{quotation.id}.pdf"'
     response["Content-Length"] = len(pdf)
 
