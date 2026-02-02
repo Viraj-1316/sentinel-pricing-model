@@ -213,7 +213,10 @@ class pricingCalculate(generics.ListCreateAPIView):
 
         def get_queryset(self):
             # Each user sees only their own pricing calculations
-            return UserPricing.objects.filter(user_name=self.request.user).order_by('-created_at')
+            if self.request.user.is_superuser:
+                return UserPricing.objects.all()
+            else:
+                return UserPricing.objects.filter(user_name=self.request.user).order_by('-created_at')
 
         def perform_create(self, serializer):
 
@@ -280,33 +283,41 @@ class pricingRecomendationview(generics.RetrieveUpdateAPIView):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        return UserPricing.objects.filter(user_name=self.request.user)
+            # Each user sees only their own pricing calculations
+            if self.request.user.is_superuser:
+                return UserPricing.objects.all()
+            else:
+                return UserPricing.objects.filter(user_name=self.request.user).order_by('-created_at')
+
 
     def perform_update(self, serializer):
         instance = self.get_object()
         vramUser = instance.vram_required
 
-        # ---------- CPU ----------
-        cpu = Component.objects.filter(
-            category__name="Processor",
-            CPUcores__isnull=False,
-            CPUcores__gte=instance.cpuCores_required
-        ).order_by("CPUcores").first()
+        cpu = None
+        cpu_cost = 0
+        if instance.include_cpu:
+            # ---------- CPU ----------
+            cpu = Component.objects.filter(
+                category__name="Processor",
+                CPUcores__isnull=False,
+                CPUcores__gte=instance.cpuCores_required
+            ).order_by("CPUcores").first()
 
-        if not cpu:
-            raise ValidationError("No CPU meets required core count")
+            if not cpu:
+                raise ValidationError("No CPU meets required core count")
 
-        cpu_price = Price.objects.filter(component=cpu).first()
-        if not cpu_price:
-            raise ValidationError(f"Price not configured for CPU: {cpu.core_hardware}")
+            cpu_price = Price.objects.filter(component=cpu).first()
+            if not cpu_price:
+                raise ValidationError(f"Price not configured for CPU: {cpu.core_hardware}")
 
-        cpu_cost = cpu_price.costing
+            cpu_cost = cpu_price.costing
 
         # ---------- GPU ----------
         gpu = None
         gpu_cost = 0
 
-        if vramUser > 0:
+        if instance.include_gpu and vramUser > 0:
             if vramUser <= 48:
                 gpu = Component.objects.filter(
                     category__name="Processor",
@@ -347,16 +358,18 @@ class pricingRecomendationview(generics.RetrieveUpdateAPIView):
                 raise ValidationError(f"Price not configured for AI feature: {ai.AI_feature}")
             ai_cost += ai_price.costing
 
-        # ---------- STORAGE ----------
-        storage = Component.objects.filter(category__name="Storage").first()
-        if not storage:
-            raise ValidationError("Storage component not configured")
+        storage_cost = 0
+        if instance.include_storage:
+            # ---------- STORAGE ----------
+            storage = Component.objects.filter(category__name="Storage").first()
+            if not storage:
+                raise ValidationError("Storage component not configured")
 
-        storage_price = Price.objects.filter(component=storage).first()
-        if not storage_price:
-            raise ValidationError("Storage price not configured")
+            storage_price = Price.objects.filter(component=storage).first()
+            if not storage_price:
+                raise ValidationError("Storage price not configured")
 
-        storage_cost = (instance.storage_used_user / 19) * storage_price.costing
+            storage_cost = (instance.storage_used_user / 19) * storage_price.costing
 
         # ---------- TOTAL ----------
         total_cost = cpu_cost + gpu_cost + ai_cost + storage_cost

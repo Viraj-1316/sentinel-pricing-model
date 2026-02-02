@@ -103,6 +103,9 @@ class userRequirementSerializer(serializers.ModelSerializer):
             'vram_required',
             'cpuCores_required',
             'ram_required',
+            "include_cpu",
+            "include_gpu",
+            "include_storage",
             'created_at',
         ]
 
