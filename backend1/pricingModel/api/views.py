@@ -225,7 +225,8 @@ class pricingCalculate(generics.ListCreateAPIView):
             storage_days = serializer.validated_data.get('storage_days', 1)
             ai_features = serializer.validated_data.get('ai_features', [])
             aiEnabledCam = serializer.validated_data.get('aiEnabledCam')
-
+            licenceDuration = serializer.validated_data.get['Duration'] 
+            
             if not cameras:
                 raise ValidationError("Camera count is required")
 
@@ -271,6 +272,7 @@ class pricingCalculate(generics.ListCreateAPIView):
                 vram_required=vram,
                 cpuCores_required=cpuCores_required,
                 ram_required=ram_required,
+                Duration = licenceDuration
             )
 
             user_pricing.ai_features.set(ai_features)
@@ -371,8 +373,17 @@ class pricingRecomendationview(generics.RetrieveUpdateAPIView):
 
             storage_cost = (instance.storage_used_user / 19) * storage_price.costing
 
+        license = Component.objects.filter(
+            category__name="licence",
+            Duartion = instance.Duartion
+            ).first()
+        
+        licensePrice = Price.objects.filter(component=license).first()
+        
+        licenseCost = licensePrice.costing
+        
         # ---------- TOTAL ----------
-        total_cost = cpu_cost + gpu_cost + ai_cost + storage_cost
+        total_cost = cpu_cost + gpu_cost + ai_cost + storage_cost + licenseCost
 
         serializer.save(
             cpu=cpu,
@@ -381,7 +392,9 @@ class pricingRecomendationview(generics.RetrieveUpdateAPIView):
             gpu_cost=gpu_cost,
             ai_cost=ai_cost,
             storage_cost=storage_cost,
+            
             total_costing=total_cost,
+            
         )
 
         create_audit_log(
