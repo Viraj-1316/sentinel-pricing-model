@@ -4,186 +4,179 @@
   <div class="position-absolute top-0 start-0 w-100 h-100"
        style="background: radial-gradient(circle at 20% 10%, rgba(13,110,253,.10), transparent 45%),
               radial-gradient(circle at 80% 30%, rgba(220,53,69,.12), transparent 40%),
-              radial-gradient(circle at 50% 90%, rgba(25,135,84,.10), transparent 45%);">
-  
+              radial-gradient(circle at 50% 90%, rgba(25,135,84,.10), transparent 45%);
+              z-index: 0;">
+  </div>
+  <!-- ✅ FIX: background div closed properly -->
 
   <!-- Page content -->
-<div class="w-100 position-relative py-4 px-3 px-lg-4"  style="z-index: 5;">
- <div class="dashboard-wrap">
+  <div class="w-100 position-relative py-4 px-3 px-lg-4" style="z-index: 5;">
+    <div class="dashboard-wrap">
 
-    <!-- Header -->
-    <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-4">
-      <div>
-        <h4 class="fw-bold mb-0">Admin Dashboard</h4>
-        <div class="text-muted small">Users • Quotations • Audit Logs</div>
+      <!-- Header -->
+      <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-4">
+        <div>
+          <h4 class="fw-bold mb-0">Admin Dashboard</h4>
+          <div class="text-muted small">Users • Quotations • Audit Logs</div>
+        </div>
       </div>
+
+      <!-- Stats cards -->
+      <div class="row g-4 mb-4">
+
+        <!-- Users -->
+        <div class="col-12 col-md-6 col-xl-3">
+          <div class="card border-0 shadow-sm rounded-4 p-4 h-100 stat-card"
+               role="button"
+               (click)="openSection('users')"
+               [class.active-card]="activeSection==='users'">
+            <div class="bg-primary bg-opacity-10 text-primary rounded-3 px-3 py-2 d-inline-flex">
+              <i class="bi bi-people fs-4"></i>
+            </div>
+            <div class="text-muted small mt-3">Total Users</div>
+            <div class="fw-bold display-6 mb-0">{{ totalUsers }}</div>
+            <div class="text-muted small mt-1">All registered users</div>
+          </div>
+        </div>
+
+        <!-- Quotations -->
+        <div class="col-12 col-md-6 col-xl-3">
+          <div class="card border-0 shadow-sm rounded-4 p-4 h-100 stat-card"
+               role="button"
+               (click)="openSection('quotations')"
+               [class.active-card]="activeSection==='quotations'">
+            <div class="bg-success bg-opacity-10 text-success rounded-3 px-3 py-2 d-inline-flex">
+              <i class="bi bi-receipt fs-4"></i>
+            </div>
+            <div class="text-muted small mt-3">Quotations</div>
+            <div class="fw-bold display-6 mb-0">{{ totalQuotations }}</div>
+            <div class="text-muted small mt-1">All generated quotations</div>
+          </div>
+        </div>
+
+        <!-- Audit Logs -->
+        <div class="col-12 col-md-6 col-xl-3">
+          <div class="card border-0 shadow-sm rounded-4 p-4 h-100 stat-card"
+               role="button"
+               (click)="openSection('logs')"
+               [class.active-card]="activeSection==='logs'">
+            <div class="bg-danger bg-opacity-10 text-danger rounded-3 px-3 py-2 d-inline-flex">
+              <i class="bi bi-shield-check fs-4"></i>
+            </div>
+            <div class="text-muted small mt-3">Audit Logs</div>
+            <div class="fw-bold display-6 mb-0">{{ logsCount }}</div>
+            <div class="text-muted small mt-1">Security & system logs</div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Expanded panel below -->
+      <div *ngIf="activeSection" class="card border-0 shadow-sm rounded-4 overflow-hidden">
+        <div class="card-body p-4">
+
+          <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+            <span class="badge rounded-pill bg-primary px-3 py-2">
+              <i class="bi bi-layers me-2"></i>{{ badgeTitle() }}
+            </span>
+
+            <button class="btn btn-outline-secondary rounded-pill px-4"
+                    (click)="loadActiveSectionData()">
+              <i class="bi bi-arrow-clockwise me-2"></i>Refresh
+            </button>
+          </div>
+
+          <!-- Loading -->
+          <div *ngIf="loadingSection" class="text-center py-5">
+            <div class="spinner-border"></div>
+            <div class="text-muted small mt-2">Loading...</div>
+          </div>
+
+          <!-- Error -->
+          <div *ngIf="errorMsg" class="alert alert-danger rounded-3">
+            <i class="bi bi-exclamation-triangle me-2"></i>{{ errorMsg }}
+          </div>
+
+          <!-- USERS TABLE -->
+          <div *ngIf="activeSection==='users' && !loadingSection">
+            <div class="table-responsive">
+              <table class="table align-middle">
+                <thead>
+                  <tr class="text-muted small">
+                    <th>Username</th>
+                    <th>Email</th>
+                    <th>Joined</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let u of users; trackBy: trackById">
+                    <td class="fw-semibold">{{ u.username }}</td>
+                    <td>{{ u.email || '—' }}</td>
+                    <td class="text-muted small">{{ u.date_joined || '—' }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- QUOTATIONS TABLE -->
+          <div *ngIf="activeSection==='quotations' && !loadingSection">
+            <div class="table-responsive">
+              <table class="table align-middle">
+                <thead>
+                  <tr class="text-muted small">
+                    <th>Username</th>
+                    <th>Cameras</th>
+                    <th>AI Cost</th>
+                    <th>Total</th>
+                    <th>Date</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let q of quotations; trackBy: trackById">
+                    <td class="fw-semibold">{{ q.username || '—' }}</td>
+                    <td>{{ q.cammera }}</td>
+                    <td>₹{{ q.ai_cost }}</td>
+                    <td class="fw-bold">₹{{ q.total_costing }}</td>
+                    <td class="text-muted small">{{ q.created_at }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div *ngIf="showViewAllQuotations" class="d-flex justify-content-end mt-1">
+              <a routerLink="/quotations" class="btn btn-outline-primary rounded-pill px-4">
+                <i class="bi bi-list-ul me-2"></i>View All Quotations
+              </a>
+            </div>
+          </div>
+
+          <!-- LOGS TABLE -->
+          <div *ngIf="activeSection==='logs' && !loadingSection">
+            <div class="table-responsive">
+              <table class="table align-middle">
+                <thead>
+                  <tr class="text-muted small">
+                    <th>Action</th>
+                    <th>Username</th>
+                    <th>Date</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let l of logs; trackBy: trackById">
+                    <td class="fw-semibold">{{ l.action }}</td>
+                    <td>{{ l.username || '—' }}</td>
+                    <td class="text-muted small">{{ l.created_at }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
     </div>
-
-    <!-- Stats cards -->
-    <div class="row g-4 mb-4">
-
-      <!-- Users -->
-      <div class="col-12 col-md-6 col-xl-3">
-        <div class="card border-0 shadow-sm rounded-4 p-4 h-100 stat-card"
-             role="button"
-             (click)="openSection('users')"
-             [class.active-card]="activeSection==='users'">
-          <div class="bg-primary bg-opacity-10 text-primary rounded-3 px-3 py-2 d-inline-flex">
-            <i class="bi bi-people fs-4"></i>
-          </div>
-          <div class="text-muted small mt-3">Total Users</div>
-          <div class="fw-bold display-6 mb-0">{{ totalUsers }}</div>
-          <div class="text-muted small mt-1">All registered users</div>
-        </div>
-      </div>
-
-      <!-- Quotations -->
-      <div class="col-12 col-md-6 col-xl-3">
-        <div class="card border-0 shadow-sm rounded-4 p-4 h-100 stat-card"
-             role="button"
-             (click)="openSection('quotations')"
-             [class.active-card]="activeSection==='quotations'">
-          <div class="bg-success bg-opacity-10 text-success rounded-3 px-3 py-2 d-inline-flex">
-            <i class="bi bi-receipt fs-4"></i>
-          </div>
-          <div class="text-muted small mt-3">Quotations</div>
-          <div class="fw-bold display-6 mb-0">{{ totalQuotations }}</div>
-          <div class="text-muted small mt-1">All generated quotations</div>
-        </div>
-      </div>
-
-      <!-- Audit Logs -->
-      <div class="col-12 col-md-6 col-xl-3">
-        <div class="card border-0 shadow-sm rounded-4 p-4 h-100 stat-card"
-             role="button"
-             (click)="openSection('logs')"
-             [class.active-card]="activeSection==='logs'">
-          <div class="bg-danger bg-opacity-10 text-danger rounded-3 px-3 py-2 d-inline-flex">
-            <i class="bi bi-shield-check fs-4"></i>
-          </div>
-          <div class="text-muted small mt-3">Audit Logs</div>
-          <div class="fw-bold display-6 mb-0">{{ logsCount }}</div>
-          <div class="text-muted small mt-1">Security & system logs</div>
-        </div>
-      </div>
-
-    </div>
-
-    <!-- Expanded panel below -->
-    <div *ngIf="activeSection" class="card border-0 shadow-sm rounded-4 overflow-hidden">
-      <div class="card-body p-4">
-
-        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
-          <span class="badge rounded-pill bg-primary px-3 py-2">
-            <i class="bi bi-layers me-2"></i>{{ badgeTitle() }}
-          </span>
-
-          <button class="btn btn-outline-secondary rounded-pill px-4"
-                  (click)="loadActiveSectionData()">
-            <i class="bi bi-arrow-clockwise me-2"></i>Refresh
-          </button>
-        </div>
-
-        <!-- Loading -->
-        <div *ngIf="loadingSection" class="text-center py-5">
-          <div class="spinner-border"></div>
-          <div class="text-muted small mt-2">Loading...</div>
-        </div>
-
-        <!-- Error -->
-        <div *ngIf="errorMsg" class="alert alert-danger rounded-3">
-          <i class="bi bi-exclamation-triangle me-2"></i>{{ errorMsg }}
-        </div>
-
-        <!-- USERS TABLE -->
-        <div *ngIf="activeSection==='users' && !loadingSection">
-          <div class="table-responsive">
-            <table class="table align-middle">
-              <thead>
-                <tr class="text-muted small">
-                  <!-- <th>#</th> -->
-                  <th>Username</th>
-                  <th>Email</th>
-                  <th>Joined</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr *ngFor="let u of users; trackBy: trackById">
-                  <!-- <td class="fw-semibold">#{{ u.id }}</td> -->
-                  <td class="fw-semibold">{{ u.username }}</td>
-                  <td>{{ u.email || '—' }}</td>
-                  <td class="text-muted small">{{ u.date_joined || '—' }}</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        <!-- QUOTATIONS TABLE -->
-        <!-- QUOTATIONS TABLE -->
-<div *ngIf="activeSection==='quotations' && !loadingSection">
-  <div class="table-responsive">
-    <table class="table align-middle">
-      <thead>
-        <tr class="text-muted small">
-          <!-- <th>#</th> -->
-          <th>Username</th>
-          <th>Cameras</th>
-          <th>AI Cost</th>
-          <th>Total</th>
-          <th>Date</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr *ngFor="let q of quotations; trackBy: trackById">
-          <!-- <td class="fw-semibold">#{{ q.id }}</td> -->
-          <td class="fw-semibold">{{ q.username || '—' }}</td>
-          <td>{{ q.cammera }}</td>
-          <td>₹{{ q.ai_cost }}</td>
-          <td class="fw-bold">₹{{ q.total_costing }}</td>
-          <td class="text-muted small">{{ q.created_at }}</td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
-
-  <!-- ✅ View All Button -->
-  <div *ngIf="showViewAllQuotations" class="d-flex justify-content-end mt-1">
-    <a routerLink="/quotations" class="btn btn-outline-primary rounded-pill px-4">
-      <i class="bi bi-list-ul me-2"></i>View All Quotations
-    </a>
-  </div>
-</div>
-
-
-        <!-- LOGS TABLE -->
-        <div *ngIf="activeSection==='logs' && !loadingSection">
-          <div class="table-responsive">
-            <table class="table align-middle">
-              <thead>
-                <tr class="text-muted small">
-                  <!-- <th>#</th> -->
-                  <th>Action</th>
-                  <th>Username</th>
-                  <th>Date</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr *ngFor="let l of logs; trackBy: trackById">
-                  <!-- <td class="fw-semibold">#{{ l.id }}</td> -->
-                  <td class="fw-semibold">{{ l.action }}</td>
-                  <td>{{ l.username || '—' }}</td>
-                  <td class="text-muted small">{{ l.created_at }}</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-      </div>
-    </div>
-
-  </div>
   </div>
 </div>
 
