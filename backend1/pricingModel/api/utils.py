@@ -17,6 +17,12 @@ def generate_enterprise_quotation_pdf(quotation, username: str) -> bytes:
         bottomMargin=40
     )
 
+    PAGE_WIDTH = A4[0] - doc.leftMargin - doc.rightMargin
+
+    # 🔒 CANONICAL WIDTH SYSTEM (matches CPU/GPU tables)
+    LEFT_COL = PAGE_WIDTH * 0.65
+    RIGHT_COL = PAGE_WIDTH * 0.35
+
     styles = getSampleStyleSheet()
     elements = []
 
@@ -63,11 +69,8 @@ def generate_enterprise_quotation_pdf(quotation, username: str) -> bytes:
     # HEADER
     # ==========================
     elements.append(Paragraph("SENTINEL", title))
-    elements.append(Paragraph("Enterprise Quotation", subtitle))
+    elements.append(Paragraph("", subtitle))
 
-    # ==========================
-    # CLIENT / QUOTATION INFO
-    # ==========================
     info_table = Table(
         [[
             Paragraph("<b>Client</b><br/>Enterprise Customer", normal),
@@ -78,7 +81,7 @@ def generate_enterprise_quotation_pdf(quotation, username: str) -> bytes:
                 normal
             )
         ]],
-        colWidths=[260, 260]
+        colWidths=[LEFT_COL, RIGHT_COL]
     )
 
     info_table.setStyle(TableStyle([
@@ -92,36 +95,37 @@ def generate_enterprise_quotation_pdf(quotation, username: str) -> bytes:
     # ==========================
     # SAFE DATA FETCH
     # ==========================
-    storage_used_user = getattr(quotation, "storage_used_user", 0)   # GB / TB
     storage_days = getattr(quotation, "storage_days", 7)
     storage_cost = getattr(quotation, "storage_cost", 0)
 
-    cpu_name = getattr(quotation, "cpu", "CPU")
+    cpu_name = getattr(quotation.cpu, "core_hardware", "CPU") if quotation.cpu else "—"
     cpu_cores = getattr(quotation, "cpu_cores", "-")
-    ram_required = getattr(quotation, "ram_required", "-")  # GB
+    ram_required = getattr(quotation, "ram_required", "-")
     cpu_cost = getattr(quotation, "cpu_cost", 0)
 
-    gpu_name = getattr(quotation, "gpu", "GPU")
-    gpu_vram = getattr(quotation, "gpu_vram", "-")  # GB
+    gpu_name = getattr(quotation.gpu, "AI_Component", "GPU") if quotation.gpu else "—"
+    gpu_vram = getattr(quotation.gpu, "VRAM", "-")
     gpu_cost = getattr(quotation, "gpu_cost", 0)
 
     ai_cost = getattr(quotation, "ai_cost", 0)
     total_cost = getattr(quotation, "total_costing", 0)
 
     # ==========================
-    # COST SUMMARY
+    # COST SUMMARY (FIXED WIDTH)
     # ==========================
     elements.append(Paragraph("Cost Summary", section))
 
-    summary_data = [
-        ["Component", "Total Cost"],
-        [f"Storage ({storage_days} Days)", f"₹ {storage_cost}"],
-        ["CPU", f"₹ {cpu_cost}"],
-        ["GPU", f"₹ {gpu_cost}"],
-        ["AI Services", f"₹ {ai_cost}"],
-    ]
+    summary_table = Table(
+        [
+            ["Component", "Total Cost"],
+            [f"Storage ({storage_days} Days)", f"₹ {storage_cost}"],
+            ["CPU", f"₹ {cpu_cost}"],
+            ["GPU", f"₹ {gpu_cost}"],
+            ["AI Services", f"₹ {ai_cost}"],
+        ],
+        colWidths=[LEFT_COL, RIGHT_COL]
+    )
 
-    summary_table = Table(summary_data, colWidths=[350, 150])
     summary_table.setStyle(TableStyle([
         ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#0d6efd")),
         ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
@@ -134,7 +138,7 @@ def generate_enterprise_quotation_pdf(quotation, username: str) -> bytes:
     elements.append(summary_table)
 
     # ==========================
-    # CPU BREAKDOWN
+    # CPU BREAKDOWN (UNCHANGED)
     # ==========================
     elements.append(Paragraph("CPU Breakdown", section))
 
@@ -149,7 +153,6 @@ def generate_enterprise_quotation_pdf(quotation, username: str) -> bytes:
     cpu_table.setStyle(TableStyle([
         ("BACKGROUND", (0, 0), (-1, 0), colors.lightgrey),
         ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
-        ("FONTSIZE", (0, 0), (-1, -1), 10),
         ("GRID", (0, 0), (-1, -1), 0.5, colors.grey),
         ("ALIGN", (1, 1), (-2, -1), "CENTER"),
         ("ALIGN", (-1, 1), (-1, -1), "RIGHT"),
@@ -159,7 +162,7 @@ def generate_enterprise_quotation_pdf(quotation, username: str) -> bytes:
     elements.append(cpu_table)
 
     # ==========================
-    # GPU BREAKDOWN
+    # GPU BREAKDOWN (UNCHANGED)
     # ==========================
     elements.append(Paragraph("GPU Breakdown", section))
 
@@ -174,7 +177,6 @@ def generate_enterprise_quotation_pdf(quotation, username: str) -> bytes:
     gpu_table.setStyle(TableStyle([
         ("BACKGROUND", (0, 0), (-1, 0), colors.lightgrey),
         ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
-        ("FONTSIZE", (0, 0), (-1, -1), 10),
         ("GRID", (0, 0), (-1, -1), 0.5, colors.grey),
         ("ALIGN", (1, 1), (1, -1), "CENTER"),
         ("ALIGN", (2, 1), (2, -1), "RIGHT"),
@@ -184,7 +186,7 @@ def generate_enterprise_quotation_pdf(quotation, username: str) -> bytes:
     elements.append(gpu_table)
 
     # ==========================
-    # AI FEATURE BREAKDOWN
+    # AI FEATURE BREAKDOWN (FIXED WIDTH)
     # ==========================
     elements.append(Paragraph("AI Feature Breakdown", section))
 
@@ -193,12 +195,20 @@ def generate_enterprise_quotation_pdf(quotation, username: str) -> bytes:
 
     if features.exists():
         for i, ai in enumerate(features, start=1):
-            cost = ai.price.costing if getattr(ai, "price", None) else 0
+            cost = ai.price.costing if hasattr(ai, "price") else 0
             ai_data.append([i, ai.AI_feature, f"₹ {cost}"])
     else:
         ai_data.append(["-", "No AI features selected", "-"])
 
-    ai_table = Table(ai_data, colWidths=[60, 300, 120])
+    ai_table = Table(
+        ai_data,
+        colWidths=[
+            PAGE_WIDTH * 0.10,
+            LEFT_COL - (PAGE_WIDTH * 0.10),
+            RIGHT_COL,
+        ]
+    )
+
     ai_table.setStyle(TableStyle([
         ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#198754")),
         ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
@@ -211,13 +221,13 @@ def generate_enterprise_quotation_pdf(quotation, username: str) -> bytes:
     elements.append(ai_table)
 
     # ==========================
-    # GRAND TOTAL
+    # GRAND TOTAL (FIXED WIDTH)
     # ==========================
     elements.append(Spacer(1, 16))
 
     total_table = Table(
         [["GRAND TOTAL", f"₹ {total_cost}"]],
-        colWidths=[360, 120]
+        colWidths=[LEFT_COL, RIGHT_COL]
     )
 
     total_table.setStyle(TableStyle([

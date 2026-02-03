@@ -116,44 +116,47 @@
       </div>
 
       <!-- ================= CPU & GPU ================= -->
-      <div class="row g-3 mb-3">
+    <!-- CPU & GPU INLINE -->
+<div class="row g-3 mb-3" *ngIf="quotationData">
 
-        <div class="col-md-6" *ngIf="quotationData?.cpu">
-          <div class="card shadow-sm h-100">
-            <div class="card-body p-3">
-              <h6 class="fw-bold mb-2">CPU</h6>
+  <!-- CPU -->
+  <div class="col-md-6" *ngIf="includeCPU">
+    <div class="card shadow-sm h-100">
+      <div class="card-body p-3">
+        <h6 class="fw-bold mb-2">CPU</h6>
 
-              <div class="d-flex justify-content-between">
-                <span>{{ quotationData.cpu.core_hardware }}</span>
-                <span>₹ {{ quotationData.cpu_cost }}</span>
-              </div>
-
-              <small class="text-muted">
-                {{ quotationData.cpu.CPUcores }} cores ·
-                {{ quotationData.cpu.ram_required }} GB RAM
-              </small>
-            </div>
-          </div>
+        <div class="d-flex justify-content-between">
+          <span>{{ quotationData.cpu?.core_hardware || '—' }}</span>
+          <span>₹ {{ quotationData.cpu_cost || 0 }}</span>
         </div>
 
-        <div class="col-md-6" *ngIf="quotationData?.gpu">
-          <div class="card shadow-sm h-100">
-            <div class="card-body p-3">
-              <h6 class="fw-bold mb-2">GPU</h6>
-
-              <div class="d-flex justify-content-between">
-                <span>{{ quotationData.gpu.AI_Component }}</span>
-                <span>₹ {{ quotationData.gpu_cost }}</span>
-              </div>
-
-              <small class="text-muted">
-                {{ quotationData.gpu.VRAM }} GB VRAM
-              </small>
-            </div>
-          </div>
-        </div>
-
+        <small class="text-muted">
+          {{ quotationData.cpu?.CPUcores || 0 }} cores ·
+          {{ quotationData.cpu?.ram_required || 0 }} GB RAM
+        </small>
       </div>
+    </div>
+  </div>
+
+  <!-- GPU -->
+  <div class="col-md-6" *ngIf="includeGPU">
+    <div class="card shadow-sm h-100">
+      <div class="card-body p-3">
+        <h6 class="fw-bold mb-2">GPU</h6>
+
+        <div class="d-flex justify-content-between">
+          <span>{{ quotationData.gpu?.AI_Component || '—' }}</span>
+          <span>₹ {{ quotationData.gpu_cost || 0 }}</span>
+        </div>
+
+        <small class="text-muted">
+          {{ quotationData.gpu?.VRAM || 0 }} GB VRAM
+        </small>
+      </div>
+    </div>
+  </div>
+
+</div>
 
       <!-- ================= AI FEATURES ================= -->
       <div class="card shadow-sm"
@@ -218,8 +221,25 @@
 
         </div>
       </div>
+<div class="d-flex gap-3 mt-4">
+  <button
+    class="btn btn-outline-secondary rounded-3 d-inline-flex align-items-center gap-2"
+    (click)="downloadPdf()">
+    <i class="bi bi-download"></i>
+    Download Quotation
+  </button>
 
+  <button
+    class="btn btn-primary rounded-3 d-inline-flex align-items-center gap-2">
+    <i class="bi bi-eye"></i>
+    View Quotation
+  </button>
+</div>
+
+
+
+ 
     </div>
-
+  
   </div>
 </div>

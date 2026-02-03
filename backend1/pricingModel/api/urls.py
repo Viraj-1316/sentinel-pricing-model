@@ -20,6 +20,7 @@ from pricingModel.api.views import (
     storageCostingDetails,
     creatingCategoryRUD,
     pricingRecomendationview,
+    AdminQuatationDetail,
 )
 
 urlpatterns = [
@@ -100,6 +101,7 @@ urlpatterns = [
     path('admin/users/', AdminUsersListView.as_view(), name='admin-users'),
     
     path('admin/quotations/', AdminAllQuotationsView.as_view(), name='admin-quotations'),
+    path('admin/quotations/<int:pk>/', AdminQuatationDetail.as_view(), name='admin-quotations-detail'),
     
     path('admin/audit-logs/', AdminAuditLogsView.as_view(), name='admin-audit-logs'),
 

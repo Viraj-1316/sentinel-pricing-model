@@ -9,9 +9,14 @@ import { HttpClient, HttpClientModule } from '@angular/common/http';
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, HttpClientModule],
   templateUrl: './user-requirements.html',
+  styleUrl: './user-requirements.css',
 })
-export class UserRequirements implements OnInit {
 
+export class UserRequirements implements OnInit {
+includeCPU = true;
+  includeGPU = true;
+  includeAI = true;
+  includeStorage = true;
   // ---------- FORM ----------
   form!: FormGroup;
 
@@ -28,7 +33,9 @@ export class UserRequirements implements OnInit {
   aiFeatures: any[] = [];
   selectedFeatures: any[] = [];
   aiCamMoreThanTotal = false;
+ 
 
+  
   // ---------- API ----------
   private AI_FEATURES_API =
     'http://127.0.0.1:8001/pricing-Model/ai-feature/';
@@ -138,14 +145,40 @@ export class UserRequirements implements OnInit {
   }
 
   // ================= NAVIGATION =================
-  goToQuotationForm(): void {
-    if (!this.costCalculated || !this.requirements?.id) return;
+ goToQuotationForm(): void {
+  if (!this.costCalculated || !this.requirements?.id) return;
 
-    this.router.navigate([
-      '/qoutation-form',
-      this.requirements.id
-    ]);
-  }
+  const API_URL =
+    `http://127.0.0.1:8001/pricing-Model/Pricingcalculation/${this.requirements.id}/`;
+
+  const payload = {
+    include_cpu: this.includeCPU,
+    include_gpu: this.includeGPU,
+    include_ai: this.includeAI,
+    include_storage: this.includeStorage
+  };
+
+  this.loading = true;
+
+  this.http.patch<any>(API_URL, payload).subscribe({
+    next: (res) => {
+      this.loading = false;
+
+      // ✅ Navigate after API success
+      this.router.navigate([
+        '/qoutation-form',
+        res.id
+      ]);
+    },
+    error: (err) => {
+      this.loading = false;
+      console.error(err);
+      alert('Failed to generate quotation');
+    }
+  });
+}
+
+
 
   onback(): void {
     this.router.navigate(['/dashboard']);

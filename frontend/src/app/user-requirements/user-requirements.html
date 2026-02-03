@@ -1,7 +1,7 @@
 <div class="page-shell">
 
   <div class="page-content-wrapper py-4">
-    <div class="container-xl px-3 px-lg-4">
+    <div class="container-fluid px-4">
 
       <!-- HEADER -->
       <div class="premium-header d-flex justify-content-between mb-4">
@@ -80,7 +80,7 @@
                         class="btn btn-primary"
                         [disabled]="loading"
                         (click)="calculateCost()">
-                  {{ loading ? 'Calculating...' : 'Calculate' }}
+                  {{ loading ? 'Calculating...' : 'Calculate the Compute and storage requirements' }}
                 </button>
               </div>
 
@@ -107,8 +107,8 @@
 </tr>
 
               <tr>
-                <td>CPU</td>
-                <td class="text-end">{{ requirements.cpuCores_required }}</td>
+                <td>CPU Cores</td>
+                <td class="text-end">{{ requirements.cpuCores_required }} cores</td>
               </tr>
               <tr>
                 <td>RAM</td>

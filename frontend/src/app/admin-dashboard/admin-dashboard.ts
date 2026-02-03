@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { RouterModule } from '@angular/router';
+import { ConfirmdialogService } from '../service/confirmdialog.service';
 
 type ActiveSection = 'users' | 'quotations' | 'logs' | null;
 
@@ -60,7 +61,7 @@ export class AdminDashboard implements OnInit {
   quotations: AdminQuotation[] = [];
   logs: AuditLog[] = [];
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient, private confirm: ConfirmdialogService) {}
 
   ngOnInit(): void {
     this.loadCounts();

@@ -3,20 +3,44 @@ import { ActivatedRoute } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
+import { ToasterService } from '../service/toaster.service';
+export interface QuotationRow {
+  id: number;
+  cammera: number;
+  camera_cost: number;
+  ai_cost: number;
+  total_costing: number;
+  created_at: string;
+  cpu_cost: number;
+  gpu_cost: number;
+  storage_cost: number;
+  ai_features: AiFeature[];
+  // admin fields
+  username?: string;
+  email?: string;
+}
+export interface AiFeature {
+  id: number;
+  AI_feature: string;
+  costing: number;
+}
 
 @Component({
   selector: 'app-qoutation-form',
   standalone: true,
   imports: [CommonModule, HttpClientModule, FormsModule],
   templateUrl: './qoutation-form.html',
+  styleUrl: './qoutation-form.css'
 })
+
 export class QoutationForm implements OnInit {
 
   quotationId!: number;
   quotationData: any = null;
   loading = false;
   errorMsg = '';
-
+  quotations: QuotationRow[] = [];
+  filtered: QuotationRow[] = [];
   // Toggles
   includeCPU = true;
   includeGPU = true;
@@ -28,7 +52,8 @@ export class QoutationForm implements OnInit {
 
   constructor(
     private route: ActivatedRoute,
-    private http: HttpClient
+    private http: HttpClient,
+    private toast: ToasterService
   ) {}
 
   ngOnInit(): void {
@@ -48,25 +73,52 @@ export class QoutationForm implements OnInit {
 
     this.http.get<any>(`${this.API}/${this.quotationId}/`)
       .subscribe({
-        next: (res) => {
-          this.quotationData = res;
+   next: (res) => {
+  this.quotationData = res;
 
-          // Sync toggles
-          this.includeCPU = res.include_cpu;
-          this.includeGPU = res.include_gpu;
-          this.includeAI = res.include_ai;
-          this.includeStorage = res.include_storage;
-
-          this.loading = false;
-        },
-        error: () => {
-          this.errorMsg = 'Failed to fetch quotation';
-          this.loading = false;
-        }
-      });
+  // Clear stale objects if disabled
+  if (!this.includeCPU) {
+    this.quotationData.cpu = null;
+    this.quotationData.cpu_cost = 0;
   }
 
-  // ================= UPDATE =================
+  if (!this.includeGPU) {
+    this.quotationData.gpu = null;
+    this.quotationData.gpu_cost = 0;
+  }
+
+  this.loading = false;
+}}
+);
+  }
+ downloadPdf() {
+  if (!this.quotationData?.id) return;
+
+  const id = this.quotationData.id;
+  const url = `http://127.0.0.1:8001/pricing-Model/quotation/${id}/pdf/`;
+
+  this.toast.info(`Downloading PDF #${id}...`);
+
+  this.http.get(url, { responseType: 'blob' }).subscribe({
+    next: (blob) => {
+      const file = new Blob([blob], { type: 'application/pdf' });
+      const downloadURL = window.URL.createObjectURL(file);
+
+      const a = document.createElement('a');
+      a.href = downloadURL;
+      a.download = `quotation_${id}.pdf`;
+      a.click();
+
+      window.URL.revokeObjectURL(downloadURL);
+      this.toast.success(`PDF downloaded: #${id}`);
+    },
+    error: () => {
+      this.toast.error('Failed to download PDF');
+    },
+  });
+}
+
+ // ================= UPDATE =================
   updateQuotation(): void {
     const payload = {
       include_cpu: this.includeCPU,

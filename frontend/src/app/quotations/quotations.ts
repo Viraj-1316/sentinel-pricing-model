@@ -4,7 +4,7 @@ import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../service/auth.service';
 import { ToasterService } from '../service/toaster.service';
-
+import { ConfirmdialogService } from '../service/confirmdialog.service';
 export interface QuotationRow {
   id: number;
   cammera: number;
@@ -71,7 +71,8 @@ export class Quotations implements OnInit {
   constructor(
     private http: HttpClient,
     private auth: AuthService,
-    private toast: ToasterService
+    private toast: ToasterService,
+    private confirm: ConfirmdialogService
   ) {}
 
   ngOnInit(): void {
@@ -267,22 +268,26 @@ export class Quotations implements OnInit {
   }
 
   // ✅ Admin Delete (NULL SAFE)
-  deleteQuotation(q: QuotationRow | null) {
-    if (!this.isAdmin || !q) return;
-
-    const url = `http://127.0.0.1:8001/pricing-Model/admin/quotation/${q.id}/delete/`;
-
-    if (!confirm(`Delete quotation #${q.id}?`)) return;
-
-    this.http.delete(url).subscribe({
-      next: () => {
-        this.toast.success(`Deleted quotation #${q.id}`);
-        this.loadQuotations();
-      },
-      error: () => this.toast.error('Delete failed'),
-    });
-  }
-
+  async deleteQuotation(q: QuotationRow | null) {
+  if (!this.isAdmin || !q) return;
+ 
+  const url =
+    `http://127.0.0.1:8001/pricing-Model/admin/quotations/${q.id}/`;
+ 
+  const ok = await this.confirm.open(
+    "Confirmation",
+    "Are you sure you want to logout?"
+  );
+  if(ok){
+  this.http.delete(url).subscribe({
+    next: () => {
+      this.toast.success(`Deleted quotation #${q.id}`);
+      this.loadQuotations();
+    },
+    error: () => this.toast.error('Delete failed'),
+  });
+}
+   }
   trackById(_: number, row: QuotationRow) {
     return row.id;
   }
