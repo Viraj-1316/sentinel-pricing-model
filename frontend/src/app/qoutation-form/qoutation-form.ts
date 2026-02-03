@@ -3,7 +3,6 @@ import { ActivatedRoute } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
-<<<<<<< HEAD
 import { ToasterService } from '../service/toaster.service';
 export interface QuotationRow {
   id: number;
@@ -26,8 +25,6 @@ export interface AiFeature {
   costing: number;
 }
 
-=======
->>>>>>> backup-before-fixes
  
 @Component({
   selector: 'app-qoutation-form',
@@ -36,31 +33,20 @@ export interface AiFeature {
   templateUrl: './qoutation-form.html',
   styleUrl: './qoutation-form.css'
 })
-<<<<<<< HEAD
-
-=======
->>>>>>> backup-before-fixes
 export class QoutationForm implements OnInit {
  
   quotationId!: number;
   quotationData: any = null;
   loading = false;
   errorMsg = '';
-<<<<<<< HEAD
   quotations: QuotationRow[] = [];
   filtered: QuotationRow[] = [];
-=======
->>>>>>> backup-before-fixes
  
   // Toggles
   includeCPU = true;
   includeGPU = true;
   includeAI = true;
   includeStorage = true;
-<<<<<<< HEAD
-
-=======
->>>>>>> backup-before-fixes
  
   private API =
     'http://127.0.0.1:8001/pricing-Model/Pricingcalculation';

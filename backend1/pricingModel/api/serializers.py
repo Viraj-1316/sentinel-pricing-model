@@ -104,7 +104,6 @@ class UserFinalQuotationSerializer(serializers.ModelSerializer):
     cpu = ComponentDisplaySerializer(read_only=True)
     gpu = ComponentDisplaySerializer(read_only=True)
 
-    # ✅ CORRECT AI SERIALIZER
     ai_features = AI_ENABLEDserializer(many=True, read_only=True)
 
     ai_feature_ids = serializers.PrimaryKeyRelatedField(
@@ -197,13 +196,13 @@ class storagePricingSerializer(serializers.ModelSerializer):
                 'costing'
                 ]
         
-# class processorSerializer(serializers.ModelSerializer):
+class processorSerializer(serializers.ModelSerializer):
     
-#     costing = serializers.IntegerField(source='price.costing')
+    costing = serializers.IntegerField(source='price.costing')
     
-#     class Meta:
+    class Meta:
         
-#         model = Component
+        model = Component
     
         fields = [
             "min_cammeraA",
