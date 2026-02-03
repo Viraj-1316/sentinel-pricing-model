@@ -1,5 +1,5 @@
 <div class="container-fluid py-4 bg-light min-vh-100">
-  <div class="container w-100 ">
+  <div class="container">
     <div class="row mb-4 align-items-center">
       <div class="col">
         <h2 class="fw-bold text-dark mb-0">System Configuration</h2>
@@ -28,11 +28,6 @@
           <li class="nav-item">
             <button class="nav-link py-3" [class.active]="tab==='storage'" (click)="setTab('storage')">
               <i class="bi bi-hdd-network me-2"></i>Storage
-            </button>
-          </li>
-          <li class="nav-item">
-            <button class="nav-link py-3" [class.active]="tab==='licence'" (click)="setTab('licence')">
-              <i class="bi bi-hdd-network me-2"></i>Licence
             </button>
           </li>
         </ul>

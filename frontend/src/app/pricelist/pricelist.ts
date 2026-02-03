@@ -32,7 +32,7 @@ export class Pricelist implements OnInit {
 
   private CATEGORY_API = 'http://127.0.0.1:8001/pricing-Model/create-category/';
   private AI_API       = 'http://127.0.0.1:8001/pricing-Model/ai-feature/';
-  private HARDWARE_API = 'http://127.0.0.1:8001/pricing-Model/cameraPricing/';
+  private HARDWARE_API = 'http://127.0.0.1:8001/pricing-Model/processorUnit/';
   private STORAGE_API  = 'http://127.0.0.1:8001/pricing-Model/storage-costing/';
 
   categoryForm: FormGroup;

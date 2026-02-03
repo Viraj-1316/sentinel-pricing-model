@@ -32,7 +32,8 @@ from pricingModel.api.serializers import (
     AdminQuotationSerializer,
     AuditLogSerializer,
     userRequirementSerializer,
-    UserFinalQuotationSerializer
+    UserFinalQuotationSerializer,
+    processorSerializer
 )
 import math
  
@@ -519,7 +520,6 @@ class processorUnit(generics.ListCreateAPIView):
             component = license,
             costing = costing
         )
- 
 class  processorUnitDetail(generics.RetrieveUpdateDestroyAPIView):
     
     serializer_class = licensePricingSerializer
@@ -530,14 +530,15 @@ class  processorUnitDetail(generics.RetrieveUpdateDestroyAPIView):
     
     def perform_update(self, serializer):
         costing = serializer.validated_data.pop('price', None)['costing']
-
+        
+        if costing is not None:
+                Price.objects.update_or_create(
+                    component=license,
+                    defaults={'costing': costing}
+                )
         license = serializer.save()
 
-        if costing is not None:
-            Price.objects.update_or_create(
-                component=license,
-                defaults={'costing': costing}
-            )
+  
             
     def perform_destroy(self, instance):
         Price.objects.filter(component=instance).delete()
