@@ -75,7 +75,7 @@ class userRequirementSerializer(serializers.ModelSerializer):
             "include_cpu",
             "include_gpu",
             "include_storage",
-            # "Duration",
+            "Duration",
             'created_at',
         ]
 
@@ -139,53 +139,15 @@ class UserFinalQuotationSerializer(serializers.ModelSerializer):
             "total_costing",
 
             "ai_features",
-            "ai_feature_ids",
-            "all_ai_features",
-
+            
+            # Licence Duration
+            "Duration",
+            "licenceCostU",
             "include_cpu",
             "include_gpu",
-            "include_ai",
             "include_storage",
-
-            "Duration",
             "created_at",
-        ]
-
-    def get_all_ai_features(self, obj):
-        return AI_ENABLEDserializer(
-            Component.objects.filter(category__name="AI"),
-            many=True
-        ).data
-
-    def update(self, instance, validated_data):
-        ai_features = validated_data.pop("ai_feature_ids", None)
-
-        instance = super().update(instance, validated_data)
-
-        if ai_features is not None:
-            instance.ai_features.set(ai_features)
-
-        return instance
-# class QuotationSerializer(serializers.ModelSerializer):
-#     ai_features = AI_ENABLEDserializer(many=True, read_only=True)
-   
-#     class Meta:
-#         model = UserPricing
-#         fields = [
-#             "id",
-#             'cammera',
-          
-#             'ai_cost',
-#             'ai_features',
-#             'cpu_cost',
-#             'gpu_cost',
-#             'storage_cost',
-#             'storage_days',
-           
-#             'total_costing',
-#             'created_at'
-#         ]
-
+        ]             
 
 class categorySerializer(serializers.ModelSerializer):
     
@@ -212,7 +174,7 @@ class componentDetailSerializer(serializers.ModelSerializer):
         model = Component
         fields = "__all__"
 
-class cameraPricingSerializer(serializers.ModelSerializer):
+class licensePricingSerializer(serializers.ModelSerializer):
     
     costing = serializers.IntegerField(source='price.costing')
     class Meta:
@@ -220,8 +182,7 @@ class cameraPricingSerializer(serializers.ModelSerializer):
        model = Component
        fields = [
            'id',
-           'min_cammera',
-           'max_cammera',
+           'Duration',
            'costing'
        ]        
 
@@ -247,14 +208,16 @@ class processorSerializer(serializers.ModelSerializer):
         model = Component
     
         fields = [
-            'id',
-            'name',
-            'CPU',
-            'GPU',
-            'CPUcores',
-            'GPUcores',
-            'ram_required',
-            'costing'
+            "min_cammeraA",
+            "max_cammeraA",
+            "min_cammera",
+            "max_cammera",
+            "core_hardware", 
+            "CPUcores",
+            "VRAM",
+            "costing",
+            "AI_Component",
+            "ram_required",
         ]
 
 
