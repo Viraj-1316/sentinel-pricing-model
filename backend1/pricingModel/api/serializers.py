@@ -80,13 +80,11 @@ class userRequirementSerializer(serializers.ModelSerializer):
         ]
 
 class AI_ENABLEDserializer(serializers.ModelSerializer):
-    costing = serializers.IntegerField(source='price.costing')
-
-    class Meta:
-        model = Component
-        fields = ['id', 'AI_feature', 'costing']
-
-                    
+        costing = serializers.IntegerField(source='price.costing')
+        class Meta:
+            model = Component
+            fields = ['id','min_cammeraA', 'max_cammeraA', 'AI_Component','VRAM', 'costing']  
+            
 class ComponentDisplaySerializer(serializers.ModelSerializer):
     costing = serializers.IntegerField(source="price.costing", read_only=True)
 
@@ -185,7 +183,7 @@ class licensePricingSerializer(serializers.ModelSerializer):
            'Duration',
            'costing'
        ]        
-
+  
 class storagePricingSerializer(serializers.ModelSerializer):
     costing = serializers.IntegerField(source='price.costing')
     # category = categorySerializer()
@@ -199,13 +197,13 @@ class storagePricingSerializer(serializers.ModelSerializer):
                 'costing'
                 ]
         
-class processorSerializer(serializers.ModelSerializer):
+# class processorSerializer(serializers.ModelSerializer):
     
-    costing = serializers.IntegerField(source='price.costing')
+#     costing = serializers.IntegerField(source='price.costing')
     
-    class Meta:
+#     class Meta:
         
-        model = Component
+#         model = Component
     
         fields = [
             "min_cammeraA",
