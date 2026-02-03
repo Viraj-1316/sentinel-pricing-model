@@ -293,13 +293,28 @@ class pricingRecomendationview(generics.RetrieveUpdateAPIView):
 
 
     def perform_update(self, serializer):
-        instance = self.get_object()
+
+        # ==========================
+        # 1️⃣ SAVE PATCHED FIELDS FIRST
+        # ==========================
+        instance = serializer.save()
+
         vramUser = instance.vram_required
 
+        # ==========================
+        # RESET DEFAULTS
+        # ==========================
         cpu = None
+        gpu = None
         cpu_cost = 0
+        gpu_cost = 0
+        ai_cost = 0
+        storage_cost = 0
+
+        # ==========================
+        # CPU
+        # ==========================
         if instance.include_cpu:
-            # ---------- CPU ----------
             cpu = Component.objects.filter(
                 category__name="Processor",
                 CPUcores__isnull=False,
@@ -311,14 +326,13 @@ class pricingRecomendationview(generics.RetrieveUpdateAPIView):
 
             cpu_price = Price.objects.filter(component=cpu).first()
             if not cpu_price:
-                raise ValidationError(f"Price not configured for CPU: {cpu.core_hardware}")
+                raise ValidationError("CPU price not configured")
 
             cpu_cost = cpu_price.costing
 
-        # ---------- GPU ----------
-        gpu = None
-        gpu_cost = 0
-
+        # ==========================
+        # GPU
+        # ==========================
         if instance.include_gpu and vramUser > 0:
             if vramUser <= 48:
                 gpu = Component.objects.filter(
@@ -326,43 +340,37 @@ class pricingRecomendationview(generics.RetrieveUpdateAPIView):
                     VRAM__isnull=False,
                     VRAM__gte=vramUser
                 ).order_by("VRAM").first()
-
-                if not gpu:
-                    raise ValidationError("No GPU meets VRAM requirement")
-
-                gpu_price = Price.objects.filter(component=gpu).first()
-                
-                if not gpu_price:
-                    raise ValidationError("GPU price not configured")
-
-                gpu_cost = gpu_price.costing
             else:
-                gpu_units = math.ceil(vramUser / 48)
                 gpu = Component.objects.filter(
                     category__name="Processor",
                     VRAM__isnull=False
                 ).order_by("-VRAM").first()
 
-                if not gpu:
-                    raise ValidationError("No GPU configured")
+            if not gpu:
+                raise ValidationError("No GPU meets VRAM requirement")
 
-                gpu_price = Price.objects.filter(component=gpu).first()
-                if not gpu_price:
-                    raise ValidationError("GPU price not configured")
+            gpu_price = Price.objects.filter(component=gpu).first()
+            if not gpu_price:
+                raise ValidationError("GPU price not configured")
 
-                gpu_cost = gpu_price.costing * gpu_units
+            gpu_cost = gpu_price.costing
 
-        # ---------- AI FEATURES ----------
-        ai_cost = 0
-        for ai in instance.ai_features.all():
-            ai_price = Price.objects.filter(component=ai).first()
-            if not ai_price:
-                raise ValidationError(f"Price not configured for AI feature: {ai.AI_feature}")
-            ai_cost += ai_price.costing
+        # ==========================
+        # AI FEATURES
+        # ==========================
+        if instance.include_ai:
+            for ai in instance.ai_features.all():
+                ai_price = Price.objects.filter(component=ai).first()
+                if not ai_price:
+                    raise ValidationError(
+                        f"Price not configured for AI feature: {ai.AI_feature}"
+                    )
+                ai_cost += ai_price.costing
 
-        storage_cost = 0
+        # ==========================
+        # STORAGE
+        # ==========================
         if instance.include_storage:
-            # ---------- STORAGE ----------
             storage = Component.objects.filter(category__name="Storage").first()
             if not storage:
                 raise ValidationError("Storage component not configured")
@@ -373,18 +381,14 @@ class pricingRecomendationview(generics.RetrieveUpdateAPIView):
 
             storage_cost = (instance.storage_used_user / 19) * storage_price.costing
 
-        # license = Component.objects.filter(
-        #     category__name="licence",
-        #     Duartion = instance.Duartion
-        #     ).first()
-        
-        # licensePrice = Price.objects.filter(component=license).first()
-        
-        # licenseCost = licensePrice.costing
-        
-        # ---------- TOTAL ----------
-        total_cost = cpu_cost + gpu_cost + ai_cost + storage_cost 
+        # ==========================
+        # TOTAL
+        # ==========================
+        total_cost = cpu_cost + gpu_cost + ai_cost + storage_cost
 
+        # ==========================
+        # FINAL SAVE
+        # ==========================
         serializer.save(
             cpu=cpu,
             gpu=gpu,
@@ -392,17 +396,15 @@ class pricingRecomendationview(generics.RetrieveUpdateAPIView):
             gpu_cost=gpu_cost,
             ai_cost=ai_cost,
             storage_cost=storage_cost,
-            # licenceCostU = licenseCost,
             total_costing=total_cost,
-            
         )
 
         create_audit_log(
             self.request,
             "UPDATE_PRICING",
-            f"Final pricing calculated. Total={total_cost}"
+            f"Pricing updated. Total={total_cost}"
         )
-
+    
 
 class UserQuotationList(generics.ListAPIView):
             serializer_class = UserFinalQuotationSerializer

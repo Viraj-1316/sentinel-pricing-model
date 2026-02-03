@@ -81,7 +81,10 @@ class Price(models.Model):
 
    
 class UserPricing(models.Model):
-
+    include_cpu = models.BooleanField(default=True)
+    include_gpu = models.BooleanField(default=True)
+    include_ai = models.BooleanField(default=True)
+    include_storage = models.BooleanField(default=True)
     user_name = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
@@ -152,9 +155,7 @@ class UserPricing(models.Model):
     Duration = models.IntegerField(default=1)
     created_at = models.DateTimeField(auto_now_add=True)
 
-    include_cpu = models.BooleanField(default=True)
-    include_gpu = models.BooleanField(default=True)
-    include_storage = models.BooleanField(default=True)
+    
     # include_ai = models.BooleanField(default=True)
 
     def __str__(self):

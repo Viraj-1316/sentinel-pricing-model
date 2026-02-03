@@ -80,10 +80,12 @@ class userRequirementSerializer(serializers.ModelSerializer):
         ]
 
 class AI_ENABLEDserializer(serializers.ModelSerializer):
-        costing = serializers.IntegerField(source='price.costing')
-        class Meta:
-            model = Component
-            fields = ['id','AI_feature', 'costing']  
+    costing = serializers.IntegerField(source='price.costing')
+
+    class Meta:
+        model = Component
+        fields = ['id', 'AI_feature', 'costing']
+
                     
 class ComponentDisplaySerializer(serializers.ModelSerializer):
     costing = serializers.IntegerField(source="price.costing", read_only=True)
@@ -104,36 +106,66 @@ class UserFinalQuotationSerializer(serializers.ModelSerializer):
     cpu = ComponentDisplaySerializer(read_only=True)
     gpu = ComponentDisplaySerializer(read_only=True)
 
+    # ✅ CORRECT AI SERIALIZER
     ai_features = AI_ENABLEDserializer(many=True, read_only=True)
+
+    ai_feature_ids = serializers.PrimaryKeyRelatedField(
+        many=True,
+        queryset=Component.objects.filter(category__name="AI"),
+        write_only=True,
+        required=False
+    )
+
+    all_ai_features = serializers.SerializerMethodField()
 
     class Meta:
         model = UserPricing
         fields = [
             "id",
             "cammera",
-            # requirements
+
             "cpuCores_required",
             "ram_required",
             "vram_required",
-            # selected hardware
+
             "cpu",
             "gpu",
-            # costs
+
             "cpu_cost",
             "gpu_cost",
             "ai_cost",
             "storage_cost",
             "storage_used_user",
             "total_costing",
-            # AI
+
             "ai_features",
-            # Licence Duration
+            "ai_feature_ids",
+            "all_ai_features",
+
+            "include_cpu",
+            "include_gpu",
+            "include_ai",
+            "include_storage",
+
             "Duration",
-            # "licence",
-            # "licenceCostU"
             "created_at",
-        ]             
-        
+        ]
+
+    def get_all_ai_features(self, obj):
+        return AI_ENABLEDserializer(
+            Component.objects.filter(category__name="AI"),
+            many=True
+        ).data
+
+    def update(self, instance, validated_data):
+        ai_features = validated_data.pop("ai_feature_ids", None)
+
+        instance = super().update(instance, validated_data)
+
+        if ai_features is not None:
+            instance.ai_features.set(ai_features)
+
+        return instance
 # class QuotationSerializer(serializers.ModelSerializer):
 #     ai_features = AI_ENABLEDserializer(many=True, read_only=True)
    
