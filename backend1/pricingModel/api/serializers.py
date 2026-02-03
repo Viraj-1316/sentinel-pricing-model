@@ -75,7 +75,7 @@ class userRequirementSerializer(serializers.ModelSerializer):
             "include_cpu",
             "include_gpu",
             "include_storage",
-            # "Duration",
+            "Duration",
             'created_at',
         ]
 
@@ -127,33 +127,15 @@ class UserFinalQuotationSerializer(serializers.ModelSerializer):
             "total_costing",
             # AI
             "ai_features",
+            
             # Licence Duration
             "Duration",
-            # "licence",
-            # "licenceCostU"
+            "licenceCostU",
+            "include_cpu",
+            "include_gpu",
+            "include_storage",
             "created_at",
         ]             
-        
-# class QuotationSerializer(serializers.ModelSerializer):
-#     ai_features = AI_ENABLEDserializer(many=True, read_only=True)
-   
-#     class Meta:
-#         model = UserPricing
-#         fields = [
-#             "id",
-#             'cammera',
-          
-#             'ai_cost',
-#             'ai_features',
-#             'cpu_cost',
-#             'gpu_cost',
-#             'storage_cost',
-#             'storage_days',
-           
-#             'total_costing',
-#             'created_at'
-#         ]
-
 
 class categorySerializer(serializers.ModelSerializer):
     
@@ -180,7 +162,7 @@ class componentDetailSerializer(serializers.ModelSerializer):
         model = Component
         fields = "__all__"
 
-class cameraPricingSerializer(serializers.ModelSerializer):
+class licensePricingSerializer(serializers.ModelSerializer):
     
     costing = serializers.IntegerField(source='price.costing')
     class Meta:
@@ -188,8 +170,7 @@ class cameraPricingSerializer(serializers.ModelSerializer):
        model = Component
        fields = [
            'id',
-           'min_cammera',
-           'max_cammera',
+           'Duration',
            'costing'
        ]        
 
@@ -215,14 +196,16 @@ class processorSerializer(serializers.ModelSerializer):
         model = Component
     
         fields = [
-            'id',
-            'name',
-            'CPU',
-            'GPU',
-            'CPUcores',
-            'GPUcores',
-            'ram_required',
-            'costing'
+            "min_cammeraA",
+            "max_cammeraA",
+            "min_cammera",
+            "max_cammera",
+            "core_hardware", 
+            "CPUcores",
+            "VRAM",
+            "costing",
+            "AI_Component",
+            "ram_required",
         ]
 
 
