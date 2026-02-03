@@ -137,15 +137,28 @@ export class UserRequirements implements OnInit {
     this.storageInTB = 0;
   }
 
-  // ================= NAVIGATION =================
-  goToQuotationForm(): void {
-    if (!this.costCalculated || !this.requirements?.id) return;
+goToQuotationForm(): void {
+  if (!this.costCalculated || !this.requirements?.id) return;
 
-    this.router.navigate([
-      '/qoutation-form',
-      this.requirements.id
-    ]);
-  }
+  const quotationId = this.requirements.id;
+
+  this.loading = true;
+
+  this.http.patch<any>(
+    `${this.CALCULATE_API}${quotationId}/`,
+    {} // 👈 EMPTY PATCH = default quotation pricing
+  ).subscribe({
+    next: () => {
+      this.loading = false;
+      this.router.navigate(['/qoutation-form', quotationId]);
+    },
+    error: () => {
+      this.errorMsg = 'Failed to generate quotation';
+      this.loading = false;
+    }
+  });
+}
+
 
   onback(): void {
     this.router.navigate(['/dashboard']);

@@ -79,7 +79,7 @@ export class UserDashboard implements OnInit {
           // ✅ GPU name extraction
           gpuName:
             q.gpu?.name ??
-            q.gpu?.core_hardware ??
+            q.gpu?.AI_Component ??
             q.gpu?.GPU ??
             '—',
           // ✅ AI features (ManyToMany)

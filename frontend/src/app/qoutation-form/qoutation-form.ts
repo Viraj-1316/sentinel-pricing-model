@@ -3,7 +3,7 @@ import { ActivatedRoute } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
-import { R } from '@angular/cdk/keycodes';
+ 
 @Component({
   selector: 'app-qoutation-form',
   standalone: true,
@@ -11,98 +11,85 @@ import { R } from '@angular/cdk/keycodes';
   templateUrl: './qoutation-form.html',
 })
 export class QoutationForm implements OnInit {
-
+ 
   quotationId!: number;
   quotationData: any = null;
-  loading = true;
+  loading = false;
   errorMsg = '';
-includeCPU = true;
-includeGPU = true;
-includeAI = true;
-
-  private PATCH_API =
+ 
+  // Toggles
+  includeCPU = true;
+  includeGPU = true;
+  includeAI = true;
+  includeStorage = true;
+ 
+  private API =
     'http://127.0.0.1:8001/pricing-Model/Pricingcalculation';
-
+ 
   constructor(
     private route: ActivatedRoute,
     private http: HttpClient
   ) {}
-
+ 
   ngOnInit(): void {
-    // 1️⃣ Get ID from URL
     this.quotationId = Number(this.route.snapshot.paramMap.get('id'));
-
+ 
     if (!this.quotationId) {
       this.errorMsg = 'Invalid quotation ID';
-      this.loading = false;
       return;
     }
-
-    // 2️⃣ Call API
+ 
     this.fetchQuotation();
   }
-updateQuotation(
-  includeCPU: boolean,
-  includeGPU: boolean,
-  includeAI: boolean
-): void {
-
-  const payload: any = {};
-
-  // CPU
-  if (!includeCPU) {
-    payload.cpu = null;
-    payload.cpu_cost = 0;
-  }
-
-  // GPU
-  if (!includeGPU) {
-    payload.gpu = null;
-    payload.gpu_cost = 0;
-  }
-
-  // AI Features
-  if (!includeAI) {
-    payload.ai_features = [];
-    payload.ai_cost = 0;
-  }
-
-  this.loading = true;
-
-  this.http.patch<any>(
-    `${this.PATCH_API}/${this.quotationId}/`,
-    payload
-  ).subscribe({
-    next: (res) => {
-      this.quotationData = res;
-      this.loading = false;
-    },
-    error: (err) => {
-      console.error(err);
-      this.errorMsg = 'Failed to update quotation';
-      this.loading = false;
-    }
-  });
-}
-
-  // ================= API CALL =================
+ 
+  // ================= FETCH =================
   fetchQuotation(): void {
     this.loading = true;
-
+ 
+    this.http.get<any>(`${this.API}/${this.quotationId}/`)
+      .subscribe({
+        next: (res) => {
+          this.quotationData = res;
+ 
+          // Sync toggles
+          this.includeCPU = res.include_cpu;
+          this.includeGPU = res.include_gpu;
+          this.includeAI = res.include_ai;
+          this.includeStorage = res.include_storage;
+ 
+          this.loading = false;
+        },
+        error: () => {
+          this.errorMsg = 'Failed to fetch quotation';
+          this.loading = false;
+        }
+      });
+  }
+ 
+  // ================= UPDATE =================
+  updateQuotation(): void {
+    const payload = {
+      include_cpu: this.includeCPU,
+      include_gpu: this.includeGPU,
+      include_ai: this.includeAI,
+      include_storage: this.includeStorage
+    };
+ 
+    this.loading = true;
+ 
     this.http.patch<any>(
-      `${this.PATCH_API}/${this.quotationId}/`,
-      {}
+      `${this.API}/${this.quotationId}/`,
+      payload
     ).subscribe({
       next: (res) => {
-        // 3️⃣ Assign API response to template variable
         this.quotationData = res;
         this.loading = false;
       },
-      error: (err) => {
-        console.error(err);
-        this.errorMsg = 'Failed to generate quotation';
+      error: () => {
+        this.errorMsg = 'Failed to update quotation';
         this.loading = false;
       }
     });
   }
 }
+ 
