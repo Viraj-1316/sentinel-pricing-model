@@ -148,29 +148,37 @@
 
             <!-- ✅ Sticky header -->
             <thead class="table-light position-sticky top-0" style="z-index:2;">
-              <tr>
-                <th *ngIf="isAdmin">User</th>
-                <th>Cameras</th>
-                <th class="text-end">AI Cost</th>
-                <th class="text-end">Total</th>
-                <th>Date</th>
-                <th class="text-center" style="width:320px;">Actions</th>
-              </tr>
-            </thead>
+  <tr>
+    <th *ngIf="isAdmin">User</th>
+    <th>Cameras</th>
+    <th>AI Features</th>
+    <th class="text-end">AI Cost</th>
+    <th class="text-end">CPU Cost</th>
+    <th class="text-end">GPU Cost</th>
+    <th class="text-end">Total</th>
+    <th>Date</th>
+    <th class="text-center" style="width:320px;">Actions</th>
+  </tr>
+</thead>
+
 
             <tbody>
 
               <!-- ✅ Rows -->
               <tr *ngFor="let q of visibleRows">
-                <td *ngIf="isAdmin" class="fw-semibold text-muted">{{ q.username || '-' }}</td>
+                <td *ngIf="isAdmin">{{q.username}}</td>
+              <td>{{ q.cammera }}</td>
+<td>
+  <span *ngFor="let f of q.ai_features; let last = last">
+    {{ f.AI_feature }}<span *ngIf="!last">, </span>
+  </span>
+</td><td class="text-end">₹ {{ q.ai_cost || 0 }}</td>
+<td class="text-end">₹ {{ q.cpu_cost || 0 }}</td>
+<td class="text-end">₹ {{ q.gpu_cost || 0 }}</td>
+<td class="text-end fw-bold text-success">₹ {{ q.total_costing }}</td>
+<td class="text-muted">{{ q.created_at | date:'medium' }}</td>
+<td>
 
-                <td>{{ q.cammera }}</td>
-                <td class="text-end">₹ {{ q.ai_cost || 0 }}</td>
-                <td class="text-end fw-bold text-success">₹ {{ q.total_costing }}</td>
-                <td class="text-muted">{{ q.created_at | date:'medium' }}</td>
-
-                <!-- ✅ Actions (all in one line) -->
-                <td class="text-center">
                   <div class="d-inline-flex gap-2 flex-nowrap actions-row">
 
                     <button class="btn btn-outline-secondary btn-sm rounded-3"

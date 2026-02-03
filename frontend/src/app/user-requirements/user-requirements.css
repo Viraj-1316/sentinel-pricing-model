@@ -1,462 +1,194 @@
-/* ================================
-   GLOBAL PAGE + CARD BREATHING
-================================ */
+/* =========================================
+   GLOBAL LAYOUT
+========================================= */
+
 html, body {
   height: 100%;
-  overflow: hidden !important;
 }
 
-.page-shell {
+body {
+  margin: 0;
   background: #f6f8fc;
-  min-height: 100vh;
   font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
 }
 
-.page-content {
-  max-width: 100%;
-  margin: 0 auto;
+/* Page shell */
+.page-shell {
   min-height: 100vh;
+  background: #f6f8fc;
 }
 
-/* ✅ MAIN CARD */
-.premium-card {
-  border-radius: 22px;
-  border: 1px solid rgba(15, 23, 42, 0.08);
-  background: rgba(255, 255, 255, 0.9);
-  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.06);
-  overflow: hidden;
-
-  /* ✅ REQUIRED for overlay absolute positioning */
-  position: relative;
+/* Centers content away from sidebar & edges */
+.page-content-wrapper {
+  display: flex;
+  justify-content: center;
+  padding: 24px 0;
 }
 
-/* ================================
-   ✅ Sticky Fix (IMPORTANT)
-   Without height, PDF overlay collapses
-================================ */
-.config-sticky,
-.right-sticky {
-  position: sticky;
-  top: 16px;
+/* Main content width */
+.container-xl {
+  width: 100%;
+  max-width: 1200px;
+  padding-left: 16px;
+  padding-right: 16px;
 }
 
-/* ✅ LEFT side scroll is already fine */
-.config-sticky {
-  height: calc(100vh - 110px);
-}
-
-/* ✅ RIGHT side MUST HAVE HEIGHT */
-.right-sticky {
-  height: calc(100vh - 110px);
-  overflow: hidden; /* prevents overlay overflow clipping bugs */
-}
-
-/* ✅ Ensure right panel content fills */
-.right-sticky .card-body {
-  height: 100%;
-  overflow-y: auto;
-}
-
-/* ================================
+/* =========================================
    HEADER
-================================ */
-.premium-header .brand-pill {
-  width: 46px;
-  height: 46px;
-  border-radius: 16px;
-  background: linear-gradient(135deg, #2563eb, #60a5fa);
-  color: #fff;
+========================================= */
+
+.premium-header {
+  background: #ffffff;
+  border-radius: 18px;
+  padding: 18px 20px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.05);
+}
+
+.brand-pill {
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
   display: grid;
   place-items: center;
   font-weight: 900;
-  letter-spacing: 0.5px;
+  color: #fff;
+  background: linear-gradient(135deg, #2563eb, #60a5fa);
 }
 
 .header-title {
   font-weight: 900;
-  letter-spacing: -0.4px;
+  letter-spacing: -0.3px;
 }
 
 .header-subtitle {
   font-size: 13px;
-  color: rgba(15, 23, 42, 0.6);
   font-weight: 600;
+  color: rgba(15, 23, 42, 0.6);
 }
 
-/* ================================
-   SECTION HEADER
-================================ */
-.premium-card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+/* =========================================
+   CARD
+========================================= */
+
+.premium-card {
+  background: #ffffff;
+  border-radius: 22px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  box-shadow: 0 14px 30px rgba(15, 23, 42, 0.08);
 }
 
-.section-icon {
-  width: 44px;
-  height: 44px;
-  border-radius: 16px;
-  display: grid;
-  place-items: center;
+.premium-card .card-body {
+  padding: 24px;
 }
 
-.section-icon.primary {
-  background: rgba(37, 99, 235, 0.12);
-  color: #2563eb;
-}
-
-.section-icon.success {
-  background: rgba(34, 197, 94, 0.12);
-  color: #16a34a;
-}
-
-.section-badge {
-  font-size: 12px;
-  font-weight: 800;
-  padding: 8px 12px;
-  border-radius: 999px;
-  border: 1px solid rgba(15, 23, 42, 0.1);
-  background: rgba(255, 255, 255, 0.8);
-  color: rgba(15, 23, 42, 0.75);
-}
-
-/* ================================
-   TYPOGRAPHY / SPACING
-================================ */
-.fw-black {
-  font-weight: 900 !important;
-  letter-spacing: -0.3px;
-}
-
-.step-title {
-  display: grid;
-  gap: 4px;
-  padding-bottom: 10px;
-  border-bottom: 1px solid rgba(15, 23, 42, 0.06);
-}
-
-.form-section {
-  padding: 2px 0;
-}
+/* =========================================
+   FORM
+========================================= */
 
 .form-label {
   font-weight: 700;
   color: rgba(15, 23, 42, 0.85);
-  margin-bottom: 10px;
+  margin-bottom: 8px;
 }
 
-.hint {
-  font-size: 12.5px;
-  font-weight: 650;
-  color: rgba(15, 23, 42, 0.55);
-}
-
-/* ================================
-   INPUT LOOK
-================================ */
-.soft-input .form-control,
-.soft-input .input-group-text {
-  border-radius: 16px !important;
-}
-
-.soft-input .form-control {
-  border: 1px solid rgba(15, 23, 42, 0.1);
-  box-shadow: none !important;
-  padding-top: 14px;
-  padding-bottom: 14px;
-  font-weight: 650;
-}
-
-.soft-input .input-group-text {
-  border: 1px solid rgba(15, 23, 42, 0.1);
-}
-
-/* ================================
-   WIZARD STEPS
-================================ */
-.wizard-steps {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-
-.step-chip {
-  border: 1px solid rgba(15, 23, 42, 0.12);
-  background: rgba(255, 255, 255, 0.9);
-  color: rgba(15, 23, 42, 0.82);
-  padding: 9px 12px;
-  border-radius: 999px;
-  font-size: 13px;
-  font-weight: 800;
-  transition: 0.2s ease;
-  cursor: pointer;
-  display: flex;
-  gap: 8px;
-  align-items: center;
-}
-
-.step-no {
-  width: 22px;
-  height: 22px;
-  border-radius: 999px;
-  display: grid;
-  place-items: center;
-  font-size: 12px;
-  font-weight: 900;
-  background: rgba(15, 23, 42, 0.06);
-}
-
-.step-chip:hover {
-  transform: translateY(-1px);
-}
-
-.step-chip.active {
-  border-color: rgba(37, 99, 235, 0.25);
-  background: rgba(37, 99, 235, 0.08);
-  color: #1d4ed8;
-}
-
-.step-chip:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
-  transform: none;
-}
-
-/* ================================
-   SCROLL AREA
-================================ */
-.config-scroll {
-  max-height: calc(100vh - 320px);
-  overflow-y: auto;
-  padding-right: 6px;
-}
-
-.config-scroll::-webkit-scrollbar {
-  width: 8px;
-}
-.config-scroll::-webkit-scrollbar-thumb {
-  background: rgba(15, 23, 42, 0.15);
-  border-radius: 99px;
-}
-
-/* ================================
-   BUTTONS
-================================ */
-.btn-soft {
-  border-radius: 14px !important;
-  padding: 10px 14px;
-  font-weight: 800;
-}
-
-/* ================================
-   SUMMARY STRIP
-================================ */
-.summary-strip {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 10px;
-  padding: 14px;
-  border-radius: 18px;
-  background: rgba(15, 23, 42, 0.03);
-  border: 1px solid rgba(15, 23, 42, 0.06);
-}
-
-.s-item {
-  padding: 12px;
-  border-radius: 16px;
-  background: rgba(255, 255, 255, 0.8);
-  border: 1px solid rgba(15, 23, 42, 0.06);
-}
-
-.s-item .k {
-  font-size: 12px;
-  font-weight: 800;
-  color: rgba(15, 23, 42, 0.55);
-}
-
-.s-item .v {
-  font-size: 16px;
-  font-weight: 900;
-  color: rgba(15, 23, 42, 0.85);
-  margin-top: 4px;
-}
-
-.s-item.total {
-  border: 1px solid rgba(34, 197, 94, 0.25);
-  background: rgba(34, 197, 94, 0.08);
-}
-
-/* ================================
-   TABS
-================================ */
-.premium-tabs {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-
-.tab-btn {
-  border: 1px solid rgba(15, 23, 42, 0.1);
-  background: rgba(255, 255, 255, 0.92);
-  padding: 10px 14px;
-  border-radius: 999px;
-  font-weight: 900;
-  font-size: 13px;
-  transition: 0.2s ease;
-  color: rgba(15, 23, 42, 0.75);
-}
-
-.tab-btn.active {
-  background: rgba(37, 99, 235, 0.1);
-  border-color: rgba(37, 99, 235, 0.25);
-  color: #1d4ed8;
-}
-
-.tab-btn:hover {
-  transform: translateY(-1px);
-}
-
-/* ✅ Smooth transition for tab changes */
-.fade-panel {
-  animation: fadeSlide 0.28s ease-in-out;
-}
-
-@keyframes fadeSlide {
-  from {
-    opacity: 0;
-    transform: translateY(8px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* ✅ Step smooth transition */
-.fade-step {
-  animation: fadeSlide 0.25s ease-in-out;
-}
-
-/* ================================
-   REVIEW CARD
-================================ */
-.review-card {
-  border-radius: 18px;
-  background: rgba(15, 23, 42, 0.03);
-  border: 1px solid rgba(15, 23, 42, 0.06);
-  padding: 16px;
-  display: grid;
-  gap: 12px;
-}
-
-.review-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 10px 12px;
+.form-control {
   border-radius: 14px;
-  background: rgba(255, 255, 255, 0.85);
-  border: 1px solid rgba(15, 23, 42, 0.06);
+  padding: 12px 14px;
+  font-weight: 600;
+  border: 1px solid rgba(15, 23, 42, 0.15);
 }
 
-.review-row .k {
-  font-weight: 800;
-  color: rgba(15, 23, 42, 0.6);
-  font-size: 13px;
+.form-control:focus {
+  box-shadow: none;
+  border-color: #2563eb;
 }
 
-.review-row .v {
-  font-weight: 900;
-  color: rgba(15, 23, 42, 0.85);
-}
+/* =========================================
+   AI FEATURE CHIPS
+========================================= */
 
-/* ================================
-   CHIP
-================================ */
-.chip {
+.chip,
+.badge.bg-primary-subtle {
+  background: rgba(37, 99, 235, 0.1);
+  border: 1px solid rgba(37, 99, 235, 0.25);
+  color: #1d4ed8;
+  font-size: 12px;
+  font-weight: 700;
   padding: 6px 10px;
   border-radius: 999px;
-  font-size: 12px;
-  font-weight: 800;
-  background: rgba(37, 99, 235, 0.08);
-  border: 1px solid rgba(37, 99, 235, 0.18);
-  color: #1d4ed8;
   display: inline-flex;
-  gap: 8px;
   align-items: center;
+  gap: 6px;
 }
 
-.chip-remove {
+.chip-remove,
+.badge i {
   cursor: pointer;
   opacity: 0.8;
 }
-.chip-remove:hover {
+
+.chip-remove:hover,
+.badge i:hover {
   opacity: 1;
 }
 
-/* ================================
-   ✅ PDF OVERLAY (FINAL FIX)
-================================ */
-.pdf-overlay {
-  position: absolute;
-  inset: 0;
-  z-index: 9999;
+/* =========================================
+   TABLE
+========================================= */
 
-  /* ✅ FULL COVER */
-  display: flex;
-  flex-direction: column;
-
-  /* ✅ nice blur */
-  background: rgba(15, 23, 42, 0.55);
-  backdrop-filter: blur(10px);
+.table {
+  font-size: 14px;
 }
 
-/* header stays on top */
-.pdf-overlay-header {
-  flex: 0 0 auto;
-  padding: 14px 18px;
-  background: rgba(255, 255, 255, 0.92);
-  border-bottom: 1px solid rgba(15, 23, 42, 0.08);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+.table td {
+  vertical-align: middle;
 }
 
-/* body takes full remaining height */
-.pdf-overlay-body {
-  flex: 1 1 auto;
-  min-height: 0; /* ✅ SUPER IMPORTANT FOR FLEX CHILD iframe */
-  padding: 12px;
+.table-bordered > :not(caption) > * {
+  border-color: rgba(15, 23, 42, 0.1);
 }
 
-/* iframe must fill 100% */
-.pdf-overlay-body iframe,
-.pdf-frame {
-  width: 100%;
-  height: 100%;
+/* =========================================
+   BUTTONS
+========================================= */
+
+.btn {
+  border-radius: 14px;
+  font-weight: 700;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #2563eb, #3b82f6);
   border: none;
-  border-radius: 18px;
-  background: #fff;
-  display: block;
 }
 
-/* ================================
-   Responsive
-================================ */
+.btn-outline-secondary {
+  border-color: rgba(15, 23, 42, 0.25);
+}
+
+/* =========================================
+   UTILITIES
+========================================= */
+
+.fw-black {
+  font-weight: 900;
+}
+
+.text-muted {
+  color: rgba(15, 23, 42, 0.55) !important;
+}
+
+/* =========================================
+   RESPONSIVE
+========================================= */
+
 @media (max-width: 991px) {
-  .summary-strip {
-    grid-template-columns: repeat(2, 1fr);
+  .container-xl {
+    max-width: 100%;
   }
 
-  .config-scroll {
-    max-height: unset;
-  }
-
-  /* ✅ on mobile, sticky not needed */
-  .right-sticky,
-  .config-sticky {
-    height: auto;
-    position: relative;
-    top: auto;
+  .premium-card .card-body {
+    padding: 18px;
   }
 }

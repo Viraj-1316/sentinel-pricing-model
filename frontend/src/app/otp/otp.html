@@ -1,13 +1,30 @@
-<div class="otp-card">
-  <h3>OTP Verification</h3>
-  <p>OTP sent to: {{ email }}</p>
+<div class="otp-root">
 
-  <input
-    type="text"
-    maxlength="6"
-    [(ngModel)]="otp"
-    placeholder="Enter 6 digit OTP"
-  />
+  <div class="otp-card">
+    <div class="otp-header">
+      <div class="logo">SP</div>
+      <h2>OTP Verification</h2>
+      <p>We sent a 6-digit code to</p>
+      <strong>{{ email }}</strong>
+    </div>
 
-  <button (click)="verifyOtp()">Verify OTP</button>
+    <input
+      class="otp-input"
+      type="text"
+      maxlength="6"
+      inputmode="numeric"
+      [(ngModel)]="otp"
+      placeholder="••••••"
+    />
+
+    <button class="otp-btn" (click)="verifyOtp()">
+      Verify OTP
+    </button>
+
+    <div class="otp-footer">
+      Didn’t receive the code?
+      <span (click)="resendOtp()">Resend</span>
+    </div>
+  </div>
+
 </div>

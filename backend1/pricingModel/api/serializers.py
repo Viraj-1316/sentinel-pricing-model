@@ -29,8 +29,11 @@ class AdminQuotationSerializer(serializers.ModelSerializer):
             "id",
             "username",
             "cammera",
-            "camera_cost",
+            "ai_features",
             "ai_cost",
+            "cpu_cost",
+            "gpu_cost",
+             "storage_cost",
             "total_costing",
             "ai_features",
             "created_at",
@@ -40,41 +43,7 @@ class AdminQuotationSerializer(serializers.ModelSerializer):
         return obj.user_name.username if obj.user_name else None
 
     def get_ai_features(self, obj):
-        return list(obj.ai_features.values("AI_feature", "costing"))
-
-class AdminUserSerializer(serializers.ModelSerializer):
-    role = serializers.SerializerMethodField()
-
-    class Meta:
-        model = User
-        fields = ['id', 'username', 'email', 'is_staff', 'date_joined', 'last_login', 'role']
-
-    def get_role(self, obj):
-        return "Admin" if obj.is_staff else "User"
-
-
-class AdminQuotationSerializer(serializers.ModelSerializer):
-    username = serializers.SerializerMethodField()
-    ai_features = serializers.SerializerMethodField()
-
-    class Meta:
-        model = UserPricing
-        fields = [
-            "id",
-            "username",
-            "cammera",
-            "camera_cost",
-            "ai_cost",
-            "total_costing",
-            "ai_features",
-            "created_at",
-        ]
-
-    def get_username(self, obj):
-        return obj.user_name.username if obj.user_name else None
-
-    def get_ai_features(self, obj):
-        return list(obj.ai_features.values("AI_feature", "costing"))
+        return list(obj.ai_features.values("AI_feature", "price"))
 
                         
 class userRequirementSerializer(serializers.ModelSerializer):
@@ -103,6 +72,10 @@ class userRequirementSerializer(serializers.ModelSerializer):
             'vram_required',
             'cpuCores_required',
             'ram_required',
+            "include_cpu",
+            "include_gpu",
+            "include_storage",
+            "Duration",
             'created_at',
         ]
 
@@ -150,30 +123,19 @@ class UserFinalQuotationSerializer(serializers.ModelSerializer):
             "gpu_cost",
             "ai_cost",
             "storage_cost",
+            "storage_used_user",
             "total_costing",
             # AI
             "ai_features",
+            
+            # Licence Duration
+            "Duration",
+            "licenceCostU",
+            "include_cpu",
+            "include_gpu",
+            "include_storage",
             "created_at",
         ]             
-        
-class QuotationSerializer(serializers.ModelSerializer):
-    ai_features = AI_ENABLEDserializer(many=True, read_only=True)
-   
-    class Meta:
-        model = UserPricing
-        fields = [
-            "id",
-            'cammera',
-            'camera_cost',
-            'ai_cost',
-            'ai_features',
-            'processor',
-            'storage_days',
-            'processor_cost',
-            'total_costing',
-            'created_at'
-        ]
-
 
 class categorySerializer(serializers.ModelSerializer):
     
@@ -200,7 +162,7 @@ class componentDetailSerializer(serializers.ModelSerializer):
         model = Component
         fields = "__all__"
 
-class cameraPricingSerializer(serializers.ModelSerializer):
+class licensePricingSerializer(serializers.ModelSerializer):
     
     costing = serializers.IntegerField(source='price.costing')
     class Meta:
@@ -208,11 +170,7 @@ class cameraPricingSerializer(serializers.ModelSerializer):
        model = Component
        fields = [
            'id',
-           'min_cammera',
-           'max_cammera',
-           'core_hardware',
-           'CPUcores',
-           'ram_required',
+           'Duration',
            'costing'
        ]        
   
@@ -237,16 +195,18 @@ class storagePricingSerializer(serializers.ModelSerializer):
         
 #         model = Component
     
-#         fields = [
-#             'id',
-#             'name',
-#             'CPU',
-#             'GPU',
-#             'CPUcores',
-#             'GPUcores',
-#             'ram_required',
-#             'costing'
-#         ]
+        fields = [
+            "min_cammeraA",
+            "max_cammeraA",
+            "min_cammera",
+            "max_cammera",
+            "core_hardware", 
+            "CPUcores",
+            "VRAM",
+            "costing",
+            "AI_Component",
+            "ram_required",
+        ]
 
 
 class AuditLogSerializer(serializers.ModelSerializer):

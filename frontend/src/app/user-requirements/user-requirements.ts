@@ -1,235 +1,196 @@
 import { Component, OnInit } from '@angular/core';
+import { Router } from '@angular/router';
+import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
-import {
-  FormBuilder,
-  FormGroup,
-  ReactiveFormsModule,
-  Validators,
-  AbstractControl,
-  ValidationErrors,
-} from '@angular/forms';
 import { HttpClient, HttpClientModule } from '@angular/common/http';
-import { Router, RouterLink } from '@angular/router';
-import { FormsModule } from '@angular/forms';
-
-export interface AIEnabled {
-  id: number;
-  AI_feature: string;
-  costing: number;
-}
-
-/** ✅ Response from Pricingcalculation API */
-export interface PricingCalculationResponse {
-  camera_cost: number;
-  storage_cost: number;
-  ai_cost: number;
-  total_costing: number;
-}
-
-function aiEnabledCameraValidator(group: AbstractControl): ValidationErrors | null {
-  const total = Number(group.get('cammera')?.value || 0);
-  const aiCam = Number(group.get('ai_enabled_cameras')?.value || 0);
-
-  if (aiCam > total) return { aiCamMoreThanTotal: true };
-  return null;
-}
 
 @Component({
   selector: 'app-user-requirements',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, HttpClientModule, RouterLink, FormsModule],
+  imports: [CommonModule, ReactiveFormsModule, HttpClientModule],
   templateUrl: './user-requirements.html',
-  styleUrl: './user-requirements.css',
 })
 export class UserRequirements implements OnInit {
-  form: FormGroup;
 
+  // ---------- FORM ----------
+  form!: FormGroup;
+
+  // ---------- UI STATE ----------
   loading = false;
-  errorMsg: string | null = null;
-
-  // AI Features
-  aiFeatures: AIEnabled[] = [];
-  totalAiCost = 0;
-
-  // cost summary
   costCalculated = false;
-  totalCost: number | null = null;
-  costBreakup: PricingCalculationResponse | null = null;
+  errorMsg = '';
 
-  /** ✅ APIs */
-  private AI_API = 'http://127.0.0.1:8001/pricing-Model/ai-feature/';
-  private QUOTE_API = 'http://127.0.0.1:8001/pricing-Model/Pricingcalculation/';
+  // ---------- RESULT ----------
+  requirements: any = null;
+  storageInTB = 0;
+
+  // ---------- AI ----------
+  aiFeatures: any[] = [];
+  selectedFeatures: any[] = [];
+  aiCamMoreThanTotal = false;
+
+  // ---------- API ----------
+  private AI_FEATURES_API =
+    'http://127.0.0.1:8001/pricing-Model/ai-feature/';
+
+  private CALCULATE_API =
+    'http://127.0.0.1:8001/pricing-Model/Pricingcalculation/';
 
   constructor(
     private fb: FormBuilder,
-    private http: HttpClient,
-    private router: Router
-  ) {
-    this.form = this.fb.group(
-      {
-        cammera: [null, [Validators.required, Validators.min(1)]],
-        storage_days: [30, [Validators.required, Validators.min(1)]],
-        ai_enabled_cameras: [0, [Validators.required, Validators.min(0)]],
-        ai_features: [[]],
-      },
-      { validators: aiEnabledCameraValidator }
-    );
-  }
+    private router: Router,
+    private http: HttpClient
+  ) {}
 
+  // ================= INIT =================
   ngOnInit(): void {
-    this.fetchAIFeatures();
+    this.initForm();
+    this.loadAiFeatures();
+  }
 
-    // ✅ AI selection changes -> update AI total
-    this.form.get('ai_features')?.valueChanges.subscribe((ids: number[]) => {
-      this.totalAiCost = this.calculateAiCost(ids || []);
-    });
-
-    // ✅ Reset results if user edits
-    this.form.valueChanges.subscribe(() => {
-      this.costCalculated = false;
-      this.costBreakup = null;
-      this.totalCost = null;
-      this.errorMsg = null;
+  // ================= FORM INIT =================
+  private initForm(): void {
+    this.form = this.fb.group({
+      cammera: [null],
+      storage_days: [null],
+      aiEnabledCam: [null],
+      ai_features: [[]],
+      storage_used_user: [null] // <-- for future use if needed
     });
   }
 
-  // ==========================
-  // ✅ NAV
-  // ==========================
-  onback() {
-    this.router.navigateByUrl('/dashboard');
-  }
-
-  // ==========================
-  // ✅ AI FEATURES
-  // ==========================
-  fetchAIFeatures(): void {
-    this.http.get<AIEnabled[]>(this.AI_API).subscribe({
-      next: (data) => {
-        this.aiFeatures = data || [];
-        const ids: number[] = this.form.value.ai_features || [];
-        this.totalAiCost = this.calculateAiCost(ids);
+  // ================= LOAD AI FEATURES =================
+  loadAiFeatures(): void {
+    this.http.get<any[]>(this.AI_FEATURES_API).subscribe({
+      next: (res) => {
+        this.aiFeatures = res || [];
       },
       error: () => {
-        this.aiFeatures = [];
-        this.errorMsg = 'Failed to load AI features.';
-      },
+        this.errorMsg = 'Failed to load AI features';
+      }
     });
   }
 
-  onToggleFeature(id: number, event: Event): void {
-    const checked = (event.target as HTMLInputElement).checked;
-    const current: number[] = this.form.value.ai_features || [];
-
-    const updated = checked
-      ? current.includes(id)
-        ? current
-        : [...current, id]
-      : current.filter((x) => x !== id);
-
-    this.form.patchValue({ ai_features: updated });
-  }
-
-  removeFeature(id: number): void {
-    const current: number[] = this.form.value.ai_features || [];
-    this.form.patchValue({ ai_features: current.filter((x) => x !== id) });
-  }
-
-  private calculateAiCost(selectedIds: number[]): number {
-    return this.aiFeatures
-      .filter((ai) => selectedIds.includes(ai.id))
-      .reduce((sum, ai) => sum + Number(ai.costing || 0), 0);
-  }
-
-  get selectedFeatures(): AIEnabled[] {
-    const ids: number[] = this.form.value.ai_features || [];
-    return this.aiFeatures.filter((ai) => ids.includes(ai.id));
-  }
-
-  // ==========================
-  // ✅ VALIDATION HELPERS
-  // ==========================
-  isInvalid(controlName: string): boolean {
-    const c = this.form.get(controlName);
-    return !!(c && c.invalid && (c.dirty || c.touched));
-  }
-
-  get aiCamMoreThanTotal(): boolean {
-    return !!(
-      this.form.errors?.['aiCamMoreThanTotal'] &&
-      (this.form.get('ai_enabled_cameras')?.touched ||
-        this.form.get('ai_enabled_cameras')?.dirty)
-    );
-  }
-
-  // ==========================
-  // ✅ CALCULATE COST
-  // ==========================
+  // ================= CALCULATE =================
   calculateCost(): void {
-    this.errorMsg = null;
-    this.totalCost = null;
-    this.costBreakup = null;
-    this.costCalculated = false;
+    this.errorMsg = '';
+    this.loading = true;
 
-    if (this.form.invalid) {
-      this.form.markAllAsTouched();
+    const cam = Number(this.form.value.cammera);
+    const days = Number(this.form.value.storage_days);
+    const aiCam = Number(this.form.value.aiEnabledCam || 0);
 
-      if (this.form.errors?.['aiCamMoreThanTotal']) {
-        this.errorMsg = 'AI enabled cameras must be less than or equal to total cameras.';
-        return;
-      }
-
-      this.errorMsg = 'Please fill all required fields correctly.';
+    // ---- VALIDATION ----
+    if (cam <= 0 || days <= 0) {
+      this.errorMsg = 'Please enter valid camera count and storage days';
+      this.loading = false;
       return;
     }
 
-    const payload = {
-      cammera: Number(this.form.value.cammera),
-      storage_days: Number(this.form.value.storage_days),
-      ai_features: this.form.value.ai_features || [],
+    this.aiCamMoreThanTotal = aiCam > cam;
+    if (this.aiCamMoreThanTotal) {
+      this.loading = false;
+      return;
+    }
 
-      // ✅ include if your backend supports it
-      ai_enabled_cameras: Number(this.form.value.ai_enabled_cameras || 0),
-    };
-
-    this.loading = true;
-
-    this.http.post<PricingCalculationResponse>(this.QUOTE_API, payload).subscribe({
+    // ---- API CALL ----
+    this.http.post<any>(this.CALCULATE_API, this.form.value).subscribe({
       next: (res) => {
-        this.loading = false;
+        // Store full response
+        this.requirements = res;
 
-        this.costBreakup = {
-          camera_cost: Number(res?.camera_cost || 0),
-          storage_cost: Number(res?.storage_cost || 0),
-          ai_cost: Number(res?.ai_cost || 0),
-          total_costing: Number(res?.total_costing || 0),
-        };
+        // Patch storage into form (optional but safe)
+        this.form.patchValue({
+          storage_used_user: res.storage_used_user
+        });
 
-        this.totalCost = this.costBreakup.total_costing;
+        // Convert to TB for UI
+        this.storageInTB = res.storage_used_user
+          ? res.storage_used_user / 1024
+          : 0;
+
         this.costCalculated = true;
-      },
-      error: (err) => {
         this.loading = false;
-        this.errorMsg = err?.error?.detail || 'Failed to calculate cost.';
       },
+      error: () => {
+        this.errorMsg = 'Calculation failed';
+        this.loading = false;
+      }
     });
   }
 
-  // ==========================
-  // ✅ CLEAR FORM
-  // ==========================
+  // ================= CLEAR =================
   clearQuotation(): void {
     this.form.reset({
       cammera: null,
-      storage_days: 30,
-      ai_enabled_cameras: 0,
+      storage_days: null,
+      aiEnabledCam: null,
       ai_features: [],
+      storage_used_user: null
     });
 
-    this.totalAiCost = 0;
+    this.selectedFeatures = [];
+    this.requirements = null;
     this.costCalculated = false;
-    this.costBreakup = null;
-    this.totalCost = null;
-    this.errorMsg = null;
+    this.aiCamMoreThanTotal = false;
+    this.errorMsg = '';
+    this.storageInTB = 0;
+  }
+
+goToQuotationForm(): void {
+  if (!this.costCalculated || !this.requirements?.id) return;
+
+  const quotationId = this.requirements.id;
+
+  this.loading = true;
+
+  this.http.patch<any>(
+    `${this.CALCULATE_API}${quotationId}/`,
+    {} // 👈 EMPTY PATCH = default quotation pricing
+  ).subscribe({
+    next: () => {
+      this.loading = false;
+      this.router.navigate(['/qoutation-form', quotationId]);
+    },
+    error: () => {
+      this.errorMsg = 'Failed to generate quotation';
+      this.loading = false;
+    }
+  });
+}
+
+
+  onback(): void {
+    this.router.navigate(['/dashboard']);
+  }
+
+  // ================= AI FEATURE LOGIC =================
+  onToggleFeature(id: number, event: any): void {
+    const selectedIds: number[] = this.form.value.ai_features || [];
+
+    if (event.target.checked) {
+      const feature = this.aiFeatures.find(f => f.id === id);
+      if (feature && !selectedIds.includes(id)) {
+        this.selectedFeatures.push(feature);
+        this.form.patchValue({
+          ai_features: [...selectedIds, id]
+        });
+      }
+    } else {
+      this.removeFeature(id);
+    }
+  }
+
+  removeFeature(id: number): void {
+    this.selectedFeatures =
+      this.selectedFeatures.filter(f => f.id !== id);
+
+    const updatedIds =
+      (this.form.value.ai_features as number[])
+        .filter(fid => fid !== id);
+
+    this.form.patchValue({
+      ai_features: updatedIds
+    });
   }
 }

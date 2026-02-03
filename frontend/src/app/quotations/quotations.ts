@@ -12,10 +12,18 @@ export interface QuotationRow {
   ai_cost: number;
   total_costing: number;
   created_at: string;
-
+  cpu_cost: number;
+  gpu_cost: number;
+  storage_cost: number;
+  ai_features: AiFeature[];
   // admin fields
   username?: string;
   email?: string;
+}
+export interface AiFeature {
+  id: number;
+  AI_feature: string;
+  costing: number;
 }
 
 @Component({
@@ -260,20 +268,22 @@ export class Quotations implements OnInit {
 
   // ✅ Admin Delete (NULL SAFE)
   deleteQuotation(q: QuotationRow | null) {
-    if (!this.isAdmin || !q) return;
+  if (!this.isAdmin || !q) return;
 
-    const url = `http://127.0.0.1:8001/pricing-Model/admin/quotation/${q.id}/delete/`;
+  const url =
+    `http://127.0.0.1:8001/pricing-Model/admin/quotations/${q.id}/`;
 
-    if (!confirm(`Delete quotation #${q.id}?`)) return;
+  if (!confirm(`Delete quotation #${q.id}?`)) return;
 
-    this.http.delete(url).subscribe({
-      next: () => {
-        this.toast.success(`Deleted quotation #${q.id}`);
-        this.loadQuotations();
-      },
-      error: () => this.toast.error('Delete failed'),
-    });
-  }
+  this.http.delete(url).subscribe({
+    next: () => {
+      this.toast.success(`Deleted quotation #${q.id}`);
+      this.loadQuotations();
+    },
+    error: () => this.toast.error('Delete failed'),
+  });
+}
+
 
   trackById(_: number, row: QuotationRow) {
     return row.id;

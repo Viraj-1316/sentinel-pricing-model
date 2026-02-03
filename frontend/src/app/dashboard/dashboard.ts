@@ -5,11 +5,11 @@ import { AuthService } from '../service/auth.service';
 // ✅ import both dashboard UI components
 import { AdminDashboard } from '../admin-dashboard/admin-dashboard';
 import { UserDashboard } from '../user-dashboard/user-dashboard';
-
+import {RouterOutlet} from '@angular/router';
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, AdminDashboard, UserDashboard],
+  imports: [CommonModule, AdminDashboard, UserDashboard, RouterOutlet],
   templateUrl: './dashboard.html',
 })
 export class Dashboard implements OnInit {
@@ -22,6 +22,7 @@ export class Dashboard implements OnInit {
     // ✅ Call /me and decide role
     this.auth.getMe().subscribe({
       next: (res) => {
+        console.log('User info:', res);
         this.isAdmin = res.is_staff || res.is_superuser;
         this.loading = false;
       },

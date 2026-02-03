@@ -42,6 +42,8 @@ class Component(models.Model):
     storage_per_cam = models.IntegerField(null=True, blank=True)
     storage_perDay = models.IntegerField(null=True, blank=True)
     
+    # ---- Licence ----
+    Duartion = models.IntegerField(default=1)
     
     class Meta:
         ordering = ["min_cammera"]
@@ -61,6 +63,9 @@ class Component(models.Model):
 
             if self.category and self.category.name.lower() == "processor":
                 return f"{self.core_hardware or self.AI_Component}"
+            
+            if self.category and self.category.name.lower() == "licence":
+                return f"{self.Duartion}"
 
         except Exception:
             return f"Component #{self.id}"
@@ -133,7 +138,24 @@ class UserPricing(models.Model):
         related_name="gpu_usages"
     )
 
+    # ---------- Licence -----------
+    
+    licence = models.ForeignKey(
+        Component,
+        on_delete=models.PROTECT,
+        related_name='licenseCosting',
+        null=True,        
+        blank=True
+    )
+    
+    licenceCostU = models.IntegerField(null=True, blank=True) 
+    Duration = models.IntegerField(default=1)
     created_at = models.DateTimeField(auto_now_add=True)
+
+    include_cpu = models.BooleanField(default=True)
+    include_gpu = models.BooleanField(default=True)
+    include_storage = models.BooleanField(default=True)
+    # include_ai = models.BooleanField(default=True)
 
     def __str__(self):
         return f"{self.user_name.username} - ₹{self.total_costing}"

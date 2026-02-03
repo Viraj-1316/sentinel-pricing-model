@@ -8,9 +8,10 @@ import {
   Validators,
   ValidationErrors,
 } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { HttpClient, HttpClientModule } from '@angular/common/http';
-import {RouterLink} from '@angular/router';
+
+
 function passwordMatchValidator(group: AbstractControl): ValidationErrors | null {
   const password = group.get('password')?.value;
   const confirm = group.get('password2')?.value;
@@ -24,6 +25,7 @@ function passwordMatchValidator(group: AbstractControl): ValidationErrors | null
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, HttpClientModule,RouterLink],
   templateUrl: './registration.html',
+  styleUrls: ['./registration.css'],
 })
 export class Registration {
   registerForm: FormGroup;
