@@ -43,7 +43,7 @@ class Component(models.Model):
     storage_perDay = models.IntegerField(null=True, blank=True)
     
     # ---- Licence ----
-    Duartion = models.IntegerField(default=1)
+    Duration = models.IntegerField(default=1)
     
     class Meta:
         ordering = ["min_cammera"]
@@ -83,7 +83,7 @@ class Price(models.Model):
 class UserPricing(models.Model):
     include_cpu = models.BooleanField(default=True)
     include_gpu = models.BooleanField(default=True)
-    include_ai = models.BooleanField(default=True)
+    # include_ai = models.BooleanField(default=True)
     include_storage = models.BooleanField(default=True)
     user_name = models.ForeignKey(
         User,
@@ -152,7 +152,7 @@ class UserPricing(models.Model):
     )
     
     licenceCostU = models.IntegerField(null=True, blank=True) 
-    Duration = models.IntegerField(default=1)
+    DurationU = models.IntegerField(default=1)
     created_at = models.DateTimeField(auto_now_add=True)
 
     include_cpu = models.BooleanField(default=True)

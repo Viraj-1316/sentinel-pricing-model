@@ -75,7 +75,7 @@ class userRequirementSerializer(serializers.ModelSerializer):
             "include_cpu",
             "include_gpu",
             "include_storage",
-            "Duration",
+            "DurationU",
             'created_at',
         ]
 
@@ -100,51 +100,98 @@ class ComponentDisplaySerializer(serializers.ModelSerializer):
             "ram_required",
         ]
         
+# class UserFinalQuotationSerializer(serializers.ModelSerializer):
+#     cpu = ComponentDisplaySerializer(read_only=True)
+#     gpu = ComponentDisplaySerializer(read_only=True)
+
+#     ai_features = AI_ENABLEDserializer(many=True, read_only=True)
+
+#     ai_feature_ids = serializers.PrimaryKeyRelatedField(
+#         many=True,
+#         queryset=Component.objects.filter(category__name="AI"),
+#         write_only=True,
+#         required=False
+#     )
+
+#     all_ai_features = serializers.SerializerMethodField()
+
+#     class Meta:
+#         model = UserPricing
+#         fields = [
+#             "id",
+#             "cammera",
+
+#             "cpuCores_required",
+#             "ram_required",
+#             "vram_required",
+
+#             "cpu",
+#             "gpu",
+
+#             "cpu_cost",
+#             "gpu_cost",
+#             "ai_cost",
+#             "storage_cost",
+#             "storage_used_user",
+#             "total_costing",
+
+#             "ai_features",
+            
+#             # Licence Duration
+#             "DurationU",
+#             "licenceCostU",
+#             "include_cpu",
+#             "include_gpu",
+#             "include_storage",
+#             "created_at",
+#         ]         
+
 class UserFinalQuotationSerializer(serializers.ModelSerializer):
     cpu = ComponentDisplaySerializer(read_only=True)
     gpu = ComponentDisplaySerializer(read_only=True)
-
+    
+    # Nested serializer to show AI feature names and costs
     ai_features = AI_ENABLEDserializer(many=True, read_only=True)
-
-    ai_feature_ids = serializers.PrimaryKeyRelatedField(
-        many=True,
-        queryset=Component.objects.filter(category__name="AI"),
-        write_only=True,
-        required=False
-    )
-
-    all_ai_features = serializers.SerializerMethodField()
+    
+    # SerializerMethodField to fetch the License object using the ID in DurationU
+    # This prevents the "int object has no attribute price" crash
+    DurationU = serializers.SerializerMethodField()
 
     class Meta:
         model = UserPricing
         fields = [
             "id",
             "cammera",
-
             "cpuCores_required",
             "ram_required",
             "vram_required",
-
             "cpu",
             "gpu",
-
             "cpu_cost",
             "gpu_cost",
             "ai_cost",
             "storage_cost",
             "storage_used_user",
             "total_costing",
-
             "ai_features",
-            
-            # Licence Duration
-            "Duration",
+            "DurationU",
             "licenceCostU",
             "include_cpu",
             "include_gpu",
             "include_storage",
             "created_at",
-        ]             
+        ]
+
+    def get_DurationU(self, obj):
+        # Since DurationU is an IntegerField storing an ID, we fetch the object manually
+        if not obj.DurationU:
+            return None
+        license_obj = Component.objects.filter(id=obj.DurationU).first()
+        if license_obj:
+            return licensePricingSerializer(license_obj).data
+        return None
+
+
 
 class categorySerializer(serializers.ModelSerializer):
     

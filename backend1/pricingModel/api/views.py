@@ -231,7 +231,7 @@ class pricingCalculate(generics.ListCreateAPIView):
             storage_days = serializer.validated_data.get('storage_days', 1)
             ai_features = serializer.validated_data.get('ai_features', [])
             aiEnabledCam = serializer.validated_data.get('aiEnabledCam')
-            licenceDuration = serializer.validated_data.get['Duration'] 
+            licenceDuration = serializer.validated_data.get['DurationU'] 
             
             if not cameras:
                 raise ValidationError("Camera count is required")
@@ -278,7 +278,7 @@ class pricingCalculate(generics.ListCreateAPIView):
                 vram_required=vram,
                 cpuCores_required=cpuCores_required,
                 ram_required=ram_required,
-                Duration = licenceDuration
+                DurationU = licenceDuration
             )
  
             user_pricing.ai_features.set(ai_features)
@@ -315,19 +315,20 @@ class pricingRecomendationview(generics.RetrieveUpdateAPIView):
                 CPUcores__isnull=False,
                 CPUcores__gte=instance.cpuCores_required
             ).order_by("CPUcores").first()
- 
+
             if not cpu:
                 raise ValidationError("No CPU meets required core count")
- 
+
             cpu_price = Price.objects.filter(component=cpu).first()
             if not cpu_price:
                 raise ValidationError(f"Price not configured for CPU: {cpu.core_hardware}")
- 
+
             cpu_cost = cpu_price.costing
- 
+
         # ---------- GPU ----------
         gpu = None
         gpu_cost = 0
+
         if include_gpu and vramUser > 0:
             if vramUser <= 48:
                 gpu = Component.objects.filter(
@@ -335,15 +336,15 @@ class pricingRecomendationview(generics.RetrieveUpdateAPIView):
                     VRAM__isnull=False,
                     VRAM__gte=vramUser
                 ).order_by("VRAM").first()
- 
+
                 if not gpu:
                     raise ValidationError("No GPU meets VRAM requirement")
- 
+
                 gpu_price = Price.objects.filter(component=gpu).first()
                 
                 if not gpu_price:
                     raise ValidationError("GPU price not configured")
- 
+
                 gpu_cost = gpu_price.costing
             else:
                 gpu_units = math.ceil(vramUser / 48)
@@ -351,16 +352,16 @@ class pricingRecomendationview(generics.RetrieveUpdateAPIView):
                     category__name="Processor",
                     VRAM__isnull=False
                 ).order_by("-VRAM").first()
- 
+
                 if not gpu:
                     raise ValidationError("No GPU configured")
- 
+
                 gpu_price = Price.objects.filter(component=gpu).first()
                 if not gpu_price:
                     raise ValidationError("GPU price not configured")
- 
+
                 gpu_cost = gpu_price.costing * gpu_units
- 
+
         # ---------- AI FEATURES ----------
         ai_cost = 0
         for ai in instance.ai_features.all():
@@ -368,23 +369,22 @@ class pricingRecomendationview(generics.RetrieveUpdateAPIView):
             if not ai_price:
                 raise ValidationError(f"Price not configured for AI feature: {ai.AI_feature}")
             ai_cost += ai_price.costing
- 
+
         storage_cost = 0
         if include_storage:
             # ---------- STORAGE ----------
             storage = Component.objects.filter(category__name="Storage").first()
             if not storage:
                 raise ValidationError("Storage component not configured")
- 
+
             storage_price = Price.objects.filter(component=storage).first()
             if not storage_price:
                 raise ValidationError("Storage price not configured")
- 
+
             storage_cost = (instance.storage_used_user / 19) * storage_price.costing
 
         license = Component.objects.filter(
             category__name="licence",
-            Duartion = instance.Duartion
             ).first()
         
         licensePrice = Price.objects.filter(component=license).first()
@@ -392,8 +392,8 @@ class pricingRecomendationview(generics.RetrieveUpdateAPIView):
         licenseCost = licensePrice.costing
         
         # ---------- TOTAL ----------
-        total_cost = cpu_cost + gpu_cost + ai_cost + storage_cost
- 
+        total_cost = cpu_cost + gpu_cost + ai_cost + storage_cost 
+
         serializer.save(
             cpu=cpu,
             gpu=gpu,
@@ -408,7 +408,7 @@ class pricingRecomendationview(generics.RetrieveUpdateAPIView):
             total_costing=total_cost,
             
         )
- 
+
         create_audit_log(
             self.request,
             "UPDATE_PRICING",
