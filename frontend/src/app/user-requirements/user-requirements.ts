@@ -11,37 +11,31 @@ import { HttpClient, HttpClientModule } from '@angular/common/http';
   templateUrl: './user-requirements.html',
   styleUrl: './user-requirements.css',
 })
-
 export class UserRequirements implements OnInit {
-includeCPU = true;
+  includeCPU = true;
   includeGPU = true;
   includeAI = true;
   includeStorage = true;
-  // ---------- FORM ----------
+
   form!: FormGroup;
 
-  // ---------- UI STATE ----------
   loading = false;
   costCalculated = false;
   errorMsg = '';
 
-  // ---------- RESULT ----------
   requirements: any = null;
   storageInTB = 0;
 
-  // ---------- AI ----------
   aiFeatures: any[] = [];
   selectedFeatures: any[] = [];
   aiCamMoreThanTotal = false;
  
-
+  // Store backend license data
+  DurationU: any[] = []; 
   
-  // ---------- API ----------
-  private AI_FEATURES_API =
-    'http://127.0.0.1:8001/pricing-Model/ai-feature/';
-
-  private CALCULATE_API =
-    'http://127.0.0.1:8001/pricing-Model/Pricingcalculation/';
+  private AI_FEATURES_API = 'http://127.0.0.1:8001/pricing-Model/ai-feature/';
+  private CALCULATE_API = 'http://127.0.0.1:8001/pricing-Model/Pricingcalculation/';
+  private LICENSE_API = 'http://127.0.0.1:8001/pricing-Model/processorUnit/';
 
   constructor(
     private fb: FormBuilder,
@@ -49,24 +43,27 @@ includeCPU = true;
     private http: HttpClient
   ) {}
 
-  // ================= INIT =================
   ngOnInit(): void {
     this.initForm();
     this.loadAiFeatures();
+    this.loadLicenseDurations();
   }
 
-  // ================= FORM INIT =================
   private initForm(): void {
     this.form = this.fb.group({
       cammera: [null],
       storage_days: [null],
       aiEnabledCam: [null],
       ai_features: [[]],
-      storage_used_user: [null] // <-- for future use if needed
+      DurationU: [null], // Bound to the license dropdown
+      storage_used_user: [null]
     });
   }
 
-  // ================= LOAD AI FEATURES =================
+  getFeatureName(id: number): string {
+    return this.aiFeatures.find(f => f.id === id)?.AI_feature || '';
+  }
+
   loadAiFeatures(): void {
     this.http.get<any[]>(this.AI_FEATURES_API).subscribe({
       next: (res) => {
@@ -78,7 +75,15 @@ includeCPU = true;
     });
   }
 
-  // ================= CALCULATE =================
+  loadLicenseDurations(): void {
+    this.http.get<any[]>(this.LICENSE_API).subscribe({
+      next: (res) => this.DurationU = res || [],
+      error: () => {
+        this.errorMsg = 'Failed to load licenses';
+      }
+    });
+  }
+
   calculateCost(): void {
     this.errorMsg = '';
     this.loading = true;
@@ -87,7 +92,6 @@ includeCPU = true;
     const days = Number(this.form.value.storage_days);
     const aiCam = Number(this.form.value.aiEnabledCam || 0);
 
-    // ---- VALIDATION ----
     if (cam <= 0 || days <= 0) {
       this.errorMsg = 'Please enter valid camera count and storage days';
       this.loading = false;
@@ -100,22 +104,13 @@ includeCPU = true;
       return;
     }
 
-    // ---- API CALL ----
     this.http.post<any>(this.CALCULATE_API, this.form.value).subscribe({
       next: (res) => {
-        // Store full response
         this.requirements = res;
-
-        // Patch storage into form (optional but safe)
         this.form.patchValue({
           storage_used_user: res.storage_used_user
         });
-
-        // Convert to TB for UI
-        this.storageInTB = res.storage_used_user
-          ? res.storage_used_user / 1024
-          : 0;
-
+        this.storageInTB = res.storage_used_user ? res.storage_used_user / 1024 : 0;
         this.costCalculated = true;
         this.loading = false;
       },
@@ -126,13 +121,13 @@ includeCPU = true;
     });
   }
 
-  // ================= CLEAR =================
   clearQuotation(): void {
     this.form.reset({
       cammera: null,
       storage_days: null,
       aiEnabledCam: null,
       ai_features: [],
+      DurationU: null,
       storage_used_user: null
     });
 
@@ -144,34 +139,37 @@ includeCPU = true;
     this.storageInTB = 0;
   }
 
-goToQuotationForm(): void {
-  if (!this.costCalculated || !this.requirements?.id) return;
+  goToQuotationForm(): void {
+    if (!this.costCalculated || !this.requirements?.id) return;
 
-  const quotationId = this.requirements.id;
+    const API_URL = `http://127.0.0.1:8001/pricing-Model/Pricingcalculation/${this.requirements.id}/`;
 
-  this.loading = true;
+    const payload = {
+      include_cpu: this.includeCPU,
+      include_gpu: this.includeGPU,
+      include_ai: this.includeAI,
+      include_storage: this.includeStorage
+    };
 
-  this.http.patch<any>(
-    `${this.CALCULATE_API}${quotationId}/`,
-    {} // 👈 EMPTY PATCH = default quotation pricing
-  ).subscribe({
-    next: () => {
-      this.loading = false;
-      this.router.navigate(['/qoutation-form', quotationId]);
-    },
-    error: () => {
-      this.errorMsg = 'Failed to generate quotation';
-      this.loading = false;
-    }
-  });
-}
+    this.loading = true;
 
+    this.http.patch<any>(API_URL, payload).subscribe({
+      next: (res) => {
+        this.loading = false;
+        this.router.navigate(['/qoutation-form', res.id]);
+      },
+      error: (err) => {
+        this.loading = false;
+        console.error(err);
+        alert('Failed to generate quotation');
+      }
+    });
+  }
 
   onback(): void {
     this.router.navigate(['/dashboard']);
   }
 
-  // ================= AI FEATURE LOGIC =================
   onToggleFeature(id: number, event: any): void {
     const selectedIds: number[] = this.form.value.ai_features || [];
 
@@ -189,13 +187,8 @@ goToQuotationForm(): void {
   }
 
   removeFeature(id: number): void {
-    this.selectedFeatures =
-      this.selectedFeatures.filter(f => f.id !== id);
-
-    const updatedIds =
-      (this.form.value.ai_features as number[])
-        .filter(fid => fid !== id);
-
+    this.selectedFeatures = this.selectedFeatures.filter(f => f.id !== id);
+    const updatedIds = (this.form.value.ai_features as number[]).filter(fid => fid !== id);
     this.form.patchValue({
       ai_features: updatedIds
     });

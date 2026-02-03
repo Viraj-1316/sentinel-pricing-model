@@ -1,5 +1,66 @@
-.action-buttons {
-  display: flex;
-  gap: 12px;        /* space between buttons */
-  align-items: center;
+/* ======= LAYOUT & BACKGROUNDS ======= */
+.page-shell {
+  min-height: 100vh;
+  background:
+    radial-gradient(1200px 600px at 10% 10%, rgba(59, 130, 246, 0.12), transparent 40%),
+    linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+  background-attachment: fixed;
+}
+
+.ls-1 { letter-spacing: 0.05em; }
+.ls-2 { letter-spacing: 0.15em; }
+
+/* ======= COMPONENT STYLING ======= */
+.card {
+  border-radius: 20px !important;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.metric-hover:hover {
+  transform: translateY(-5px);
+  background: #ffffff;
+  box-shadow: 0 15px 35px rgba(13, 110, 253, 0.1) !important;
+}
+
+.bg-primary-subtle {
+  background-color: #f0f7ff !important;
+}
+
+.bg-dark {
+  background-color: #1a1d21 !important;
+}
+
+/* Custom Checkbox */
+.custom-check .form-check-input {
+  width: 1.25em;
+  height: 1.25em;
+  margin-top: 0.2em;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.custom-check .form-check-label {
+  font-weight: 500;
+  color: #475569;
+  cursor: pointer;
+  padding-left: 0.5rem;
+}
+
+/* Animations & Effects */
+.hover-lift {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.hover-lift:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 20px rgba(0, 0, 0, 0.15) !important;
+}
+
+.italic { font-style: italic; }
+
+/* Floating Sidebar Adjustments */
+@media (min-width: 992px) {
+  .position-sticky {
+    z-index: 1020;
+  }
 }

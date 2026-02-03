@@ -4,6 +4,8 @@ import { CommonModule } from '@angular/common';
 import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { ToasterService } from '../service/toaster.service';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
+
 export interface QuotationRow {
   id: number;
   cammera: number;
@@ -25,7 +27,6 @@ export interface AiFeature {
   costing: number;
 }
 
- 
 @Component({
   selector: 'app-qoutation-form',
   standalone: true,
@@ -33,6 +34,7 @@ export interface AiFeature {
   templateUrl: './qoutation-form.html',
   styleUrl: './qoutation-form.css'
 })
+
 export class QoutationForm implements OnInit {
  
   quotationId!: number;
@@ -41,25 +43,98 @@ export class QoutationForm implements OnInit {
   errorMsg = '';
   quotations: QuotationRow[] = [];
   filtered: QuotationRow[] = [];
- 
   // Toggles
   includeCPU = true;
   includeGPU = true;
-  includeAI = true;
+  // includeAI = true;
   includeStorage = true;
- 
+showPdf = false;
+pdfUrl: any;
+showEmailModal = false;
+otherEmail = '';
+
+viewQuotation() {
+  if (!this.quotationData?.id) return;
+
+  const id = this.quotationData.id;
+  const url = `http://127.0.0.1:8001/pricing-Model/quotation/${id}/pdf/`;
+
+  this.loading = true;
+
+  this.http.get(url, { responseType: 'blob' }).subscribe({
+    next: (blob) => {
+      const file = new Blob([blob], { type: 'application/pdf' });
+      const objectUrl = URL.createObjectURL(file);
+
+      this.pdfUrl = this.sanitizer.bypassSecurityTrustResourceUrl(objectUrl);
+      this.showPdf = true;
+      this.loading = false;
+
+      // prevent background scroll
+      document.body.style.overflow = 'hidden';
+    },
+    error: () => {
+      this.toast.error('Failed to load PDF preview');
+      this.loading = false;
+    }
+  });
+}
+
+
+closePdf() {
+  this.showPdf = false;
+  document.body.style.overflow = '';
+}
+
+openSendEmailModal() {
+  this.showEmailModal = true;
+  this.otherEmail = '';
+  document.body.style.overflow = 'hidden';
+}
+closeEmailModal() {
+  this.showEmailModal = false;
+  document.body.style.overflow = '';
+}
+sendEmailToSelf() {
+  this.sendEmail({});
+}
+sendEmailToOther() {
+  if (!this.otherEmail) return;
+  this.sendEmail({ email: this.otherEmail });
+}
+private sendEmail(payload: any) {
+  const id = this.quotationData.id;
+  const url = `http://127.0.0.1:8001/pricing-Model/quotation/${id}/send-email/`;
+
+  this.loading = true;
+
+  this.http.post(url, payload).subscribe({
+    next: () => {
+      this.toast.success('Quotation email sent successfully');
+      this.loading = false;
+      this.closeEmailModal();
+    },
+    error: () => {
+      this.toast.error('Failed to send quotation email');
+      this.loading = false;
+    }
+  });
+}
+
   private API =
     'http://127.0.0.1:8001/pricing-Model/Pricingcalculation';
- 
+
   constructor(
     private route: ActivatedRoute,
     private http: HttpClient,
-    private toast: ToasterService
+    private toast: ToasterService,
+    private sanitizer: DomSanitizer
+
   ) {}
- 
+
   ngOnInit(): void {
     this.quotationId = Number(this.route.snapshot.paramMap.get('id'));
- 
+
     if (!this.quotationId) {
       this.errorMsg = 'Invalid quotation ID';
       return;
@@ -124,12 +199,12 @@ export class QoutationForm implements OnInit {
     const payload = {
       include_cpu: this.includeCPU,
       include_gpu: this.includeGPU,
-      include_ai: this.includeAI,
+      // include_ai: this.includeAI,
       include_storage: this.includeStorage
     };
- 
+
     this.loading = true;
- 
+
     this.http.patch<any>(
       `${this.API}/${this.quotationId}/`,
       payload

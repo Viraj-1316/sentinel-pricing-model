@@ -1,225 +1,176 @@
-<div class="container-fluid py-3">
- 
-  <!-- ================= HEADER ================= -->
-  <div class="d-flex justify-content-between align-items-center mb-3">
-    <div>
-      <h3 class="fw-bold mb-0">Quotation</h3>
-      <small class="text-muted">
-        Reference ID: #{{ quotationData?.id }}
-      </small>
+<div class="page-shell bg-light min-vh-100 py-4">
+  <div class="container px-4">
+
+    <div class="premium-header d-flex justify-content-between align-items-center mb-4 bg-white p-3 rounded-4 shadow-sm">
+      <div class="d-flex align-items-center gap-3">
+        <div class="brand-pill bg-primary text-white d-flex align-items-center justify-content-center fw-bold rounded-3" style="width: 48px; height: 48px;">SP</div>
+        <div>
+          <h4 class="fw-bold mb-0">Quotation Summary</h4>
+          <small class="text-muted">Ref ID: #{{ quotationData?.id }} · Generated on {{ quotationData?.created_at | date:'mediumDate' }}</small>
+        </div>
+      </div>
+      <div class="d-flex gap-2">
+        <span class="badge bg-success-subtle text-success fs-6 px-3 py-2 rounded-pill border border-success border-opacity-25">
+          <i class="bi bi-wallet2 me-2"></i>₹ {{ quotationData?.total_costing | number }}
+        </span>
+      </div>
     </div>
- 
-    <span class="badge bg-success fs-6 px-3 py-2">
-      ₹ {{ quotationData?.total_costing | number }}
-    </span>
-  </div>
- 
-  <!-- ================= ERROR ================= -->
-  <div *ngIf="errorMsg" class="alert alert-danger">
-    {{ errorMsg }}
-  </div>
- 
-  <!-- ================= LOADING ================= -->
-  <div *ngIf="loading" class="text-center py-4">
-    <div class="spinner-border text-success"></div>
-  </div>
- 
-  <div class="row g-3" *ngIf="quotationData && !loading">
- 
-    <!-- ================= LEFT COLUMN ================= -->
-    <div class="col-xl-9 col-lg-8">
- 
-      <!-- ================= CUSTOMIZE ================= -->
-      <div class="card shadow-sm mb-3">
-        <div class="card-body py-3">
-          <div class="row align-items-center">
- 
-            <div class="col-md-8">
-              <h6 class="fw-bold mb-2">Customize Quotation</h6>
- 
-              <div class="d-flex flex-wrap gap-4">
-                <div class="form-check">
-                  <input class="form-check-input" type="checkbox"
-                         [(ngModel)]="includeCPU">
-                  <label class="form-check-label">CPU</label>
-                </div>
- 
-                <div class="form-check">
-                  <input class="form-check-input" type="checkbox"
-                         [(ngModel)]="includeGPU">
-                  <label class="form-check-label">GPU</label>
-                </div>
- 
-                <!-- <div class="form-check">
-                  <input class="form-check-input" type="checkbox"
-                         [(ngModel)]="includeAI">
-                  <label class="form-check-label">AI</label>
-                </div> -->
- 
-                <div class="form-check">
-                  <input class="form-check-input" type="checkbox"
-                         [(ngModel)]="includeStorage">
-                  <label class="form-check-label">Storage</label>
+
+    <div *ngIf="errorMsg" class="alert alert-danger rounded-4 border-0 shadow-sm animate__animated animate__shakeX">{{ errorMsg }}</div>
+    <div *ngIf="loading" class="text-center py-5"><div class="spinner-border text-primary"></div></div>
+
+    <div class="row g-4" *ngIf="quotationData && !loading">
+      
+      <div class="col-xl-8 col-lg-7">
+        
+        <div class="card border-0 shadow-sm mb-4 overflow-hidden">
+          <div class="card-header bg-white py-3 border-bottom">
+            <h6 class="fw-bold mb-0 text-primary"><i class="bi bi-sliders me-2"></i>Adjust Components</h6>
+          </div>
+          <div class="card-body">
+            <div class="row align-items-center g-3">
+              <div class="col-md-9">
+                <div class="d-flex flex-wrap gap-4">
+                  <div class="form-check custom-check">
+                    <input class="form-check-input" type="checkbox" [(ngModel)]="includeCPU" id="checkCPU">
+                    <label class="form-check-label" for="checkCPU">Compute (CPU)</label>
+                  </div>
+                  <div class="form-check custom-check">
+                    <input class="form-check-input" type="checkbox" [(ngModel)]="includeGPU" id="checkGPU">
+                    <label class="form-check-label" for="checkGPU">Acceleration (GPU)</label>
+                  </div>
+                  <div class="form-check custom-check">
+                    <input class="form-check-input" type="checkbox" [(ngModel)]="includeStorage" id="checkStorage">
+                    <label class="form-check-label" for="checkStorage">Infrastructure Storage</label>
+                  </div>
                 </div>
               </div>
-            </div>
- 
-            <div class="col-md-4 text-end">
-              <button class="btn btn-warning px-4"
-                      (click)="updateQuotation()"
-                      [disabled]="loading">
-                Update
-              </button>
-            </div>
- 
-          </div>
-        </div>
-      </div>
- 
-      <!-- ================= METRICS ================= -->
-      <div class="row g-3 mb-3">
- 
-        <div class="col-md-3">
-          <div class="card shadow-sm text-center p-2">
-            <small class="text-muted">Cameras</small>
-            <h5 class="fw-bold">{{ quotationData?.cammera }}</h5>
-          </div>
-        </div>
- 
-        <div class="col-md-3">
-          <div class="card shadow-sm text-center p-2">
-            <small class="text-muted">CPU Cores</small>
-            <h5 class="fw-bold">
-              {{ quotationData?.cpuCores_required }}
-            </h5>
-          </div>
-        </div>
- 
-        <div class="col-md-3">
-          <div class="card shadow-sm text-center p-2">
-            <small class="text-muted">RAM</small>
-            <h5 class="fw-bold">
-              {{ quotationData?.ram_required }} GB
-            </h5>
-          </div>
-        </div>
- 
-        <div class="col-md-3">
-          <div class="card shadow-sm text-center p-2">
-            <small class="text-muted">GPU VRAM</small>
-            <h5 class="fw-bold">
-              {{ quotationData?.vram_required }} GB
-            </h5>
-          </div>
-        </div>
- 
-      </div>
- 
-      <!-- ================= CPU & GPU ================= -->
-      <div class="row g-3 mb-3">
- 
-        <div class="col-md-6" *ngIf="quotationData?.cpu">
-          <div class="card shadow-sm h-100">
-            <div class="card-body p-3">
-              <h6 class="fw-bold mb-2">CPU</h6>
- 
-              <div class="d-flex justify-content-between">
-                <span>{{ quotationData.cpu.core_hardware }}</span>
-                <span>₹ {{ quotationData.cpu_cost }}</span>
+              <div class="col-md-3 text-end">
+                <button class="btn btn-primary w-100 rounded-3 shadow-sm fw-bold" (click)="updateQuotation()" [disabled]="loading">
+                  Apply Updates
+                </button>
               </div>
- 
-              <small class="text-muted">
-                {{ quotationData.cpu.CPUcores }} cores ·
-                {{ quotationData.cpu.ram_required }} GB RAM
-              </small>
             </div>
           </div>
         </div>
- 
-        <div class="col-md-6" *ngIf="quotationData?.gpu">
-          <div class="card shadow-sm h-100">
-            <div class="card-body p-3">
-              <h6 class="fw-bold mb-2">GPU</h6>
- 
-              <div class="d-flex justify-content-between">
-                <span>{{ quotationData.gpu.AI_Component }}</span>
-                <span>₹ {{ quotationData.gpu_cost }}</span>
+
+        <div class="row g-3 mb-4">
+          <div class="col-md-3" *ngFor="let metric of [
+            {label: 'Cameras', val: quotationData?.cammera, icon: 'camera-video'},
+            {label: 'CPU Cores', val: quotationData?.cpuCores_required, icon: 'cpu'},
+            {label: 'RAM (GB)', val: quotationData?.ram_required, icon: 'memory'},
+            {label: 'VRAM (GB)', val: quotationData?.vram_required, icon: 'gpu-card'}
+          ]">
+            <div class="card border-0 shadow-sm text-center p-3 metric-hover">
+              <i class="bi bi-{{metric.icon}} text-primary opacity-50 mb-2 fs-4"></i>
+              <small class="text-uppercase fw-bold text-muted ls-1">{{metric.label}}</small>
+              <h4 class="fw-bold mb-0 mt-1">{{metric.val}}</h4>
+            </div>
+          </div>
+        </div>
+
+        <div class="row g-3 mb-4">
+          <div class="col-md-6" *ngIf="quotationData?.cpu">
+            <div class="card border-0 shadow-sm h-100 border-start border-4 border-primary">
+              <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                  <div>
+                    <h6 class="fw-bold text-dark mb-1">Processor Unit</h6>
+                    <span class="badge bg-light text-primary border rounded-pill">{{ quotationData.cpu?.core_hardware }}</span>
+                  </div>
+                  <span class="fw-bold text-success">₹ {{ quotationData.cpu_cost | number }}</span>
+                </div>
+                <div class="d-flex gap-3 text-muted small">
+                  <span><i class="bi bi-cpu me-1"></i> {{ quotationData.cpu?.CPUcores }} Cores</span>
+                  <span><i class="bi bi-memory me-1"></i> {{ quotationData.cpu?.ram_required }} GB RAM</span>
+                </div>
               </div>
- 
-              <small class="text-muted">
-                {{ quotationData.gpu.VRAM }} GB VRAM
-              </small>
             </div>
           </div>
-        </div>
- 
-      </div>
- 
-      <!-- ================= AI FEATURES ================= -->
-      <div class="card shadow-sm"
-           *ngIf="quotationData?.ai_features?.length">
- 
-        <div class="card-body p-3">
-          <h6 class="fw-bold mb-2">AI Features</h6>
- 
-          <div class="row g-2">
-            <div class="col-md-6"
-                 *ngFor="let ai of quotationData.ai_features">
- 
-              <div class="border rounded p-2
-                          d-flex justify-content-between">
-                <span>{{ ai.AI_feature }}</span>
-                <span>₹ {{ ai.costing }}</span>
+
+          <div class="col-md-6" *ngIf="quotationData?.gpu">
+            <div class="card border-0 shadow-sm h-100 border-start border-4 border-warning">
+              <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                  <div>
+                    <h6 class="fw-bold text-dark mb-1">Graphics Accelerator</h6>
+                    <span class="badge bg-light text-warning border rounded-pill">{{ quotationData.gpu?.AI_Component }}</span>
+                  </div>
+                  <span class="fw-bold text-success">₹ {{ quotationData.gpu_cost | number }}</span>
+                </div>
+                <div class="text-muted small">
+                  <span><i class="bi bi-gpu-card me-1"></i> {{ quotationData.gpu?.VRAM }} GB Dedicated VRAM</span>
+                </div>
               </div>
- 
             </div>
           </div>
         </div>
+
+        <div class="card border-0 shadow-sm mb-4" *ngIf="quotationData?.ai_features?.length">
+          <div class="card-body">
+            <h6 class="fw-bold mb-3 text-primary">AI Feature Modules</h6>
+            <div class="row g-3">
+              <div class="col-md-6" *ngFor="let ai of quotationData.ai_features">
+                <div class="p-3 bg-light rounded-4 d-flex justify-content-between align-items-center border">
+                  <div class="d-flex align-items-center">
+                    <div class="bg-primary bg-opacity-10 text-primary rounded-3 p-2 me-3"><i class="bi bi-robot"></i></div>
+                    <span class="fw-medium text-dark">{{ ai.AI_feature }}</span>
+                  </div>
+                  <span class="fw-bold text-muted small">₹ {{ ai.costing | number }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
       </div>
- 
+
+      <div class="col-xl-4 col-lg-5">
+        <div class="card border-0 shadow-lg position-sticky" style="top: 2rem; border-top: 5px solid #0d6efd !important;">
+          <div class="card-body p-4">
+            <h5 class="fw-bold text-dark mb-4 d-flex align-items-center">
+              <i class="bi bi-receipt me-2 text-primary"></i>Final Investment
+            </h5>
+
+            <div class="d-flex flex-column gap-3 mb-4">
+              <div class="d-flex justify-content-between text-muted border-bottom pb-2">
+                <span>Hardware Bundle</span>
+                <span class="fw-bold text-dark">₹ {{ (quotationData?.cpu_cost + quotationData?.gpu_cost) | number }}</span>
+              </div>
+              <div class="d-flex justify-content-between text-muted border-bottom pb-2">
+                <span>AI Module Total</span>
+                <span class="fw-bold text-dark">₹ {{ quotationData?.ai_cost | number }}</span>
+              </div>
+              <div class="d-flex justify-content-between text-muted border-bottom pb-2">
+                <span>Storage Infrastructure</span>
+                <span class="fw-bold text-dark">₹ {{ quotationData?.storage_cost | number }}</span>
+              </div>
+              <div class="d-flex justify-content-between align-items-center bg-primary-subtle p-3 rounded-4 mt-2">
+                <div>
+                  <span class="d-block fw-bold text-primary">License Duration</span>
+                  <small class="text-primary opacity-75">Validity: {{ quotationData?.DurationU?.Duration }} Year(s)</small>
+                </div>
+                <span class="fw-bold text-primary fs-5">₹ {{ quotationData?.licenceCostU | number }}</span>
+              </div>
+            </div>
+
+            <div class="bg-dark rounded-4 p-4 text-white shadow-sm mb-4">
+              <small class="text-secondary text-uppercase ls-2 d-block mb-1">Total Estimated Cost</small>
+              <div class="d-flex align-items-baseline">
+                <h2 class="display-6 fw-bold text-info mb-0">₹ {{ quotationData?.total_costing | number }}</h2>
+              </div>
+            </div>
+
+            <button class="btn btn-info w-100 py-3 rounded-4 fw-bold text-dark shadow-sm transition-all hover-lift">
+              <i class="bi bi-file-earmark-pdf-fill me-2"></i>DOWNLOAD PDF QUOTE
+            </button>
+            <p class="text-center text-muted small mt-3 italic mb-0">
+              <i class="bi bi-info-circle me-1"></i> Quote valid for 15 days.
+            </p>
+          </div>
+        </div>
+      </div>
+
     </div>
- 
-    <!-- ================= RIGHT COLUMN ================= -->
-    <div class="col-xl-3 col-lg-4">
- 
-      <div class="card shadow-lg border-success position-sticky"
-           style="top: 80px;">
-        <div class="card-body p-3">
- 
-          <h6 class="fw-bold mb-3">Cost Summary</h6>
- 
-          <div class="d-flex justify-content-between">
-            <span>CPU</span>
-            <span>₹ {{ quotationData?.cpu_cost }}</span>
-          </div>
- 
-          <div class="d-flex justify-content-between">
-            <span>GPU</span>
-            <span>₹ {{ quotationData?.gpu_cost }}</span>
-          </div>
- 
-          <div class="d-flex justify-content-between">
-            <span>AI</span>
-            <span>₹ {{ quotationData?.ai_cost }}</span>
-          </div>
- 
-          <div class="d-flex justify-content-between">
-            <span>Storage</span>
-            <span>₹ {{ quotationData?.storage_cost }}</span>
-          </div>
- 
-          <hr>
- 
-          <div class="d-flex justify-content-between
-                      fw-bold fs-5 text-success">
-            <span>Total</span>
-            <span>₹ {{ quotationData?.total_costing }}</span>
-          </div>
- 
-        </div>
-      </div>
- 
-    </div>
- 
   </div>
 </div>

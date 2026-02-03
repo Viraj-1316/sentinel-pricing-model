@@ -1,4 +1,17 @@
 /* ====== THEME VARIABLES ====== */
+.gradient-bg {
+  background:
+    radial-gradient(circle at 20% 10%, rgba(13,110,253,.12), transparent 45%),
+    radial-gradient(circle at 80% 30%, rgba(220,53,69,.12), transparent 40%),
+    radial-gradient(circle at 50% 90%, rgba(25,135,84,.12), transparent 45%);
+  z-index: 0;
+  pointer-events: none; /* critical */
+}
+
+.content-layer {
+  z-index: 1;
+}
+
 body[data-theme="light"] {
   --bg: #ffffff;
   --card: #ffffff;

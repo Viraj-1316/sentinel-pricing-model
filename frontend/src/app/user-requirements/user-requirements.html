@@ -1,137 +1,138 @@
-<div class="page-shell">
-
-  <div class="page-content-wrapper py-4">
-    <div class="container-fluid px-4">
-
-      <!-- HEADER -->
-      <div class="premium-header d-flex justify-content-between mb-4">
-        <div class="d-flex gap-3">
-          <div class="brand-pill">SP</div>
-          <div>
-            <h4 class="mb-0">User Requirements</h4>
-            <small>Enter requirements to generate quotation</small>
-          </div>
+<div class="page-shell bg-light min-vh-100 py-4">
+  <div class="container px-4">
+    <div class="premium-header d-flex justify-content-between align-items-center mb-5 bg-white p-3 rounded-4 shadow-sm border-0">
+      <div class="d-flex align-items-center gap-3">
+        <div class="brand-pill bg-primary text-white d-flex align-items-center justify-content-center fw-bold rounded-3" style="width: 48px; height: 48px;">SP</div>
+        <div>
+          <h4 class="fw-bold mb-0">User Requirements</h4>
+          <p class="text-muted small mb-0">Configure infrastructure parameters to generate a quotation</p>
         </div>
-
-        <button class="btn btn-outline-primary" (click)="onback()">
-          ← Dashboard
-        </button>
       </div>
+      <button class="btn btn-outline-primary rounded-3 px-4 transition-all" (click)="onback()"><i class="bi bi-arrow-left me-2"></i>Dashboard</button>
+    </div>
 
-      <!-- ERROR -->
-      <div *ngIf="errorMsg" class="alert alert-danger">
-        {{ errorMsg }}
-      </div>
+    <div *ngIf="errorMsg" class="alert alert-danger border-0 shadow-sm rounded-4 mb-4 animate__animated animate__shakeX">
+      <i class="bi bi-exclamation-octagon-fill me-2"></i>{{ errorMsg }}
+    </div>
 
-      <div class="row g-4">
-
-        <!-- LEFT FORM -->
-        <div class="col-lg-6">
-          <div class="card p-4">
-
-            <form [formGroup]="form">
-
-              <div class="mb-3">
-                <label>Total Cameras</label>
-                <input type="number" class="form-control"
-                       formControlName="cammera">
-              </div>
-
-              <div class="mb-3">
-                <label>Storage Days</label>
-                <input type="number" class="form-control"
-                       formControlName="storage_days">
-              </div>
-
-              <div class="mb-3">
-                <label>AI Enabled Cameras</label>
-                <input type="number" class="form-control"
-                       formControlName="aiEnabledCam">
-                <small *ngIf="aiCamMoreThanTotal" class="text-danger">
-                  AI cameras must be ≤ total cameras
-                </small>
-              </div>
-
-              <!-- AI FEATURES -->
-              <div class="mb-4">
-                <label>AI Features</label>
-
-                <div *ngFor="let ai of aiFeatures" class="form-check">
-                  <input
-                    type="checkbox"
-                    class="form-check-input"
-                    [checked]="form.value.ai_features.includes(ai.id)"
-                    (change)="onToggleFeature(ai.id, $event)"
-                  />
-                  <label class="form-check-label">
-                    {{ ai.AI_feature }} (₹{{ ai.costing }})
-                  </label>
+    <div class="row g-4">
+      <div class="col-lg-7">
+        <div class="card border-0 shadow-sm rounded-4 p-4 h-100">
+          <h5 class="fw-bold mb-4 text-dark border-bottom pb-2">Infrastructure Specs</h5>
+          <form [formGroup]="form">
+            <div class="row g-3 mb-4">
+              <div class="col-md-6">
+                <label class="form-label small fw-bold text-uppercase text-muted">Total Cameras</label>
+                <div class="input-group">
+                  <span class="input-group-text bg-white border-2 border-end-0 rounded-start-3"><i class="bi bi-camera-video text-primary"></i></span>
+                  <input type="number" class="form-control border-2 border-start-0 rounded-end-3 shadow-none" formControlName="cammera" placeholder="0">
                 </div>
               </div>
-
-              <div class="d-flex justify-content-end gap-2">
-                <button type="button"
-                        class="btn btn-secondary"
-                        (click)="clearQuotation()">
-                  Clear
-                </button>
-
-                <button type="button"
-                        class="btn btn-primary"
-                        [disabled]="loading"
-                        (click)="calculateCost()">
-                  {{ loading ? 'Calculating...' : 'Calculate the Compute and storage requirements' }}
-                </button>
+              <div class="col-md-6">
+                <label class="form-label small fw-bold text-uppercase text-muted">Retention (Days)</label>
+                <div class="input-group">
+                  <span class="input-group-text bg-white border-2 border-end-0 rounded-start-3"><i class="bi bi-calendar-event text-primary"></i></span>
+                  <input type="number" class="form-control border-2 border-start-0 rounded-end-3 shadow-none" formControlName="storage_days" placeholder="Days">
+                </div>
               </div>
-
-            </form>
-          </div>
-        </div>
-
-        <!-- RIGHT RESULT -->
-        <div class="col-lg-6">
-          <div *ngIf="costCalculated && requirements" class="card p-4">
-
-            <h5>Storage & Compute Requirements</h5>
-
-            <table class="table table-bordered">
-              <tr>
-                <td>Total Cameras</td>
-                <td class="text-end">{{ requirements.cammera }}</td>
-              </tr>
-  <tr>
-  <td>Total Storage</td>
-  <td class="text-end">
-    {{ storageInTB | number:'1.2-2' }} TB
-  </td>
-</tr>
-
-              <tr>
-                <td>CPU Cores</td>
-                <td class="text-end">{{ requirements.cpuCores_required }} cores</td>
-              </tr>
-              <tr>
-                <td>RAM</td>
-                <td class="text-end">{{ requirements.ram_required }} GB</td>
-              </tr>
-              <tr>
-                <td>GPU VRAM</td>
-                <td class="text-end">{{ requirements.vram_required }} GB</td>
-              </tr>
-  
-
-            </table>
-
-            <div class="text-end">
-              <button class="btn btn-success"
-                      (click)="goToQuotationForm()">
-                Generate Quotation
-              </button>
             </div>
 
+            <div class="bg-primary-subtle p-4 rounded-4 mb-4 border border-primary border-opacity-10">
+              <div class="mb-4">
+                <label class="form-label small fw-bold text-uppercase text-primary">AI Enabled Cameras</label>
+                <input type="number" class="form-control border-2 shadow-none rounded-3" formControlName="aiEnabledCam" placeholder="Units">
+                <div *ngIf="aiCamMoreThanTotal" class="text-danger small mt-1"><i class="bi bi-x-circle me-1"></i>Must be ≤ total cameras</div>
+              </div>
+
+              <label class="form-label small fw-bold text-uppercase text-primary">AI Feature Modules</label>
+              <div class="dropdown w-100">
+                <button type="button" class="form-control border-2 text-start d-flex flex-wrap gap-2 align-items-center bg-white rounded-3 shadow-none min-vh-50" data-bs-toggle="dropdown">
+                  <ng-container *ngIf="form.value.ai_features.length; else placeholder">
+                    <span class="badge bg-primary rounded-pill py-2 px-3 animate__animated animate__fadeIn" *ngFor="let id of form.value.ai_features" (click)="$event.stopPropagation()">
+                      {{ getFeatureName(id) }} <i class="bi bi-x-circle ms-1 cursor-pointer" (click)="removeFeature(id)"></i>
+                    </span>
+                  </ng-container>
+                  <ng-template #placeholder><span class="text-muted">Select modules...</span></ng-template>
+                </button>
+                <ul class="dropdown-menu w-100 shadow-lg border-0 rounded-4 p-2">
+                  <li *ngFor="let ai of aiFeatures">
+                    <div class="form-check p-2 rounded-3 hover-bg-light">
+                      <input type="checkbox" class="form-check-input ms-0 me-3" [checked]="form.value.ai_features.includes(ai.id)" (change)="onToggleFeature(ai.id, $event)"/>
+                      <label class="form-check-label w-100">{{ ai.AI_feature }} <span class="text-muted small ms-2">(₹{{ ai.costing }})</span></label>
+                    </div>
+                  </li>
+                </ul>
+              </div>
+            </div>
+
+            <div class="mb-4">
+              <label class="form-label small fw-bold text-uppercase text-muted">License Plan</label>
+              <div class="form-floating">
+                <select class="form-select border-2 shadow-none rounded-4" formControlName="DurationU" id="licSelect">
+                  <option [value]="null" disabled selected>Choose validity...</option>
+                  <option *ngFor="let d of DurationU" [value]="d.id">{{ d.Duration }} Year(s) — ₹{{ d.costing }}</option>
+                </select>
+                <label for="licSelect">Select Validity Period</label>
+              </div>
+            </div>
+
+            <div class="d-flex justify-content-end gap-3 pt-3 border-top">
+              <button type="button" class="btn btn-light px-4 rounded-3 border fw-medium transition-all" (click)="clearQuotation()">Clear</button>
+              <button type="button" class="btn btn-primary px-4 rounded-3 shadow-sm fw-bold transition-all" [disabled]="loading" (click)="calculateCost()">
+                <span *ngIf="!loading"><i class="bi bi-cpu-fill me-2"></i>Analyze Infrastructure</span>
+                <span *ngIf="loading" class="spinner-border spinner-border-sm me-2"></span>
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <div class="col-lg-5">
+        <div *ngIf="costCalculated && requirements; else emptyState" class="card border-0 shadow-lg rounded-4 overflow-hidden bg-dark text-white h-100 p-0">
+          <div class="card-header bg-primary py-3 px-4 border-0 d-flex align-items-center">
+            <i class="bi bi-server me-3 fs-4"></i><h5 class="mb-0 fw-bold">Proposed Infrastructure</h5>
+          </div>
+          
+          <div class="card-body p-4 d-flex flex-column justify-content-between">
+            <div class="mb-5 animate__animated animate__fadeIn">
+              <label class="text-secondary small text-uppercase fw-bold ls-2 d-block mb-1">Calculated Storage</label>
+              <h1 class="display-5 fw-bold text-info mb-0">{{ storageInTB | number:'1.2-2' }} <small class="fs-3">TB</small></h1>
+            </div>
+
+            <div class="row g-3 mb-5">
+              <div class="col-6">
+                <div class="p-3 rounded-4 bg-glass border border-secondary border-opacity-25">
+                  <small class="text-secondary d-block mb-1 text-uppercase fw-semibold">CPU Cores</small>
+                  <span class="fw-bold fs-4">{{ requirements.cpuCores_required }} <span class="fs-6 text-muted fw-medium">Cores</span></span>
+                </div>
+              </div>
+              <div class="col-6">
+                <div class="p-3 rounded-4 bg-glass border border-secondary border-opacity-25">
+                  <small class="text-secondary d-block mb-1 text-uppercase fw-semibold">System RAM</small>
+                  <span class="fw-bold fs-4">{{ requirements.ram_required }} <span class="fs-6 text-muted fw-medium">GB</span></span>
+                </div>
+              </div>
+              <div class="col-12">
+                <div class="p-3 rounded-4 bg-glass border border-secondary border-opacity-25 highlight-warning">
+                  <small class="text-secondary d-block mb-1 text-uppercase fw-semibold">GPU Acceleration</small>
+                  <span class="fw-bold fs-4 text-warning">{{ requirements.vram_required }} <span class="fs-6 text-muted fw-medium">GB VRAM</span></span>
+                </div>
+              </div>
+            </div>
+
+            <button class="btn btn-info btn-lg w-100 rounded-3 py-3 fw-bold text-dark shadow-premium transition-all hover-lift" (click)="goToQuotationForm()">
+              PROCEED TO QUOTATION <i class="bi bi-arrow-right-circle-fill ms-2"></i>
+            </button>
           </div>
         </div>
 
+        <ng-template #emptyState>
+          <div class="card border-0 shadow-sm rounded-4 d-flex flex-column align-items-center justify-content-center p-5 text-center h-100 text-muted border-dashed">
+            <i class="bi bi-bar-chart display-1 mb-3 opacity-25"></i>
+            <h5 class="fw-bold text-dark">Ready for Analysis</h5>
+            <p>Define your system parameters to see recommended hardware and storage.</p>
+          </div>
+        </ng-template>
       </div>
     </div>
   </div>
