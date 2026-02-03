@@ -31,7 +31,8 @@ from pricingModel.api.serializers import (
     AdminQuotationSerializer,
     AuditLogSerializer,
     userRequirementSerializer,
-    UserFinalQuotationSerializer
+    UserFinalQuotationSerializer,
+    processorSerializer
 )
 import math
 
@@ -522,24 +523,25 @@ class creatingCategoryRUD(generics.RetrieveUpdateDestroyAPIView):
             costing = costing
         )
 
-# class  processorUnitDetail(generics.RetrieveUpdateDestroyAPIView):
+class  processorUnitDetail(generics.RetrieveUpdateDestroyAPIView):
     
     serializer_class = licensePricingSerializer
     
     queryset = Component.objects.filter(category__name='license')
 
-#     permission_classes = [IsAdminUser]
+    permission_classes = [IsAdminUser]
     
-#     def perform_update(self, serializer):
-#         costing = serializer.validated_data.pop('price', None)['costing']
+    def perform_update(self, serializer):
+        costing = serializer.validated_data.pop('price', None)['costing']
+        
+        if costing is not None:
+                Price.objects.update_or_create(
+                    component=license,
+                    defaults={'costing': costing}
+                )
+        license = serializer.save()
 
-    license = serializer.save()
-
-    if costing is not None:
-            Price.objects.update_or_create(
-                component=license,
-                defaults={'costing': costing}
-            )
+  
             
     def perform_destroy(self, instance):
         Price.objects.filter(component=instance).delete()

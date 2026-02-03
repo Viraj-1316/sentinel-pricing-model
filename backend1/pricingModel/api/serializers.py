@@ -187,13 +187,13 @@ class storagePricingSerializer(serializers.ModelSerializer):
                 'costing'
                 ]
         
-# class processorSerializer(serializers.ModelSerializer):
+class processorSerializer(serializers.ModelSerializer):
     
-#     costing = serializers.IntegerField(source='price.costing')
+    costing = serializers.IntegerField(source='price.costing')
     
-#     class Meta:
+    class Meta:
         
-#         model = Component
+        model = Component
     
         fields = [
             "min_cammeraA",
