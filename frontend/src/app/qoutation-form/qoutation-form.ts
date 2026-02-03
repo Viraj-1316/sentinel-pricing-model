@@ -25,6 +25,7 @@ export interface AiFeature {
   costing: number;
 }
 
+ 
 @Component({
   selector: 'app-qoutation-form',
   standalone: true,
@@ -34,31 +35,33 @@ export interface AiFeature {
 })
 
 export class QoutationForm implements OnInit {
-
+ 
   quotationId!: number;
   quotationData: any = null;
   loading = false;
   errorMsg = '';
   quotations: QuotationRow[] = [];
   filtered: QuotationRow[] = [];
+ 
   // Toggles
   includeCPU = true;
   includeGPU = true;
   includeAI = true;
   includeStorage = true;
 
+ 
   private API =
     'http://127.0.0.1:8001/pricing-Model/Pricingcalculation';
-
+ 
   constructor(
     private route: ActivatedRoute,
     private http: HttpClient,
     private toast: ToasterService
   ) {}
-
+ 
   ngOnInit(): void {
     this.quotationId = Number(this.route.snapshot.paramMap.get('id'));
-
+ 
     if (!this.quotationId) {
       this.errorMsg = 'Invalid quotation ID';
       return;
@@ -126,9 +129,9 @@ export class QoutationForm implements OnInit {
       include_ai: this.includeAI,
       include_storage: this.includeStorage
     };
-
+ 
     this.loading = true;
-
+ 
     this.http.patch<any>(
       `${this.API}/${this.quotationId}/`,
       payload
@@ -144,3 +147,4 @@ export class QoutationForm implements OnInit {
     });
   }
 }
+ 

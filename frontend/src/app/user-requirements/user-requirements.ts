@@ -144,40 +144,27 @@ includeCPU = true;
     this.storageInTB = 0;
   }
 
-  // ================= NAVIGATION =================
- goToQuotationForm(): void {
+goToQuotationForm(): void {
   if (!this.costCalculated || !this.requirements?.id) return;
 
-  const API_URL =
-    `http://127.0.0.1:8001/pricing-Model/Pricingcalculation/${this.requirements.id}/`;
-
-  const payload = {
-    include_cpu: this.includeCPU,
-    include_gpu: this.includeGPU,
-    include_ai: this.includeAI,
-    include_storage: this.includeStorage
-  };
+  const quotationId = this.requirements.id;
 
   this.loading = true;
 
-  this.http.patch<any>(API_URL, payload).subscribe({
-    next: (res) => {
+  this.http.patch<any>(
+    `${this.CALCULATE_API}${quotationId}/`,
+    {} // 👈 EMPTY PATCH = default quotation pricing
+  ).subscribe({
+    next: () => {
       this.loading = false;
-
-      // ✅ Navigate after API success
-      this.router.navigate([
-        '/qoutation-form',
-        res.id
-      ]);
+      this.router.navigate(['/qoutation-form', quotationId]);
     },
-    error: (err) => {
+    error: () => {
+      this.errorMsg = 'Failed to generate quotation';
       this.loading = false;
-      console.error(err);
-      alert('Failed to generate quotation');
     }
   });
 }
-
 
 
   onback(): void {

@@ -1,5 +1,5 @@
 <div class="container-fluid py-3">
-
+ 
   <!-- ================= HEADER ================= -->
   <div class="d-flex justify-content-between align-items-center mb-3">
     <div>
@@ -8,54 +8,54 @@
         Reference ID: #{{ quotationData?.id }}
       </small>
     </div>
-
+ 
     <span class="badge bg-success fs-6 px-3 py-2">
       ₹ {{ quotationData?.total_costing | number }}
     </span>
   </div>
-
+ 
   <!-- ================= ERROR ================= -->
   <div *ngIf="errorMsg" class="alert alert-danger">
     {{ errorMsg }}
   </div>
-
+ 
   <!-- ================= LOADING ================= -->
   <div *ngIf="loading" class="text-center py-4">
     <div class="spinner-border text-success"></div>
   </div>
-
+ 
   <div class="row g-3" *ngIf="quotationData && !loading">
-
+ 
     <!-- ================= LEFT COLUMN ================= -->
     <div class="col-xl-9 col-lg-8">
-
+ 
       <!-- ================= CUSTOMIZE ================= -->
       <div class="card shadow-sm mb-3">
         <div class="card-body py-3">
           <div class="row align-items-center">
-
+ 
             <div class="col-md-8">
               <h6 class="fw-bold mb-2">Customize Quotation</h6>
-
+ 
               <div class="d-flex flex-wrap gap-4">
                 <div class="form-check">
                   <input class="form-check-input" type="checkbox"
                          [(ngModel)]="includeCPU">
                   <label class="form-check-label">CPU</label>
                 </div>
-
+ 
                 <div class="form-check">
                   <input class="form-check-input" type="checkbox"
                          [(ngModel)]="includeGPU">
                   <label class="form-check-label">GPU</label>
                 </div>
-
+ 
                 <!-- <div class="form-check">
                   <input class="form-check-input" type="checkbox"
                          [(ngModel)]="includeAI">
                   <label class="form-check-label">AI</label>
                 </div> -->
-
+ 
                 <div class="form-check">
                   <input class="form-check-input" type="checkbox"
                          [(ngModel)]="includeStorage">
@@ -63,7 +63,7 @@
                 </div>
               </div>
             </div>
-
+ 
             <div class="col-md-4 text-end">
               <button class="btn btn-warning px-4"
                       (click)="updateQuotation()"
@@ -71,21 +71,21 @@
                 Update
               </button>
             </div>
-
+ 
           </div>
         </div>
       </div>
-
+ 
       <!-- ================= METRICS ================= -->
       <div class="row g-3 mb-3">
-
+ 
         <div class="col-md-3">
           <div class="card shadow-sm text-center p-2">
             <small class="text-muted">Cameras</small>
             <h5 class="fw-bold">{{ quotationData?.cammera }}</h5>
           </div>
         </div>
-
+ 
         <div class="col-md-3">
           <div class="card shadow-sm text-center p-2">
             <small class="text-muted">CPU Cores</small>
@@ -94,7 +94,7 @@
             </h5>
           </div>
         </div>
-
+ 
         <div class="col-md-3">
           <div class="card shadow-sm text-center p-2">
             <small class="text-muted">RAM</small>
@@ -103,7 +103,7 @@
             </h5>
           </div>
         </div>
-
+ 
         <div class="col-md-3">
           <div class="card shadow-sm text-center p-2">
             <small class="text-muted">GPU VRAM</small>
@@ -112,134 +112,114 @@
             </h5>
           </div>
         </div>
-
+ 
       </div>
-
+ 
       <!-- ================= CPU & GPU ================= -->
-    <!-- CPU & GPU INLINE -->
-<div class="row g-3 mb-3" *ngIf="quotationData">
-
-  <!-- CPU -->
-  <div class="col-md-6" *ngIf="includeCPU">
-    <div class="card shadow-sm h-100">
-      <div class="card-body p-3">
-        <h6 class="fw-bold mb-2">CPU</h6>
-
-        <div class="d-flex justify-content-between">
-          <span>{{ quotationData.cpu?.core_hardware || '—' }}</span>
-          <span>₹ {{ quotationData.cpu_cost || 0 }}</span>
+      <div class="row g-3 mb-3">
+ 
+        <div class="col-md-6" *ngIf="quotationData?.cpu">
+          <div class="card shadow-sm h-100">
+            <div class="card-body p-3">
+              <h6 class="fw-bold mb-2">CPU</h6>
+ 
+              <div class="d-flex justify-content-between">
+                <span>{{ quotationData.cpu.core_hardware }}</span>
+                <span>₹ {{ quotationData.cpu_cost }}</span>
+              </div>
+ 
+              <small class="text-muted">
+                {{ quotationData.cpu.CPUcores }} cores ·
+                {{ quotationData.cpu.ram_required }} GB RAM
+              </small>
+            </div>
+          </div>
         </div>
-
-        <small class="text-muted">
-          {{ quotationData.cpu?.CPUcores || 0 }} cores ·
-          {{ quotationData.cpu?.ram_required || 0 }} GB RAM
-        </small>
-      </div>
-    </div>
-  </div>
-
-  <!-- GPU -->
-  <div class="col-md-6" *ngIf="includeGPU">
-    <div class="card shadow-sm h-100">
-      <div class="card-body p-3">
-        <h6 class="fw-bold mb-2">GPU</h6>
-
-        <div class="d-flex justify-content-between">
-          <span>{{ quotationData.gpu?.AI_Component || '—' }}</span>
-          <span>₹ {{ quotationData.gpu_cost || 0 }}</span>
+ 
+        <div class="col-md-6" *ngIf="quotationData?.gpu">
+          <div class="card shadow-sm h-100">
+            <div class="card-body p-3">
+              <h6 class="fw-bold mb-2">GPU</h6>
+ 
+              <div class="d-flex justify-content-between">
+                <span>{{ quotationData.gpu.AI_Component }}</span>
+                <span>₹ {{ quotationData.gpu_cost }}</span>
+              </div>
+ 
+              <small class="text-muted">
+                {{ quotationData.gpu.VRAM }} GB VRAM
+              </small>
+            </div>
+          </div>
         </div>
-
-        <small class="text-muted">
-          {{ quotationData.gpu?.VRAM || 0 }} GB VRAM
-        </small>
+ 
       </div>
-    </div>
-  </div>
-
-</div>
-
+ 
       <!-- ================= AI FEATURES ================= -->
       <div class="card shadow-sm"
            *ngIf="quotationData?.ai_features?.length">
-
+ 
         <div class="card-body p-3">
           <h6 class="fw-bold mb-2">AI Features</h6>
-
+ 
           <div class="row g-2">
             <div class="col-md-6"
                  *ngFor="let ai of quotationData.ai_features">
-
+ 
               <div class="border rounded p-2
                           d-flex justify-content-between">
                 <span>{{ ai.AI_feature }}</span>
                 <span>₹ {{ ai.costing }}</span>
               </div>
-
+ 
             </div>
           </div>
         </div>
       </div>
-
+ 
     </div>
-
+ 
     <!-- ================= RIGHT COLUMN ================= -->
     <div class="col-xl-3 col-lg-4">
-
+ 
       <div class="card shadow-lg border-success position-sticky"
            style="top: 80px;">
         <div class="card-body p-3">
-
+ 
           <h6 class="fw-bold mb-3">Cost Summary</h6>
-
+ 
           <div class="d-flex justify-content-between">
             <span>CPU</span>
             <span>₹ {{ quotationData?.cpu_cost }}</span>
           </div>
-
+ 
           <div class="d-flex justify-content-between">
             <span>GPU</span>
             <span>₹ {{ quotationData?.gpu_cost }}</span>
           </div>
-
+ 
           <div class="d-flex justify-content-between">
             <span>AI</span>
             <span>₹ {{ quotationData?.ai_cost }}</span>
           </div>
-
+ 
           <div class="d-flex justify-content-between">
             <span>Storage</span>
             <span>₹ {{ quotationData?.storage_cost }}</span>
           </div>
-
+ 
           <hr>
-
+ 
           <div class="d-flex justify-content-between
                       fw-bold fs-5 text-success">
             <span>Total</span>
             <span>₹ {{ quotationData?.total_costing }}</span>
           </div>
-
+ 
         </div>
       </div>
-<div class="d-flex gap-3 mt-4">
-  <button
-    class="btn btn-outline-secondary rounded-3 d-inline-flex align-items-center gap-2"
-    (click)="downloadPdf()">
-    <i class="bi bi-download"></i>
-    Download Quotation
-  </button>
-
-  <button
-    class="btn btn-primary rounded-3 d-inline-flex align-items-center gap-2">
-    <i class="bi bi-eye"></i>
-    View Quotation
-  </button>
-</div>
-
-
-
  
     </div>
-  
+ 
   </div>
 </div>

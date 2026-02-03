@@ -288,6 +288,8 @@ export class Quotations implements OnInit {
   });
 }
    }
+
+
   trackById(_: number, row: QuotationRow) {
     return row.id;
   }

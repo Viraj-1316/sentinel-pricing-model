@@ -1,480 +1,245 @@
-<div class="pricing-page">
-
-  <!-- Header -->
-  <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
-    <div>
-      <h4 class="fw-bold mb-1">Pricing List</h4>
-      <div class="text-muted small">
-        Manage Categories, Camera slabs, AI features, CPU/GPU pricing & Storage
+<div class="container-fluid py-4 bg-light min-vh-100">
+  <div class="container w-100 ">
+    <div class="row mb-4 align-items-center">
+      <div class="col">
+        <h2 class="fw-bold text-dark mb-0">System Configuration</h2>
+        <p class="text-muted">Manage pricing, hardware scaling, and AI capabilities</p>
       </div>
     </div>
-  </div>
 
-  <!-- Tabs -->
-  <div class="pricing-tabs card border-0 shadow-sm rounded-4 mb-4">
-    <div class="card-body p-2">
-      <div class="d-flex flex-wrap gap-2">
-        <button class="btn rounded-pill px-4"
-                [class.btn-primary]="tab==='category'"
-                [class.btn-light]="tab!=='category'"
-                (click)="setTab('category')">
-          <i class="bi bi-tags me-2"></i>Categories
-        </button>
-
-        <!-- <button class="btn rounded-pill px-4"
-                [class.btn-primary]="tab==='camera'"
-                [class.btn-light]="tab!=='camera'"
-                (click)="setTab('camera')">
-          <i class="bi bi-camera-video me-2"></i>Camera Pricing
-        </button> -->
-
-        <button class="btn rounded-pill px-4"
-                [class.btn-primary]="tab==='ai'"
-                [class.btn-light]="tab!=='ai'"
-                (click)="setTab('ai')">
-          <i class="bi bi-cpu me-2"></i>AI Features Pricing
-        </button>
-
-        <button class="btn rounded-pill px-4"
-                [class.btn-primary]="tab==='hardware'"
-                [class.btn-light]="tab!=='hardware'"
-                (click)="setTab('hardware')">
-          <i class="bi bi-gpu-card me-2"></i>CPU GPU Pricing
-        </button>
-
-        <button class="btn rounded-pill px-4"
-                [class.btn-primary]="tab==='storage'"
-                [class.btn-light]="tab!=='storage'"
-                (click)="setTab('storage')">
-          <i class="bi bi-hdd-stack me-2"></i>Storage Cost
-        </button>
+    <div class="card border-0 shadow-sm mb-4">
+      <div class="card-body p-2">
+        <ul class="nav nav-pills nav-fill">
+          <li class="nav-item">
+            <button class="nav-link py-3" [class.active]="tab==='category'" (click)="setTab('category')">
+              <i class="bi bi-tag me-2"></i>Category
+            </button>
+          </li>
+          <li class="nav-item">
+            <button class="nav-link py-3" [class.active]="tab==='ai'" (click)="setTab('ai')">
+              <i class="bi bi-robot me-2"></i>AI Features
+            </button>
+          </li>
+          <li class="nav-item">
+            <button class="nav-link py-3" [class.active]="tab==='hardware'" (click)="setTab('hardware')">
+              <i class="bi bi-cpu me-2"></i>Processor Specs
+            </button>
+          </li>
+          <li class="nav-item">
+            <button class="nav-link py-3" [class.active]="tab==='storage'" (click)="setTab('storage')">
+              <i class="bi bi-hdd-network me-2"></i>Storage
+            </button>
+          </li>
+          <li class="nav-item">
+            <button class="nav-link py-3" [class.active]="tab==='licence'" (click)="setTab('licence')">
+              <i class="bi bi-hdd-network me-2"></i>Licence
+            </button>
+          </li>
+        </ul>
       </div>
     </div>
-  </div>
 
-  <!-- Error -->
-  <div *ngIf="errorMsg" class="alert alert-danger rounded-4">
-    <i class="bi bi-exclamation-triangle me-2"></i>{{ errorMsg }}
-  </div>
+    <div class="card border-0 shadow-sm">
+      <div class="card-body p-4">
 
-  <!-- 2 Column Layout -->
-  <div class="row g-4">
-
-    <!-- Left: Form -->
-    <div class="col-12 col-lg-4">
-      <div class="card border-0 shadow-sm rounded-4 sticky-form">
-        <div class="card-body p-4">
-
-          <!-- ✅ CATEGORY FORM -->
-          <ng-container *ngIf="tab==='category'">
-            <div class="fw-bold mb-1">Create Category</div>
-            <div class="text-muted small mb-3">Add category name (Camera, AI, Storage, Processor etc.)</div>
-
-            <form [formGroup]="categoryForm" (ngSubmit)="saveCategory()">
-
-              <div class="mb-3">
-                <label class="form-label small fw-semibold">Category Name</label>
-                <input type="text"
-                       class="form-control"
-                       formControlName="name"
-                       placeholder="ex: Camera">
+        <div *ngIf="tab==='category'" class="animate__animated animate__fadeIn">
+          <h5 class="fw-bold mb-4">Product Categories</h5>
+          <form [formGroup]="categoryForm" (ngSubmit)="saveCategory()" class="row g-3 mb-5">
+            <div class="col-md-10">
+              <input class="form-control form-control-lg" formControlName="name" placeholder="e.g. Enterprise Solution">
+            </div>
+            <div class="col-md-2">
+              <button class="btn btn-primary btn-lg w-100" [disabled]="categoryForm.invalid">
+                {{ editingCategoryId ? 'Update' : 'Save' }}
+              </button>
+            </div>
+          </form>
+          <div class="list-group list-group-flush border rounded">
+            <div *ngFor="let c of categoryList" class="list-group-item d-flex justify-content-between align-items-center py-3">
+              <span class="fw-medium">{{ c.name }}</span>
+              <div class="btn-group">
+                <button class="btn btn-outline-secondary btn-sm" (click)="editCategory(c)">✏️</button>
+                <button class="btn btn-outline-danger btn-sm" (click)="deleteCategory(c.id)">🗑️</button>
               </div>
-
-              <button class="btn btn-primary w-100 rounded-3"
-                      [disabled]="saving || categoryForm.invalid">
-                <span *ngIf="saving" class="spinner-border spinner-border-sm me-2"></span>
-                {{ editingCategoryId ? 'Update Category' : 'Save Category' }}
-              </button>
-
-              <button *ngIf="editingCategoryId"
-                      type="button"
-                      class="btn btn-light border w-100 rounded-3 mt-2"
-                      (click)="cancelCategoryEdit()">
-                Cancel Edit
-              </button>
-
-            </form>
-          </ng-container>
-
-
-          <!-- ✅ CAMERA FORM -->
-         
-          <!-- ✅ AI FORM -->
-          <ng-container *ngIf="tab==='ai'">
-            <div class="fw-bold mb-1">Add AI Feature Pricing</div>
-            <div class="text-muted small mb-3">Create AI feature and pricing</div>
-
-            <form [formGroup]="aiForm" (ngSubmit)="saveAiPricing()">
-
-              <div class="mb-3">
-                <label class="form-label small fw-semibold">AI Feature Name</label>
-                <input type="text"
-                       class="form-control"
-                       formControlName="AI_feature"
-                       placeholder="ex: Face Detection">
-              </div>
-
-              <div class="mb-3">
-                <label class="form-label small fw-semibold">Cost</label>
-                <div class="input-group">
-                  <span class="input-group-text bg-white">₹</span>
-                  <input type="number" class="form-control" formControlName="costing">
-                </div>
-              </div>
-
-              <button class="btn btn-primary w-100 rounded-3"
-                      [disabled]="saving || aiForm.invalid">
-                <span *ngIf="saving" class="spinner-border spinner-border-sm me-2"></span>
-                {{ editingAiId ? 'Update AI Feature' : 'Save AI Feature' }}
-              </button>
-
-              <button *ngIf="editingAiId"
-                      type="button"
-                      class="btn btn-light border w-100 rounded-3 mt-2"
-                      (click)="cancelAiEdit()">
-                Cancel Edit
-              </button>
-
-            </form>
-          </ng-container>
-
-
-          <!-- ✅ CPU GPU FORM -->
-          <ng-container *ngIf="tab==='hardware'">
-            <div class="fw-bold mb-1">CPU GPU Pricing</div>
-            <div class="text-muted small mb-3">Add CPU/GPU configuration pricing</div>
-
-            <form [formGroup]="hardwareForm" (ngSubmit)="saveHardwarePricing()">
-
-              <div class="row g-3">
-                <div class="col-12">
-                  <label class="form-label small fw-semibold">Name</label>
-                  <input type="text"
-                         class="form-control"
-                         formControlName="name"
-                         placeholder="ex: Intel i5 (Default Pack)">
-                </div>
-
-                <div class="col-12">
-                  <label class="form-label small fw-semibold">CPU</label>
-                  <input type="text"
-                         class="form-control"
-                         formControlName="CPU"
-                         placeholder="ex: Intel i5 / Ryzen 5">
-                </div>
-
-                <div class="col-12 col-md-6">
-                  <label class="form-label small fw-semibold">CPU Cores</label>
-                  <input type="number"
-                         class="form-control"
-                         formControlName="CPUcores">
-                </div>
-
-                <div class="col-12 col-md-6">
-                  <label class="form-label small fw-semibold">RAM (GB)</label>
-                  <input type="number"
-                         class="form-control"
-                         formControlName="ram_required">
-                </div>
-
-                <div class="col-12">
-                  <label class="form-label small fw-semibold">GPU</label>
-                  <input type="text"
-                         class="form-control"
-                         formControlName="GPU"
-                         placeholder="ex: NVIDIA RTX / AMD Radeon">
-                </div>
-
-                <div class="col-12 col-md-6">
-                  <label class="form-label small fw-semibold">GPU Cores</label>
-                  <input type="number"
-                         class="form-control"
-                         formControlName="GPUcores">
-                </div>
-
-                <div class="col-12 col-md-6">
-                  <label class="form-label small fw-semibold">Cost</label>
-                  <div class="input-group">
-                    <span class="input-group-text bg-white">₹</span>
-                    <input type="number"
-                           class="form-control"
-                           formControlName="costing">
-                  </div>
-                </div>
-              </div>
-
-              <button class="btn btn-primary w-100 rounded-3 mt-4"
-                      [disabled]="saving || hardwareForm.invalid">
-                <span *ngIf="saving" class="spinner-border spinner-border-sm me-2"></span>
-                {{ editingHardwareId ? 'Update CPU GPU Pricing' : 'Save CPU GPU Pricing' }}
-              </button>
-
-              <button *ngIf="editingHardwareId"
-                      type="button"
-                      class="btn btn-light border w-100 rounded-3 mt-2"
-                      (click)="cancelHardwareEdit()">
-                Cancel Edit
-              </button>
-
-            </form>
-          </ng-container>
-
-
-          <!-- ✅ STORAGE FORM -->
-          <ng-container *ngIf="tab==='storage'">
-            <div class="fw-bold mb-1">Storage Costing</div>
-            <div class="text-muted small mb-3">Define storage per camera & per day pricing</div>
-
-            <form [formGroup]="storageForm" (ngSubmit)="saveStorage()">
-
-              <div class="mb-3">
-                <label class="form-label small fw-semibold">Storage per Cam</label>
-                <input type="number"
-                       class="form-control"
-                       formControlName="storage_per_cam"
-                       placeholder="ex: 2">
-              </div>
-
-              <div class="mb-3">
-                <label class="form-label small fw-semibold">Storage per Day</label>
-                <input type="number"
-                       class="form-control"
-                       formControlName="storage_perDay"
-                       placeholder="ex: 30">
-              </div>
-
-              <div class="mb-3">
-                <label class="form-label small fw-semibold">Cost</label>
-                <div class="input-group">
-                  <span class="input-group-text bg-white">₹</span>
-                  <input type="number"
-                         class="form-control"
-                         formControlName="costing">
-                </div>
-              </div>
-
-              <button class="btn btn-primary w-100 rounded-3"
-                      [disabled]="saving || storageForm.invalid">
-                <span *ngIf="saving" class="spinner-border spinner-border-sm me-2"></span>
-                {{ editingStorageId ? 'Update Storage Cost' : 'Save Storage Cost' }}
-              </button>
-
-              <button *ngIf="editingStorageId"
-                      type="button"
-                      class="btn btn-light border w-100 rounded-3 mt-2"
-                      (click)="cancelStorageEdit()">
-                Cancel Edit
-              </button>
-
-            </form>
-          </ng-container>
-
+            </div>
+          </div>
         </div>
-      </div>
-    </div>
 
-
-    <!-- Right: List -->
-    <div class="col-12 col-lg-8">
-      <div class="card border-0 shadow-sm rounded-4">
-        <div class="card-body p-0">
-
-          <div class="p-4 border-bottom d-flex justify-content-between align-items-center">
-            <div class="fw-bold">
-              {{
-                tab==='category'
-                  ? 'Categories'
-                  
-                    : tab==='ai'
-                      ? 'AI Features'
-                      : tab==='hardware'
-                        ? 'CPU GPU Pricing'
-                        : 'Storage Costing'
-              }}
+        <div *ngIf="tab==='ai'" class="animate__animated animate__fadeIn">
+          <h5 class="fw-bold mb-4">AI Feature Management</h5>
+          <form [formGroup]="aiForm" (ngSubmit)="saveAi()" class="row g-3 mb-4">
+            <div class="col-md-7">
+              <label class="form-label small fw-bold">FEATURE NAME</label>
+              <input class="form-control" formControlName="AI_feature" placeholder="e.g. Face Detection">
             </div>
-
-            <div class="text-muted small" *ngIf="loading">
-              <span class="spinner-border spinner-border-sm me-2"></span> Loading...
+            <div class="col-md-3">
+              <label class="form-label small fw-bold">COSTING (₹)</label>
+              <input class="form-control" formControlName="costing" type="number">
             </div>
-          </div>
-
-
-          <!-- ✅ CATEGORY LIST -->
-          <div *ngIf="tab==='category'" class="table-responsive list-scroll">
-            <table class="table mb-0 align-middle">
-              <thead class="table-light position-sticky top-0">
-                <tr>
-                  <th>#</th>
-                  <th>Category Name</th>
-                  <th class="text-end">Actions</th>
-                </tr>
-              </thead>
-
-              <tbody>
-                <tr *ngFor="let cat of categoryList; let i = index; trackBy: trackById">
-                  <td class="text-muted">{{ i + 1 }}</td>
-                  <td class="fw-semibold">{{ cat.name }}</td>
-
-                  <td class="text-end">
-                    <button class="btn btn-sm btn-warning me-2"
-                            (click)="editCategory(cat)">
-                      <i class="bi bi-pencil-square"></i>
-                    </button>
-
-                    <button class="btn btn-sm btn-danger"
-                            (click)="deleteCategory(cat.id)">
-                      <i class="bi bi-trash"></i>
-                    </button>
-                  </td>
-                </tr>
-
-                <tr *ngIf="categoryList.length === 0">
-                  <td colspan="3" class="text-center text-muted py-5">
-                    No categories added.
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-
-
-          <!-- ✅ CAMERA LIST -->
-          
-
-
-          <!-- ✅ AI LIST -->
-          <div *ngIf="tab==='ai'" class="table-responsive list-scroll">
-            <table class="table mb-0 align-middle">
-              <thead class="table-light position-sticky top-0">
+            <div class="col-md-2 d-flex align-items-end">
+              <button class="btn btn-primary w-100" [disabled]="aiForm.invalid">Save</button>
+            </div>
+          </form>
+          <div class="table-responsive border rounded">
+            <table class="table table-hover align-middle mb-0">
+              <thead class="table-light">
                 <tr>
                   <th>AI Feature</th>
-                  <th class="text-end">Cost</th>
+                  <th>Monthly Cost</th>
                   <th class="text-end">Actions</th>
                 </tr>
               </thead>
-
               <tbody>
-                <tr *ngFor="let a of aiList; trackBy: trackById">
-                  <td class="fw-semibold">{{ a.AI_feature }}</td>
-                  <td class="text-end fw-bold">₹ {{ a.costing }}</td>
-
+                <tr *ngFor="let a of aiList">
+                  <td class="fw-bold">{{ a.AI_feature }}</td>
+                  <td class="text-primary fw-bold">₹{{ a.costing }}</td>
                   <td class="text-end">
-                    <button class="btn btn-sm btn-warning me-2"
-                            (click)="editAi(a)">
-                      <i class="bi bi-pencil-square"></i>
-                    </button>
-
-                    <button class="btn btn-sm btn-danger"
-                            (click)="deleteAi(a.id)">
-                      <i class="bi bi-trash"></i>
-                    </button>
-                  </td>
-                </tr>
-
-                <tr *ngIf="aiList.length === 0">
-                  <td colspan="3" class="text-center text-muted py-5">
-                    No AI features added.
+                    <button class="btn btn-sm btn-light border me-1" (click)="editAi(a)">Edit</button>
+                    <button class="btn btn-sm btn-light border text-danger" (click)="deleteAi(a.id)">Delete</button>
                   </td>
                 </tr>
               </tbody>
             </table>
           </div>
-
-
-          <!-- ✅ HARDWARE LIST -->
-          <div *ngIf="tab==='hardware'" class="table-responsive list-scroll">
-            <table class="table mb-0 align-middle">
-              <thead class="table-light position-sticky top-0">
-                <tr>
-                  <th>Name</th>
-                  <th>CPU</th>
-                  <th>CPU Cores</th>
-                  <th>GPU</th>
-                  <th>GPU Cores</th>
-                  <th>RAM</th>
-                  <th class="text-end">Cost</th>
-                  <th class="text-end">Actions</th>
-                </tr>
-              </thead>
-
-              <tbody>
-                <tr *ngFor="let h of hardwareList; trackBy: trackById">
-                  <td class="fw-semibold">{{ h.name }}</td>
-                  <td class="fw-semibold">{{ h.CPU }}</td>
-                  <td>{{ h.CPUcores }}</td>
-                  <td class="fw-semibold">{{ h.GPU }}</td>
-                  <td>{{ h.GPUcores }}</td>
-                  <td>{{ h.ram_required }} GB</td>
-                  <td class="text-end fw-bold">₹ {{ h.costing }}</td>
-
-                  <td class="text-end">
-                    <button class="btn btn-sm btn-warning me-2"
-                            (click)="editHardware(h)">
-                      <i class="bi bi-pencil-square"></i>
-                    </button>
-
-                    <button class="btn btn-sm btn-danger"
-                            (click)="deleteHardware(h.id)">
-                      <i class="bi bi-trash"></i>
-                    </button>
-                  </td>
-                </tr>
-
-                <tr *ngIf="hardwareList.length === 0">
-                  <td colspan="8" class="text-center text-muted py-5">
-                    No CPU/GPU pricing added.
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-
-
-          <!-- ✅ STORAGE LIST -->
-          <div *ngIf="tab==='storage'" class="table-responsive list-scroll">
-            <table class="table mb-0 align-middle">
-              <thead class="table-light position-sticky top-0">
-                <tr>
-                  <th>Storage / Cam</th>
-                  <th>Storage / Day</th>
-                  <th class="text-end">Cost</th>
-                  <th class="text-end">Actions</th>
-                </tr>
-              </thead>
-
-              <tbody>
-                <tr *ngFor="let s of storageList; trackBy: trackById">
-                  <td class="fw-semibold">{{ s.storage_per_cam }}</td>
-                  <td>{{ s.storage_perDay }} GB</td>
-                  <td class="text-end fw-bold">₹ {{ s.costing }}</td>
-
-                  <td class="text-end">
-                    <button class="btn btn-sm btn-warning me-2"
-                            (click)="editStorage(s)">
-                      <i class="bi bi-pencil-square"></i>
-                    </button>
-
-                    <button class="btn btn-sm btn-danger"
-                            (click)="deleteStorage(s.id)">
-                      <i class="bi bi-trash"></i>
-                    </button>
-                  </td>
-                </tr>
-
-                <tr *ngIf="storageList.length === 0">
-                  <td colspan="4" class="text-center text-muted py-5">
-                    No storage pricing added.
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-
         </div>
+
+        <div *ngIf="tab==='hardware'" class="animate__animated animate__fadeIn">
+          <div class="d-flex justify-content-between align-items-center mb-4">
+            <h5 class="fw-bold mb-0">Hardware Scaling Logic</h5>
+            <div class="btn-group p-1 bg-light rounded border">
+              <button class="btn btn-sm px-4" [class.btn-white.shadow-sm]="hardwareTab==='cpu'" [class.btn-light]="hardwareTab!=='cpu'" (click)="setHardwareTab('cpu')">Standard Pricing</button>
+              <button class="btn btn-sm px-4" [class.btn-white.shadow-sm]="hardwareTab==='gpu'" [class.btn-light]="hardwareTab!=='gpu'" (click)="setHardwareTab('gpu')">AI-Enhanced Pricing</button>
+            </div>
+          </div>
+
+          <div *ngIf="hardwareTab==='cpu'" class="p-4 border rounded bg-light-subtle mb-4">
+            <form [formGroup]="cpuForm" (ngSubmit)="saveCpu()" class="row g-3">
+              <div class="col-md-3">
+                <label class="form-label small fw-bold">CAMERA RANGE</label>
+                <div class="input-group input-group-sm">
+                  <input type="number" class="form-control" formControlName="min_cammera" placeholder="Min">
+                  <input type="number" class="form-control" formControlName="max_cammera" placeholder="Max">
+                </div>
+              </div>
+              <div class="col-md-3">
+                <label class="form-label small fw-bold">CPU MODEL</label>
+                <input class="form-control form-control-sm" formControlName="core_hardware">
+              </div>
+              <div class="col-md-2">
+                <label class="form-label small fw-bold">CORES/RAM</label>
+                <div class="input-group input-group-sm">
+                  <input type="number" class="form-control" formControlName="CPUcores" placeholder="Cores">
+                  <input type="number" class="form-control" formControlName="ram_required" placeholder="RAM">
+                </div>
+              </div>
+              <div class="col-md-2">
+                <label class="form-label small fw-bold text-success">COSTING (₹)</label>
+                <input type="number" class="form-control form-control-sm" formControlName="costing">
+              </div>
+              <div class="col-md-2 d-flex align-items-end">
+                <button class="btn btn-dark btn-sm w-100">Save CPU</button>
+              </div>
+            </form>
+          </div>
+
+          <div *ngIf="hardwareTab==='gpu'" class="p-4 border rounded bg-primary-subtle mb-4 border-primary-subtle">
+            <form [formGroup]="gpuForm" (ngSubmit)="saveGpu()" class="row g-3">
+              <div class="col-md-3">
+                <label class="form-label small fw-bold text-primary">AI CAMERA RANGE</label>
+                <div class="input-group input-group-sm">
+                  <input type="number" class="form-control" formControlName="min_cammeraA">
+                  <input type="number" class="form-control" formControlName="max_cammeraA">
+                </div>
+              </div>
+              <div class="col-md-3">
+                <label class="form-label small fw-bold text-primary">GPU COMPONENT</label>
+                <input class="form-control form-control-sm" formControlName="AI_Component">
+              </div>
+              <div class="col-md-2">
+                <label class="form-label small fw-bold text-primary">VRAM (GB)</label>
+                <input class="form-control form-control-sm" formControlName="VRAM">
+              </div>
+              <div class="col-md-2">
+                <label class="form-label small fw-bold text-success">COSTING (₹)</label>
+                <input type="number" class="form-control form-control-sm" formControlName="costing">
+              </div>
+              <div class="col-md-2 d-flex align-items-end">
+                <button class="btn btn-primary btn-sm w-100">Save GPU</button>
+              </div>
+            </form>
+          </div>
+
+          <div class="table-responsive border rounded bg-white">
+            <table class="table table-hover align-middle mb-0">
+              <thead class="table-light">
+                <tr class="small text-muted">
+                  <th>RANGE</th>
+                  <th>SPECIFICATION</th>
+                  <th>DETAILS</th>
+                  <th class="text-end">UNIT COST</th>
+                  <th class="text-end">ACTION</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let item of (hardwareTab==='cpu' ? cpuList : gpuList)">
+                  <td>
+                    <span class="badge rounded-pill bg-info text-dark">
+                      {{ item.min_cammera || item.min_cammeraA }} - {{ item.max_cammera || item.max_cammeraA }} Cams
+                    </span>
+                  </td>
+                  <td class="fw-bold">{{ item.core_hardware || item.AI_Component }}</td>
+                  <td>
+                    <small *ngIf="hardwareTab==='cpu'"><i class="bi bi-cpu"></i> {{ item.CPUcores }} Cores | {{ item.ram_required }}GB RAM</small>
+                    <small *ngIf="hardwareTab==='gpu'"><i class="bi bi-gpu-card"></i> VRAM: {{ item.VRAM }}</small>
+                  </td>
+                  <td class="text-end fw-bold text-success">₹{{ item.costing }}</td>
+                  <td class="text-end">
+                    <button class="btn btn-link text-decoration-none btn-sm me-2" (click)="hardwareTab==='cpu' ? editCpu(item) : editGpu(item)">Edit</button>
+                    <button class="btn btn-link text-decoration-none text-danger btn-sm" (click)="hardwareTab==='cpu' ? deleteCpu(item.id) : deleteGpu(item.id)">Delete</button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div *ngIf="tab==='storage'" class="animate__animated animate__fadeIn">
+          <h5 class="fw-bold mb-4">Storage Policies</h5>
+          <form [formGroup]="storageForm" (ngSubmit)="saveStorage()" class="row g-3 mb-5 p-3 bg-light rounded">
+            <div class="col-md-3">
+              <label class="form-label small fw-bold">GB / CAMERA</label>
+              <input class="form-control" formControlName="storage_per_cam" type="number">
+            </div>
+            <div class="col-md-3">
+              <label class="form-label small fw-bold">RETENTION (DAYS)</label>
+              <input class="form-control" formControlName="storage_perDay" type="number">
+            </div>
+            <div class="col-md-3">
+              <label class="form-label small fw-bold">PRICE (₹)</label>
+              <input class="form-control" formControlName="costing" type="number">
+            </div>
+            <div class="col-md-3 d-flex align-items-end">
+              <button class="btn btn-primary w-100">Save Storage Config</button>
+            </div>
+          </form>
+          <div class="row row-cols-1 row-cols-md-3 g-4">
+            <div *ngFor="let s of storageList" class="col">
+              <div class="card h-100 border-0 shadow-sm bg-light">
+                <div class="card-body">
+                  <span class="badge bg-success float-end">₹{{ s.costing }}</span>
+                  <div class="display-6 fw-bold mb-1">{{ s.storage_per_cam }}GB</div>
+                  <p class="text-muted mb-0">{{ s.storage_perDay }} days retention</p>
+                </div>
+                <div class="card-footer bg-white border-0 d-flex justify-content-end gap-2">
+                  <button class="btn btn-sm btn-outline-secondary" (click)="editStorage(s)">Edit</button>
+                  <button class="btn btn-sm btn-outline-danger" (click)="deleteStorage(s.id)">Delete</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
       </div>
     </div>
-
   </div>
 </div>
-
-
