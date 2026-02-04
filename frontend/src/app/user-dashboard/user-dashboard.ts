@@ -16,7 +16,7 @@ export interface Quotation {
   gpu_cost: number;
   ai_cost: number;
 
-  storage_used_user: number | null;   // 🔥 allow null
+  storage_used_user: number | null;
   storage_cost: number;
 
   total_costing: number;
@@ -47,8 +47,10 @@ export class UserDashboard implements OnInit {
  
   notifications: { title: string; message: string; time: string }[] = [];
 
-  private QUOTATION_API =
-    'http://127.0.0.1:8001/pricing-Model/user-quotations/';
+  // API Endpoints
+  private QUOTATION_API = 'http://127.0.0.1:8001/pricing-Model/user-quotations/';
+  private DELETE_API = 'http://127.0.0.1:8001/pricing-Model/Pricingcalculation/';
+  private PDF_API = 'http://127.0.0.1:8001/pricing-Model/generate-pdf/';
 
   constructor(
     private http: HttpClient,
@@ -60,43 +62,27 @@ export class UserDashboard implements OnInit {
     this.loadDashboard();
   }
 
+  /**
+   * Fetches data from the backend and normalizes hardware names for display
+   */
   loadDashboard(): void {
     this.loading = true;
     this.errorMsg = null;
 
     this.http.get<any[]>(this.QUOTATION_API).subscribe({
       next: (res) => {
-
         this.quotations = (res ?? []).map(q => ({
           ...q,
-
-          // ✅ CPU name extraction (handles all backend shapes)
-          cpuName:
-            q.cpu?.name ??
-            q.cpu?.core_hardware ??
-            q.cpu?.CPU ??
-            '—',
-          // ✅ GPU name extraction
-          gpuName:
-            q.gpu?.name ??
-            q.gpu?.AI_Component ??
-            q.gpu?.GPU ??
-            '—',
-          // ✅ AI features (ManyToMany)
+          cpuName: q.cpu?.core_hardware ?? q.cpu?.name ?? q.cpu?.CPU ?? '—',
+          gpuName: q.gpu?.AI_Component ?? q.gpu?.name ?? q.gpu?.GPU ?? '—',
           aiFeatureNames: Array.isArray(q.ai_features) && q.ai_features.length > 0
-            ? q.ai_features
-                .map((a: any) => a.AI_feature ?? a.name ?? '—')
-                .join(', ')
+            ? q.ai_features.map((a: any) => a.AI_feature ?? a.name ?? '—').join(', ')
             : '—',
-          // ✅ STORAGE FIX (do NOT force 0)
-          storage_used_user:
-            q.storage_used_user === null || q.storage_used_user === undefined
-              ? null
-              : q.storage_used_user
+          storage_used_user: q.storage_used_user ?? null
         }));
 
         this.totalQuotations = this.quotations.length;
-        this.recent = this.quotations.slice(0, 5);
+        this.recent = this.quotations.slice(0, 5); // Display latest 5 entries
 
         if (this.totalQuotations > 0) {
           const latest = this.quotations[0];
@@ -106,6 +92,7 @@ export class UserDashboard implements OnInit {
           this.latestTotal = null;
           this.lastActivity = null;
         }
+
         this.notifications = this.recent.map(q => ({
           title: 'Quotation Generated',
           message: `Quotation #${q.id} generated (₹${q.total_costing})`,
@@ -119,6 +106,44 @@ export class UserDashboard implements OnInit {
       },
     });
   }
+
+  // ========================= ACTION METHODS =========================
+
+  /**
+   * Navigates back to the quotation summary form for editing flags
+   */
+  editQuotation(id: number): void {
+    this.router.navigate(['/qoutation-form', id]);
+  }
+
+  /**
+   * Deletes a quotation from the backend and updates local arrays instantly
+   */
+  deleteQuotation(id: number): void {
+  if (confirm('Are you sure you want to permanently delete this quotation?')) {
+    this.http.delete(`${this.DELETE_API}${id}/`).subscribe({
+      next: () => {
+        // 1. Alert the user
+        alert('Quotation deleted successfully.');
+        this.loadDashboard();
+      },
+      error: (err) => {
+        console.error('Delete error:', err);
+        this.errorMsg = 'Failed to delete quotation.';
+      }
+    });
+  }
+}
+  /**
+   * Opens the backend PDF view in a new browser tab
+   */
+  downloadPDF(id: number): void {
+    const url = `${this.PDF_API}${id}/`;
+    window.open(url, '_blank');
+  }
+
+  // ========================= NAVIGATION HELPERS =========================
+
   goToGenerate(): void {
     this.router.navigateByUrl('/user-requirements');
   }
@@ -126,8 +151,8 @@ export class UserDashboard implements OnInit {
   goToQuotations(): void {
     this.router.navigateByUrl('/quotations');
   }
+
   onLogout(): void {
     this.auth.logout();
   }
 }
- 

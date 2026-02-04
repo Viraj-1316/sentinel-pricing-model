@@ -1,13 +1,11 @@
 <div class="min-vh-100 w-100 bg-light position-relative overflow-hidden">
  
-  <!-- Background gradients -->
   <div class="position-absolute top-0 start-0 w-100 h-100"
        style="background: radial-gradient(circle at 15% 20%, rgba(13,110,253,.22), transparent 40%),
               radial-gradient(circle at 85% 30%, rgba(32,201,151,.22), transparent 40%),
               radial-gradient(circle at 50% 90%, rgba(255,193,7,.18), transparent 45%);">
   </div>
  
-  <!-- Floating shapes -->
   <div class="position-absolute rounded-circle"
        style="width: 260px; height: 260px; background: rgba(13,110,253,.12); top: -80px; left: -60px;">
   </div>
@@ -17,7 +15,6 @@
  
   <div class="container-fluid position-relative py-4 px-3 px-lg-4" style="z-index: 5;">
  
-    <!-- Header -->
     <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
       <div>
         <h4 class="fw-bold mb-0">Dashboard</h4>
@@ -29,27 +26,21 @@
           <i class="bi bi-file-earmark-plus me-1"></i>
           Generate Quotation
         </button>
- 
-      
       </div>
     </div>
  
-    <!-- Error -->
     <div *ngIf="errorMsg" class="alert alert-danger rounded-3">
       <i class="bi bi-exclamation-triangle me-2"></i>
       {{ errorMsg }}
     </div>
  
-    <!-- Loading -->
     <div *ngIf="loading" class="text-muted d-flex align-items-center gap-2">
       <span class="spinner-border spinner-border-sm"></span>
       Loading dashboard...
     </div>
  
-    <!-- ========================= DASHBOARD CONTENT ========================= -->
     <div *ngIf="!loading">
  
-      <!-- Empty state -->
       <div *ngIf="totalQuotations === 0" class="card border-0 shadow-sm rounded-4">
         <div class="card-body p-5 text-center">
           <div class="display-6 text-muted mb-2">
@@ -67,12 +58,9 @@
         </div>
       </div>
  
-      <!-- Normal dashboard -->
       <div *ngIf="totalQuotations > 0">
  
-        <!-- KPI Cards -->
         <div class="row g-3 mb-4">
- 
           <div class="col-12 col-md-6 col-xl-3">
             <div class="card border-0 shadow-sm rounded-4 h-100">
               <div class="card-body p-4">
@@ -140,23 +128,17 @@
               </div>
             </div>
           </div>
- 
         </div>
  
-        <!-- Main Grid -->
         <div class="row g-4">
- 
-          <!-- Recent Quotations -->
           <div class="col-12 ">
             <div class="card border-0 shadow-sm rounded-4">
               <div class="card-body p-4">
- 
                 <div class="d-flex justify-content-between align-items-center mb-3">
                   <div>
                     <h5 class="fw-bold mb-0">Recent Quotations</h5>
                     <div class="text-muted small">Latest 5 quotations</div>
                   </div>
- 
                   <a routerLink="/quotations" class="btn btn-outline-secondary rounded-3">
                     View All
                   </a>
@@ -166,7 +148,6 @@
                   <table class="table table-hover align-middle mb-0">
                     <thead class="table-light">
                       <tr>
-                        <!-- <th style="width:90px;">ID</th> -->
                         <th>Cameras</th>
                         <th>CPU</th>
                         <th>CPU Cost</th>
@@ -178,55 +159,59 @@
                         <th>Storage Cost</th>
                         <th>Total</th>
                         <th>Date</th>
-                      </tr>
+                        <th class="text-center">Actions</th> </tr>
                     </thead>
 
-
-
                     <tbody>
-  <tr *ngFor="let q of recent">
+                      <tr *ngFor="let q of recent">
+                        <td>{{ q.cammera }}</td>
+                        <td>{{ q.cpuName }}</td>
+                        <td class="fw-bold text-success">₹ {{ q.cpu_cost }}</td>
+                        <td>{{ q.gpuName }}</td>
+                        <td class="fw-bold text-success">₹ {{ q.gpu_cost }}</td>
+                        <td>{{ q.aiFeatureNames }}</td>
+                        <td class="fw-bold text-success">₹ {{ q.ai_cost }}</td>
+                        <td class="fw-bold text-success">
+                          {{ q.storage_used_user !== null ? q.storage_used_user : '—' }} GB
+                        </td>
+                        <td class="fw-bold text-success">₹ {{ q.storage_cost }}</td>
+                        <td class="fw-bold text-success">₹ {{ q.total_costing }}</td>
+                        <td class="text-muted">{{ q.created_at | date:'medium' }}</td>
+                        
+                        <td class="text-center">
+                          <div class="d-flex justify-content-center gap-2">
+                            <button class="btn btn-outline-info btn-sm rounded-2 shadow-none" 
+                                    (click)="downloadPDF(q.id)" 
+                                    title="Download PDF">
+                              <i class="bi bi-file-pdf-fill"></i>
+                            </button>
+                            <button class="btn btn-outline-primary btn-sm rounded-2 shadow-none" 
+                                    (click)="editQuotation(q.id)" 
+                                    title="Edit">
+                              <i class="bi bi-pencil-square"></i>
+                            </button>
+                            <button class="btn btn-outline-danger btn-sm rounded-2 shadow-none" 
+                                    (click)="deleteQuotation(q.id)" 
+                                    title="Delete">
+                              <i class="bi bi-trash3-fill"></i>
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
 
-    <td>{{ q.cammera }}</td>
-
-    <td>{{ q.cpuName }}</td>
-    <td class="fw-bold text-success">₹ {{ q.cpu_cost }}</td>
-
-    <td>{{ q.gpuName }}</td>
-    <td class="fw-bold text-success">₹ {{ q.gpu_cost }}</td>
-
-    <td>{{ q.aiFeatureNames }}</td>
-    <td class="fw-bold text-success">₹ {{ q.ai_cost }}</td>
-
-    <td class="fw-bold text-success">
-  {{ q.storage_used_user !== null ? q.storage_used_user : '—' }} GB
-</td>
-
-    <td class="fw-bold text-success">₹ {{ q.storage_cost }}</td>
-
-    <td class="fw-bold text-success">₹ {{ q.total_costing }}</td>
-    <td class="text-muted">{{ q.created_at | date:'medium' }}</td>
-  </tr>
-
-  <tr *ngIf="recent.length === 0">
-    <td colspan="11" class="text-center text-muted py-4">
-      No quotations available.
-    </td>
-  </tr>
-</tbody>
+                      <tr *ngIf="recent.length === 0">
+                        <td colspan="12" class="text-center text-muted py-4">
+                          No quotations available.
+                        </td>
+                      </tr>
+                    </tbody>
                   </table>
                 </div>
- 
               </div>
             </div>
           </div>
- 
-        
- 
         </div>
- 
       </div>
- 
     </div>
- 
   </div>
 </div>

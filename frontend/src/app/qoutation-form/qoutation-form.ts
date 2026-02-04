@@ -16,6 +16,7 @@ export interface QuotationRow {
   cpu_cost: number;
   gpu_cost: number;
   storage_cost: number;
+  // storage_days: number;
   ai_features: AiFeature[];
   // admin fields
   username?: string;

@@ -1,6 +1,6 @@
 /* Color Palette */
 .bg-primary-subtle { background-color: #f0f7ff !important; }
-.bg-dark { background-color: #1a1d21 !important; }
+.bg-dark { background-color:#f0f7ff !important; }
 .text-info { color: #00e5ff !important; }
 .text-warning { color: #ffc107 !important; }
 

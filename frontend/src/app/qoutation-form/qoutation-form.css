@@ -19,7 +19,7 @@
 .metric-hover:hover {
   transform: translateY(-5px);
   background: #ffffff;
-  box-shadow: 0 15px 35px rgba(13, 110, 253, 0.1) !important;
+  box-shadow: 0 15px 35px rgba(19, 60, 123, 0.1) !important;
 }
 
 .bg-primary-subtle {
