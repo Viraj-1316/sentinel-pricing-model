@@ -60,7 +60,7 @@ ALLOWED_HOSTS = ['localhost', '127.0.0.1',"192.168.65.89","10.136.76.181"]
 # Application definition
 
 INSTALLED_APPS = [
-    "corsheaders",
+    'corsheaders',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -209,3 +209,10 @@ CELERY_ACCEPT_CONTENT = ["json"]
 CELERY_TASK_SERIALIZER = "json"
 CELERY_RESULT_SERIALIZER = "json"
 CELERY_TIMEZONE = "Asia/Kolkata"
+CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_CREDENTIALS = True
+
+from corsheaders.defaults import default_methods, default_headers
+
+CORS_ALLOW_METHODS = list(default_methods)
+CORS_ALLOW_HEADERS = list(default_headers)

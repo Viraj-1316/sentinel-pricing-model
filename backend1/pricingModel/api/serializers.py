@@ -83,7 +83,7 @@ class AI_ENABLEDserializer(serializers.ModelSerializer):
         costing = serializers.IntegerField(source='price.costing')
         class Meta:
             model = Component
-            fields = ['id','min_cammeraA', 'max_cammeraA', 'AI_Component','VRAM', 'costing']  
+            fields = ['id','AI_feature', 'costing']  
             
 class ComponentDisplaySerializer(serializers.ModelSerializer):
     costing = serializers.IntegerField(source="price.costing", read_only=True)
@@ -172,6 +172,7 @@ class UserFinalQuotationSerializer(serializers.ModelSerializer):
             "ai_cost",
             "storage_cost",
             "storage_used_user",
+            "storage_days",
             "total_costing",
             "ai_features",
             "DurationU",

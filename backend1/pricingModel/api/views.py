@@ -231,7 +231,7 @@ class pricingCalculate(generics.ListCreateAPIView):
             storage_days = serializer.validated_data.get('storage_days', 1)
             ai_features = serializer.validated_data.get('ai_features', [])
             aiEnabledCam = serializer.validated_data.get('aiEnabledCam')
-            licenceDuration = serializer.validated_data.get['DurationU'] 
+            licenceDuration = serializer.validated_data['DurationU'] 
             
             if not cameras:
                 raise ValidationError("Camera count is required")
@@ -264,9 +264,9 @@ class pricingCalculate(generics.ListCreateAPIView):
             vram = int(0.6*aiEnabledCam1)
             cpuCores_required = int(0.128 * cameras)
             ram_required = int(0.256 * cameras)
- 
+
             # ---------- STORAGE COST ----------
-            storage_used = cameras * storage.storage_per_cam * storage_days
+            storage_used = cameras * storage_days
             storage_used_user = storage_used * 19
             
             # ---------- SAVE ----------
@@ -286,7 +286,7 @@ class pricingCalculate(generics.ListCreateAPIView):
     
  
  
-class pricingRecomendationview(generics.RetrieveUpdateAPIView):
+class pricingRecomendationview(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = UserFinalQuotationSerializer
     permission_classes = [IsAuthenticated]
  
@@ -392,7 +392,7 @@ class pricingRecomendationview(generics.RetrieveUpdateAPIView):
         licenseCost = licensePrice.costing
         
         # ---------- TOTAL ----------
-        total_cost = cpu_cost + gpu_cost + ai_cost + storage_cost 
+        total_cost = cpu_cost + gpu_cost + ai_cost + storage_cost + licenseCost
 
         serializer.save(
             cpu=cpu,
@@ -506,14 +506,14 @@ class processorUnit(generics.ListCreateAPIView):
         return [IsAuthenticated(), IsAdminUser()]
     
     def get_queryset(self):
-        return Component.objects.filter(category__name='license')
+        return Component.objects.filter(category__name='licence')
     
     def perform_create(self, serializer):
         
         costing = serializer.validated_data.pop('price')['costing']
         
         license = serializer.save(
-            category = Category.objects.get(name='license')
+            category = Category.objects.get(name='licence')
         )
  
         Price.objects.create(
@@ -524,7 +524,7 @@ class  processorUnitDetail(generics.RetrieveUpdateDestroyAPIView):
     
     serializer_class = licensePricingSerializer
     
-    queryset = Component.objects.filter(category__name='license')
+    queryset = Component.objects.filter(category__name='licence')
 
     permission_classes = [IsAdminUser]
     
