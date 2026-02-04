@@ -1,0 +1,46 @@
+version: "3.9"
+
+services:
+
+  postgres:
+    image: postgres:15
+    container_name: postgres_db
+    restart: always
+    environment:
+      POSTGRES_DB: pricing_model
+      POSTGRES_USER: viraj
+      POSTGRES_PASSWORD: viraj123
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  backend:
+    build: ./backend
+    container_name: django_backend
+    command: gunicorn backend.wsgi:application --bind 0.0.0.0:8001
+
+    volumes:
+      - ./backend:/app
+
+    ports:
+      - "8001:8001"
+
+    env_file:
+      - ./backend/.env   # ⭐ VERY IMPORTANT
+
+    depends_on:
+      - postgres
+
+
+  frontend:
+    build: ./frontend
+    container_name: angular_frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+
+
+volumes:
+  postgres_data:
