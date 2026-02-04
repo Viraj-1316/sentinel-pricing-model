@@ -69,7 +69,7 @@ savingPassword = false;
   };
 
   constructor(private router: Router, private http: HttpClient) {}
-  VERIFY_PASSWORD_API = "http://127.0.0.1:8001/accounts/verify-password/";
+  VERIFY_PASSWORD_API = "${environment.apiBaseUrl}/accounts/verify-password/";
 
   ngOnInit(): void {
     this.username = localStorage.getItem('username') || 'User';
@@ -92,7 +92,7 @@ savingPassword = false;
     // apply theme/accent immediately (premium feel)
     this.applyAppearance();
   }
-  UPDATE_PASSWORD_API = "http://127.0.0.1:8001/accounts/change-password/";
+  UPDATE_PASSWORD_API = "${environment.apiBaseUrl}/accounts/change-password/";
 
 updatePassword() {
   this.resetMessages();

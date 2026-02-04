@@ -4,7 +4,7 @@ import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { ToasterService } from '../service/toaster.service';
 import { Router } from '@angular/router';
-
+import { environment } from '../../environments/environment';
 type RoleFilter = 'all' | 'admin' | 'user';
 type SortBy = 'latest' | 'oldest' | 'name';
 
@@ -43,8 +43,8 @@ interface UserStats {
   styleUrl: './user-management.css',
 })
 export class UserManagement implements OnInit {
-  USERS_API = 'http://127.0.0.1:8001/pricing-Model/admin/users/';
-  QUOTATIONS_API = 'http://127.0.0.1:8001/pricing-Model/admin/quotations/';
+  USERS_API = `${environment.apiBaseUrl}/pricing-Model/admin/users/`;
+  QUOTATIONS_API = `${environment.apiBaseUrl}/pricing-Model/admin/quotations/`;
 
   loading = false;
   errorMsg: string | null = null;

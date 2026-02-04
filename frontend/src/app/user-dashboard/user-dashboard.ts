@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { AuthService } from '../service/auth.service';
- 
+import { environment } from '../../environments/environment'; 
 export interface Quotation {
   id: number;
   cammera: number;
@@ -48,9 +48,9 @@ export class UserDashboard implements OnInit {
   notifications: { title: string; message: string; time: string }[] = [];
 
   // API Endpoints
-  private QUOTATION_API = 'http://127.0.0.1:8001/pricing-Model/user-quotations/';
-  private DELETE_API = 'http://127.0.0.1:8001/pricing-Model/Pricingcalculation/';
-  private PDF_API = 'http://127.0.0.1:8001/pricing-Model/quotation/';
+  private QUOTATION_API = `${environment.apiBaseUrl}/pricing-Model/user-quotations/`;
+  private DELETE_API = `${environment.apiBaseUrl}/pricing-Model/Pricingcalculation/`;
+  private PDF_API = `${environment.apiBaseUrl}/pricing-Model/quotation/`;
 
   constructor(
     private http: HttpClient,

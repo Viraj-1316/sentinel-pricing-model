@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { Router } from '@angular/router';
-
+import { environment } from '../../environments/environment';
 @Component({
   selector: 'app-otp',
   standalone: true,
@@ -16,8 +16,8 @@ export class Otp {
   loading = false;
   errorMsg: string | null = null;
 
-  private VERIFY_OTP_URL = 'http://127.0.0.1:8001/accounts/verify-email-otp/';
-  private RESEND_OTP_URL = 'http://127.0.0.1:8001/accounts/send-email-otp/';
+  private VERIFY_OTP_URL = `${environment.apiBaseUrl}/accounts/verify-email-otp/`;
+  private RESEND_OTP_URL = `${environment.apiBaseUrl}/accounts/send-email-otp/`;
 
   email = sessionStorage.getItem("reg_email");   // ✅ changed
 

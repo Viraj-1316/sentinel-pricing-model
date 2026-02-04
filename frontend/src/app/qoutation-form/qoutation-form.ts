@@ -5,7 +5,7 @@ import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { ToasterService } from '../service/toaster.service';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
-
+import { environment } from '../../environments/environment';
 export interface QuotationRow {
   id: number;
   cammera: number;
@@ -58,7 +58,7 @@ viewQuotation() {
   if (!this.quotationData?.id) return;
 
   const id = this.quotationData.id;
-  const url = `http://127.0.0.1:8001/pricing-Model/quotation/${id}/pdf/`;
+  const url = `${environment.apiBaseUrl}/pricing-Model/quotation/${id}/pdf/`;
 
   this.loading = true;
 
@@ -105,7 +105,7 @@ sendEmailToOther() {
 }
 private sendEmail(payload: any) {
   const id = this.quotationData.id;
-  const url = `http://127.0.0.1:8001/pricing-Model/quotation/${id}/send-email/`;
+  const url = `${environment.apiBaseUrl}/pricing-Model/quotation/${id}/send-email/`;
 
   this.loading = true;
 
@@ -123,7 +123,7 @@ private sendEmail(payload: any) {
 }
 
   private API =
-    'http://127.0.0.1:8001/pricing-Model/Pricingcalculation';
+    `${environment.apiBaseUrl}/pricing-Model/Pricingcalculation`;
 
   constructor(
     private route: ActivatedRoute,
@@ -172,7 +172,7 @@ private sendEmail(payload: any) {
   if (!this.quotationData?.id) return;
 
   const id = this.quotationData.id;
-  const url = `http://127.0.0.1:8001/pricing-Model/quotation/${id}/pdf/`;
+  const url = `${environment.apiBaseUrl}/pricing-Model/quotation/${id}/pdf/`;
 
   this.toast.info(`Downloading PDF #${id}...`);
 

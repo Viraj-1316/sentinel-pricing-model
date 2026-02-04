@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
+import { environment } from '../../environments/environment';
 
 interface UserProfile {
   username: string;
@@ -23,7 +24,7 @@ interface UserProfile {
 })
 export class Profile implements OnInit {
 
-  PROFILE_API = 'http://127.0.0.1:8001/accounts/api/me/';
+  PROFILE_API = `${environment.apiBaseUrl}/accounts/api/me/`;
 
   loading = false;
   saving = false;

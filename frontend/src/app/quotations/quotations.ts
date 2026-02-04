@@ -5,6 +5,7 @@ import { RouterLink } from '@angular/router';
 import { AuthService } from '../service/auth.service';
 import { ToasterService } from '../service/toaster.service';
 import { ConfirmdialogService } from '../service/confirmdialog.service';
+import { environment } from '../../environments/environment';
 export interface QuotationRow {
   id: number;
   cammera: number;
@@ -65,8 +66,8 @@ export class Quotations implements OnInit {
   previewQuotation: QuotationRow | null = null;
 
   // ✅ APIs
-  private USER_LIST_API = 'http://127.0.0.1:8001/pricing-Model/user-quotations/';
-  private ADMIN_LIST_API = 'http://127.0.0.1:8001/pricing-Model/admin/quotations/';
+  private USER_LIST_API = `${environment.apiBaseUrl}/pricing-Model/user-quotations/`;
+  private ADMIN_LIST_API = `${environment.apiBaseUrl}/pricing-Model/admin/quotations/`;
 
   constructor(
     private http: HttpClient,
@@ -230,7 +231,7 @@ export class Quotations implements OnInit {
   downloadPdf(q: QuotationRow | null) {
     if (!q) return;
 
-    const url = `http://127.0.0.1:8001/pricing-Model/quotation/${q.id}/pdf/`;
+    const url = `${environment.apiBaseUrl}/pricing-Model/quotation/${q.id}/pdf/`;
 
     this.toast.info(`Downloading PDF #${q.id}...`);
 
@@ -257,7 +258,7 @@ export class Quotations implements OnInit {
   sendEmail(q: QuotationRow | null) {
     if (!q) return;
 
-    const url = `http://127.0.0.1:8001/pricing-Model/quotation/${q.id}/send-email/`;
+    const url = `${environment.apiBaseUrl}/pricing-Model/quotation/${q.id}/send-email/`;
 
     this.toast.info(`Sending email for quotation #${q.id}...`);
 
@@ -272,7 +273,7 @@ export class Quotations implements OnInit {
   if (!this.isAdmin || !q) return;
  
   const url =
-    `http://127.0.0.1:8001/pricing-Model/admin/quotations/${q.id}/`;
+    `${environment.apiBaseUrl}/pricing-Model/admin/quotations/${q.id}/`;
  
   const ok = await this.confirm.open(
     "Confirmation",

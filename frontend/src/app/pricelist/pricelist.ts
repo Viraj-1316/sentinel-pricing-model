@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { ReactiveFormsModule, FormBuilder, Validators, FormGroup } from '@angular/forms';
 import { ToasterService } from '../service/toaster.service';
-
+import { environment } from '../../environments/environment';
 type TabKey = 'category' | 'ai' | 'hardware' | 'storage' | 'licence';
 type HardwareTab = 'cpu' | 'gpu';
 
@@ -35,7 +35,7 @@ export class Pricelist implements OnInit {
   editingLicenceId: number | null = null;
 
   // API Endpoints
-  private BASE_URL = 'http://127.0.0.1:8001/pricing-Model';
+  private BASE_URL = `${environment.apiBaseUrl}/pricing-Model`;
   private API = {
     category: `${this.BASE_URL}/create-category/`,
     ai: `${this.BASE_URL}/ai-feature/`,

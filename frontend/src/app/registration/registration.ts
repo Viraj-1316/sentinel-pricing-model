@@ -10,7 +10,7 @@ import {
 } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { HttpClient, HttpClientModule } from '@angular/common/http';
-
+import { environment } from '../../environments/environment';
 
 function passwordMatchValidator(group: AbstractControl): ValidationErrors | null {
   const password = group.get('password')?.value;
@@ -36,7 +36,7 @@ export class Registration {
   showPassword = false;
   showConfirmPassword = false;
 
-  private SEND_OTP_URL = 'http://127.0.0.1:8001/accounts/send-email-otp/';
+  private SEND_OTP_URL = `${environment.apiBaseUrl}/accounts/send-email-otp/`;
 
   constructor(
     private fb: FormBuilder,

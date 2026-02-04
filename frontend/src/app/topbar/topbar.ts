@@ -6,7 +6,7 @@ import { ToasterService } from '../service/toaster.service';
 import { ConfirmdialogService } from '../service/confirmdialog.service';
 import { ActivatedRoute, NavigationEnd } from '@angular/router';
 import { filter } from 'rxjs/operators';
-
+import { environment } from '../../environments/environment';
 export interface Quotation {
   id: number;
   cammera: number;
@@ -39,7 +39,7 @@ export class Topbar implements OnInit {
   userInitial = 'U';
 
   // ✅ API
-  QUOTATION_API = 'http://127.0.0.1:8001/pricing-Model/user-quotations/';
+  QUOTATION_API = `${environment.apiBaseUrl}/pricing-Model/user-quotations/`;
 
   // ✅ dashboard fields
   quotations: Quotation[] = [];

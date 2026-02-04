@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { environment } from '../environments/environment';
+import { environment } from '../../environments/environment';
 import { Observable, tap, BehaviorSubject } from 'rxjs';
 import { Router } from '@angular/router';
 
@@ -18,7 +18,7 @@ export interface MeResponse {
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
-  private baseUrl = environment.apiBaseUrl;
+  private baseUrl = `${environment.apiBaseUrl}`;
 
   // ✅ store user info globally
   private meSubject = new BehaviorSubject<MeResponse | null>(null);
@@ -31,7 +31,7 @@ export class AuthService {
 
   // ✅ Login API
   login(payload: { username: string; password: string }): Observable<TokenResponse> {
-    return this.http.post<TokenResponse>(`${this.baseUrl}/accounts/api/token/`, payload);
+    return this.http.post<TokenResponse>(`${environment.apiBaseUrl}/accounts/api/token/`, payload);
   }
 
   // ✅ Refresh Token API

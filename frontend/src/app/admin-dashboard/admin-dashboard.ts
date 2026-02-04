@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { RouterModule } from '@angular/router';
 import { ConfirmdialogService } from '../service/confirmdialog.service';
+import { environment } from '../../environments/environment';
 
 type ActiveSection = 'users' | 'quotations' | 'logs' | null;
 
@@ -40,9 +41,9 @@ interface AuditLog {
 export class AdminDashboard implements OnInit {
 
   // ✅ API Endpoints
-  USERS_API = 'http://127.0.0.1:8001/pricing-Model/admin/users/';
-  QUOTATIONS_API = 'http://127.0.0.1:8001/pricing-Model/admin/quotations/';
-  LOGS_API = 'http://127.0.0.1:8001/pricing-Model/admin/audit-logs/';
+  USERS_API = `${environment.apiBaseUrl}/pricing-Model/admin/users/`;
+  QUOTATIONS_API = `${environment.apiBaseUrl}/pricing-Model/admin/quotations/`;
+  LOGS_API = `${environment.apiBaseUrl}/pricing-Model/admin/audit-logs/`;
 
   // counts
   totalUsers = 0;

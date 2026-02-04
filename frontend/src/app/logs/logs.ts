@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { ToasterService } from '../service/toaster.service';
-
+import { environment } from '../../environments/environment';
 type SortBy = 'latest' | 'oldest';
 type ActionFilter = 'all' | 'LOGIN' | 'LOGOUT' | 'CREATE_QUOTATION' | 'DOWNLOAD_PDF' | 'SEND_EMAIL' | 'DELETE_QUOTATION' | 'UPDATE_PRICING';
 
@@ -27,7 +27,7 @@ export interface AuditLogRow {
 export class Logs implements OnInit {
 
   // ✅ API endpoint
-  private LOGS_API = 'http://127.0.0.1:8001/pricing-Model/admin/audit-logs/';
+  private LOGS_API = `${environment.apiBaseUrl}/pricing-Model/admin/audit-logs/`;
 
   loading = false;
   errorMsg: string | null = null;

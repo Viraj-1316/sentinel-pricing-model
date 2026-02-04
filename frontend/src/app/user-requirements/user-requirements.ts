@@ -3,7 +3,7 @@ import { Router } from '@angular/router';
 import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { HttpClient, HttpClientModule } from '@angular/common/http';
-
+import { environment } from '../../environments/environment';
 @Component({
   selector: 'app-user-requirements',
   standalone: true,
@@ -33,9 +33,9 @@ export class UserRequirements implements OnInit {
   // Store backend license data
   DurationU: any[] = []; 
   
-  private AI_FEATURES_API = 'http://127.0.0.1:8001/pricing-Model/ai-feature/';
-  private CALCULATE_API = 'http://127.0.0.1:8001/pricing-Model/Pricingcalculation/';
-  private LICENSE_API = 'http://127.0.0.1:8001/pricing-Model/processorUnit/';
+  private AI_FEATURES_API = `${environment.apiBaseUrl}/pricing-Model/ai-feature/`;
+  private CALCULATE_API = `${environment.apiBaseUrl}/pricing-Model/Pricingcalculation/`;
+  private LICENSE_API = `${environment.apiBaseUrl}/pricing-Model/processorUnit/`;
 
   constructor(
     private fb: FormBuilder,
@@ -142,7 +142,7 @@ export class UserRequirements implements OnInit {
   goToQuotationForm(): void {
     if (!this.costCalculated || !this.requirements?.id) return;
 
-    const API_URL = `http://127.0.0.1:8001/pricing-Model/Pricingcalculation/${this.requirements.id}/`;
+    const API_URL = `${environment.apiBaseUrl}/pricing-Model/Pricingcalculation/${this.requirements.id}/`;
 
     const payload = {
       include_cpu: this.includeCPU,
