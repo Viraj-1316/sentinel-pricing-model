@@ -50,7 +50,7 @@ export class UserDashboard implements OnInit {
   // API Endpoints
   private QUOTATION_API = 'http://127.0.0.1:8001/pricing-Model/user-quotations/';
   private DELETE_API = 'http://127.0.0.1:8001/pricing-Model/Pricingcalculation/';
-  private PDF_API = 'http://127.0.0.1:8001/pricing-Model/generate-pdf/';
+  private PDF_API = 'http://127.0.0.1:8001/pricing-Model/quotation/';
 
   constructor(
     private http: HttpClient,
@@ -138,7 +138,7 @@ export class UserDashboard implements OnInit {
    * Opens the backend PDF view in a new browser tab
    */
   downloadPDF(id: number): void {
-    const url = `${this.PDF_API}${id}/`;
+    const url = `${this.PDF_API}${id}/pdf/`;
     window.open(url, '_blank');
   }
 
