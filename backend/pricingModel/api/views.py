@@ -124,7 +124,7 @@ class cameraSlabsCS(generics.ListCreateAPIView):
         costing = serializer.validated_data.pop('price')['costing']
  
         component = serializer.save(
-            category=Category.objects.get(name='Camera')
+            category=Category.objects.get(name='Processor')
         )
  
         Price.objects.create(
@@ -137,7 +137,7 @@ class cameraSlabRUD(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = processorSerializer
  
     def get_queryset(self):
-        return Component.objects.filter(category__name='Procrssor')
+        return Component.objects.filter(category__name='Processor')
     
     def get_permissions(self):
         if self.request.method == "GET":

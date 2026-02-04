@@ -1,0 +1,9 @@
+venv
+__pycache__
+*.pyc
+db.postgres
+.env
+.git
+.gitignore
+node_modules
+dist
