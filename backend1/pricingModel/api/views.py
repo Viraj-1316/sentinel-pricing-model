@@ -387,7 +387,13 @@ class pricingRecomendationview(generics.RetrieveUpdateDestroyAPIView):
             category__name="licence",
             ).first()
         
+        if not license:
+            raise ValidationError("licence component not configured")
+        
         licensePrice = Price.objects.filter(component=license).first()
+        
+        if not licensePrice:
+            raise ValidationError("licence price not configured")
         
         licenseCost = licensePrice.costing
         
