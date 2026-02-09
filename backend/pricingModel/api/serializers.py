@@ -253,6 +253,7 @@ class processorSerializer(serializers.ModelSerializer):
         model = Component
     
         fields = [
+            "id",
             "min_cammeraA",
             "max_cammeraA",
             "min_cammera",

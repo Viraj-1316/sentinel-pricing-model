@@ -333,12 +333,12 @@ class pricingRecomendationview(generics.RetrieveUpdateDestroyAPIView):
             if vramUser <= 48:
                 gpu = Component.objects.filter(
                     category__name="Processor",
-                    VRAM__isnull=False,
+                    VRAM__gt=0,
                     VRAM__gte=vramUser
                 ).order_by("VRAM").first()
 
-                if not gpu:
-                    raise ValidationError("No GPU meets VRAM requirement")
+                # if not gpu:
+                #     raise ValidationError("No GPU meets VRAM requirement")
 
                 gpu_price = Price.objects.filter(component=gpu).first()
                 
