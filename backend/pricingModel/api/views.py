@@ -71,19 +71,34 @@ class AdminQuatationDetail(generics.RetrieveDestroyAPIView):
 @permission_classes([IsAuthenticated])
 def send_quotation_email(request, pk):
  
-    quotation = UserPricing.objects.filter(pk=pk, user_name=request.user).first()
+    quotation = UserPricing.objects.filter(
+        pk=pk,
+        user_name=request.user
+    ).first()
+ 
     if not quotation:
         return Response({"detail": "Quotation not found"}, status=404)
  
-    to_email = request.user.email
+    print("REQUEST DATA:", request.data)
+    print("USER EMAIL:", request.user.email)
+ 
+    # ✅ FIX: read email from payload OR user
+    to_email = (
+        request.data.get("Email")
+        or request.data.get("email")
+        or request.user.email
+    )
+ 
     if not to_email:
         return Response({"detail": "Email is required"}, status=400)
  
-    # ✅ Celery Task Trigger (async)
-    send_quotation_email_task.delay(quotation.id, request.user.username, to_email)
+    send_quotation_email_task.delay(
+        quotation.id,
+        request.user.username,
+        to_email
+    )
  
     return Response({"detail": "Email sending started ✅"})
- 
  
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
