@@ -36,7 +36,8 @@ class Component(models.Model):
     min_cammeraA = models.IntegerField(null=True, blank=True)
     max_cammeraA = models.IntegerField(null=True, blank=True)
     AI_Component = models.CharField(max_length=100, null=True, blank=True)
-    VRAM = models.CharField(max_length=50, blank=True)
+    VRAM = models.PositiveIntegerField(null=True, blank=True)
+
     
     # ---- Storage ----
     storage_per_cam = models.IntegerField(null=True, blank=True)

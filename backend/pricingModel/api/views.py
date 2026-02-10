@@ -337,15 +337,19 @@ class pricingRecomendationview(generics.RetrieveUpdateDestroyAPIView):
                     VRAM__gte=vramUser
                 ).order_by("VRAM").first()
 
-                # if not gpu:
-                #     raise ValidationError("No GPU meets VRAM requirement")
+                if not gpu:
+                    raise ValidationError("No GPU meets VRAM requirement")
 
-                gpu_price = Price.objects.filter(component=gpu).first()
-                
-                if not gpu_price:
+                # gpu_price = Price.objects.filter(component=gpu).first()
+                try:
+                    gpu_cost = gpu.price.costing
+                except Price.DoesNotExist:
                     raise ValidationError("GPU price not configured")
 
-                gpu_cost = gpu_price.costing
+                # if not gpu_price:
+                #     raise ValidationError("GPU price not configured")
+
+                # gpu_cost = gpu_price.costing
             else:
                 gpu_units = math.ceil(vramUser / 48)
                 gpu = Component.objects.filter(
