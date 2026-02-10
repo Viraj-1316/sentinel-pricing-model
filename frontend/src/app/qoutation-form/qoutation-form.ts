@@ -20,14 +20,14 @@ export interface QuotationRow {
   ai_features: AiFeature[];
   // admin fields
   username?: string;
-  email?: string;
+  Email?: string;
 }
 export interface AiFeature {
   id: number;
   AI_feature: string;
   costing: number;
 }
-
+ 
 @Component({
   selector: 'app-qoutation-form',
   standalone: true,
@@ -35,7 +35,7 @@ export interface AiFeature {
   templateUrl: './qoutation-form.html',
   styleUrl: './qoutation-form.css'
 })
-
+ 
 export class QoutationForm implements OnInit {
  
   quotationId!: number;
@@ -53,24 +53,24 @@ showPdf = false;
 pdfUrl: any;
 showEmailModal = false;
 otherEmail = '';
-
+ 
 viewQuotation() {
   if (!this.quotationData?.id) return;
-
+ 
   const id = this.quotationData.id;
   const url = `${environment.apiBaseUrl}/pricing-Model/quotation/${id}/pdf/`;
-
+ 
   this.loading = true;
-
+ 
   this.http.get(url, { responseType: 'blob' }).subscribe({
     next: (blob) => {
       const file = new Blob([blob], { type: 'application/pdf' });
       const objectUrl = URL.createObjectURL(file);
-
+ 
       this.pdfUrl = this.sanitizer.bypassSecurityTrustResourceUrl(objectUrl);
       this.showPdf = true;
       this.loading = false;
-
+ 
       // prevent background scroll
       document.body.style.overflow = 'hidden';
     },
@@ -80,13 +80,14 @@ viewQuotation() {
     }
   });
 }
-
-
+ 
+ 
 closePdf() {
   this.showPdf = false;
   document.body.style.overflow = '';
 }
-
+ 
+ 
 openSendEmailModal() {
   this.showEmailModal = true;
   this.otherEmail = '';
@@ -101,14 +102,15 @@ sendEmailToSelf() {
 }
 sendEmailToOther() {
   if (!this.otherEmail) return;
-  this.sendEmail({ email: this.otherEmail });
+  this.sendEmail({ Email: this.otherEmail });
 }
+ 
 private sendEmail(payload: any) {
   const id = this.quotationData.id;
   const url = `${environment.apiBaseUrl}/pricing-Model/quotation/${id}/send-email/`;
-
+ 
   this.loading = true;
-
+ 
   this.http.post(url, payload).subscribe({
     next: () => {
       this.toast.success('Quotation email sent successfully');
@@ -121,71 +123,71 @@ private sendEmail(payload: any) {
     }
   });
 }
-
+ 
   private API =
     `${environment.apiBaseUrl}/pricing-Model/Pricingcalculation`;
-
+ 
   constructor(
     private route: ActivatedRoute,
     private http: HttpClient,
     private toast: ToasterService,
     private sanitizer: DomSanitizer
-
+ 
   ) {}
-
+ 
   ngOnInit(): void {
     this.quotationId = Number(this.route.snapshot.paramMap.get('id'));
-
+ 
     if (!this.quotationId) {
       this.errorMsg = 'Invalid quotation ID';
       return;
     }
-
+ 
     this.fetchQuotation();
   }
-
+ 
   // ================= FETCH =================
   fetchQuotation(): void {
     this.loading = true;
-
+ 
     this.http.get<any>(`${this.API}/${this.quotationId}/`)
       .subscribe({
    next: (res) => {
   this.quotationData = res;
-
+ 
   // Clear stale objects if disabled
   if (!this.includeCPU) {
     this.quotationData.cpu = null;
     this.quotationData.cpu_cost = 0;
   }
-
+ 
   if (!this.includeGPU) {
     this.quotationData.gpu = null;
     this.quotationData.gpu_cost = 0;
   }
-
+ 
   this.loading = false;
 }}
 );
   }
- downloadPdf() {
+downloadPdf() {
   if (!this.quotationData?.id) return;
-
+ 
   const id = this.quotationData.id;
   const url = `${environment.apiBaseUrl}/pricing-Model/quotation/${id}/pdf/`;
-
+ 
   this.toast.info(`Downloading PDF #${id}...`);
-
+ 
   this.http.get(url, { responseType: 'blob' }).subscribe({
     next: (blob) => {
       const file = new Blob([blob], { type: 'application/pdf' });
       const downloadURL = window.URL.createObjectURL(file);
-
+ 
       const a = document.createElement('a');
       a.href = downloadURL;
       a.download = `quotation_${id}.pdf`;
       a.click();
-
+ 
       window.URL.revokeObjectURL(downloadURL);
       this.toast.success(`PDF downloaded: #${id}`);
     },
@@ -194,8 +196,8 @@ private sendEmail(payload: any) {
     },
   });
 }
-
- // ================= UPDATE =================
+ 
+// ================= UPDATE =================
   updateQuotation(): void {
     const payload = {
       include_cpu: this.includeCPU,
@@ -203,9 +205,9 @@ private sendEmail(payload: any) {
       // include_ai: this.includeAI,
       include_storage: this.includeStorage
     };
-
+ 
     this.loading = true;
-
+ 
     this.http.patch<any>(
       `${this.API}/${this.quotationId}/`,
       payload
@@ -221,4 +223,5 @@ private sendEmail(payload: any) {
     });
   }
 }
+ 
  
