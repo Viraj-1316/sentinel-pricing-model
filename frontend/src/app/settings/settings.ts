@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
-
+import { environment } from '../../environments/environment';
 type ActiveTab = 'account' | 'security' | 'preferences' | 'notifications' | 'admin';
 
 @Component({
@@ -70,7 +70,7 @@ savingPassword = false;
 
   constructor(private router: Router, private http: HttpClient) {}
   VERIFY_PASSWORD_API = "${environment.apiBaseUrl}/accounts/verify-password/";
-
+ ME_API = `${environment.apiBaseUrl}/accounts/api/me/`;
   ngOnInit(): void {
     this.username = localStorage.getItem('username') || 'User';
     this.role = (localStorage.getItem('role') || 'User') as any;
@@ -220,17 +220,47 @@ verifyCurrentPassword() {
     }, 400);
   }
 
- applyAppearance() {
-  const mode = this.settings.preferences.appearance; // light | dark | system
-  const finalTheme =
-    mode === 'system'
-      ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
-      : mode;
-
-  document.body.setAttribute('data-theme', finalTheme);
-  localStorage.setItem('theme', finalTheme);
+applyAppearance() {
+  const html = document.documentElement;
+  const body = document.body;
+  
+  // Remove existing theme classes
+  html.classList.remove('theme-light', 'theme-dark');
+  body.classList.remove('theme-light', 'theme-dark');
+  
+  // Remove existing accent classes
+  html.classList.remove('accent-blue', 'accent-purple', 'accent-green', 'accent-orange');
+  
+  // Apply appearance mode
+  const appearance = this.settings.preferences.appearance || 'dark';
+  
+  if (appearance === 'light') {
+    html.classList.add('theme-light');
+    body.classList.add('theme-light');
+    html.setAttribute('data-bs-theme', 'light');
+  } else if (appearance === 'dark') {
+    html.classList.add('theme-dark');
+    body.classList.add('theme-dark');
+    html.setAttribute('data-bs-theme', 'dark');
+  } else if (appearance === 'system') {
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const theme = prefersDark ? 'dark' : 'light';
+    html.classList.add(`theme-${theme}`);
+    body.classList.add(`theme-${theme}`);
+    html.setAttribute('data-bs-theme', theme);
+  }
+  
+  // Apply accent color
+  const accent = this.settings.preferences.accent || 'blue';
+  html.classList.add(`accent-${accent}`);
+  
+  // Apply compact mode
+  if (this.settings.preferences.compactMode) {
+    body.classList.add('compact-mode');
+  } else {
+    body.classList.remove('compact-mode');
+  }
 }
-
 
 
 

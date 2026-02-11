@@ -73,30 +73,29 @@ export const routes: Routes = [
 
       // Admin
       {
-        path: 'admin',
-        canActivate: [adminGuard],
-        data: { breadcrumb: { root: 'Admin', current: 'Admin Panel' } },
-        children: [
-          {
-            path: 'pricelist',
-            loadComponent: () =>
-              import('./pricelist/pricelist').then(m => m.Pricelist),
-            data: { breadcrumb: { root: 'Admin', current: 'Price List' } }
-          },
-          {
-            path: 'user-management',
-            loadComponent: () =>
-              import('./user-management/user-management').then(m => m.UserManagement),
-            data: { breadcrumb: { root: 'Admin', current: 'User Management' } }
-          },
-          {
-            path: 'logs',
-            loadComponent: () =>
-              import('./logs/logs').then(m => m.Logs),
-            data: { breadcrumb: { root: 'Admin', current: 'System Logs' } }
-          }
-        ],
-      },
+  path: 'admin',
+  canActivate: [adminGuard],
+  children: [
+
+    { path: '', pathMatch: 'full', redirectTo: 'pricelist' },  // ✅ IMPORTANT FIX
+
+    {
+      path: 'pricelist',
+      loadComponent: () =>
+        import('./pricelist/pricelist').then(m => m.Pricelist),
+    },
+    {
+      path: 'user-management',
+      loadComponent: () =>
+        import('./user-management/user-management').then(m => m.UserManagement),
+    },
+    {
+      path: 'logs',
+      loadComponent: () =>
+        import('./logs/logs').then(m => m.Logs),
+    }
+  ]
+},
     ],
   },
 

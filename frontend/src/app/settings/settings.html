@@ -124,21 +124,25 @@
           </div>
 
           <div class="row g-3">
-            <div class="col-12 col-md-6">
-              <label class="form-label small text-muted">Email</label>
-              <input type="email"
-                     class="form-control form-control-lg rounded-3"
-                     [(ngModel)]="settings.account.email"
-                     placeholder="Enter email">
-            </div>
+          <!-- Email (Read Only) -->
+<div class="col-12 col-md-6">
+  <label class="form-label small text-muted">Email</label>
 
-            <div class="col-12 col-md-6">
-              <label class="form-label small text-muted">Phone Number</label>
-              <input type="text"
-                     class="form-control form-control-lg rounded-3"
-                     [(ngModel)]="settings.account.phone_number"
-                     placeholder="Enter phone number">
-            </div>
+  <div class="form-control form-control-lg rounded-3 bg-light">
+    <i class="bi bi-envelope me-2 text-muted"></i>
+    {{ settings.account.email || 'Not available' }}
+  </div>
+</div>
+
+<!-- Phone Number (Read Only) -->
+<div class="col-12 col-md-6">
+  <label class="form-label small text-muted">Phone Number</label>
+
+  <div class="form-control form-control-lg rounded-3 bg-light">
+    <i class="bi bi-telephone me-2 text-muted"></i>
+    {{ settings.account.phone_number || 'Not available' }}
+  </div>
+</div>
 
             <div class="col-12 col-md-6">
               <label class="form-label small text-muted">Region</label>

@@ -1,328 +1,466 @@
 <div class="um-page">
+  
+  <!-- Animated Background -->
+  <div class="um-bg-animation">
+    <div class="um-shape um-shape-1"></div>
+    <div class="um-shape um-shape-2"></div>
+    <div class="um-shape um-shape-3"></div>
+  </div>
 
-  <!-- Header -->
-  <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-3">
-    <div>
-      <h4 class="fw-bold mb-0">User Management</h4>
-      <div class="text-muted small">Admin control panel • Users • Roles • Activity</div>
-    </div>
+  <!-- Header Section -->
+  <div class="um-header mb-4 animate-slide-down">
+    <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
+      <div>
+        <h2 class="fw-bold mb-2 d-flex align-items-center gap-2">
+          <i class="bi bi-people-fill text-primary"></i>
+          User Management
+        </h2>
+        <div class="um-breadcrumb">
+          <i class="bi bi-shield-check me-2"></i>
+          <span>Admin Control Panel</span>
+          <span class="mx-2">•</span>
+          <span>Users</span>
+          <span class="mx-2">•</span>
+          <span>Roles & Activity</span>
+        </div>
+      </div>
 
-    <div class="d-flex gap-2">
-      <button class="btn btn-outline-secondary rounded-3" (click)="refresh()">
-        <i class="bi bi-arrow-clockwise me-2"></i>Refresh
-      </button>
+      <div class="d-flex gap-2">
+        <button class="btn btn-outline-primary rounded-pill px-4 btn-hover-lift" (click)="refresh()">
+          <i class="bi bi-arrow-clockwise me-2"></i>Refresh Data
+        </button>
+      </div>
     </div>
   </div>
 
-  <!-- KPI Cards -->
-  <div class="row g-3 mb-4">
-
+  <!-- KPI Dashboard Cards -->
+  <div class="row g-4 mb-4">
+    
+    <!-- Total Users -->
     <div class="col-12 col-md-6 col-xl-3">
-      <div class="card border-0 shadow-sm rounded-4 kpi-card">
-        <div class="card-body p-4">
-          <div class="d-flex justify-content-between align-items-start">
-            <div>
-              <div class="text-muted small">Total Users</div>
-              <div class="fw-bold fs-2">{{ totalUsers }}</div>
+      <div class="um-kpi-card animate-fade-in" style="animation-delay: 0.1s;">
+        <div class="um-kpi-glow um-glow-blue"></div>
+        <div class="um-kpi-content">
+          <div class="d-flex justify-content-between align-items-start mb-3">
+            <div class="um-kpi-icon um-icon-blue">
+              <i class="bi bi-people-fill"></i>
             </div>
-            <div class="icon-box bg-primary bg-opacity-10 text-primary">
-              <i class="bi bi-people"></i>
+            <div class="um-kpi-badge badge-blue">
+              <i class="bi bi-graph-up-arrow me-1"></i>Total
             </div>
           </div>
-          <div class="text-muted small mt-2">All registered users</div>
+          <div class="um-kpi-label">Total Users</div>
+          <div class="um-kpi-value">{{ totalUsers }}</div>
+          <div class="um-kpi-desc">All registered users</div>
         </div>
       </div>
     </div>
 
+    <!-- Active Users -->
     <div class="col-12 col-md-6 col-xl-3">
-      <div class="card border-0 shadow-sm rounded-4 kpi-card">
-        <div class="card-body p-4">
-          <div class="d-flex justify-content-between align-items-start">
-            <div>
-              <div class="text-muted small">Active Users</div>
-              <div class="fw-bold fs-2">{{ activeUsers }}</div>
+      <div class="um-kpi-card animate-fade-in" style="animation-delay: 0.2s;">
+        <div class="um-kpi-glow um-glow-green"></div>
+        <div class="um-kpi-content">
+          <div class="d-flex justify-content-between align-items-start mb-3">
+            <div class="um-kpi-icon um-icon-green">
+              <i class="bi bi-check-circle-fill"></i>
             </div>
-            <div class="icon-box bg-success bg-opacity-10 text-success">
-              <i class="bi bi-check2-circle"></i>
+            <div class="um-kpi-badge badge-green">
+              <i class="bi bi-activity me-1"></i>Active
             </div>
           </div>
-          <div class="text-muted small mt-2">Available / enabled users</div>
+          <div class="um-kpi-label">Active Users</div>
+          <div class="um-kpi-value">{{ activeUsers }}</div>
+          <div class="um-kpi-desc">Available & enabled</div>
         </div>
       </div>
     </div>
 
+    <!-- Admins -->
     <div class="col-12 col-md-6 col-xl-3">
-      <div class="card border-0 shadow-sm rounded-4 kpi-card">
-        <div class="card-body p-4">
-          <div class="d-flex justify-content-between align-items-start">
-            <div>
-              <div class="text-muted small">Admins</div>
-              <div class="fw-bold fs-2">{{ totalAdmins }}</div>
+      <div class="um-kpi-card animate-fade-in" style="animation-delay: 0.3s;">
+        <div class="um-kpi-glow um-glow-red"></div>
+        <div class="um-kpi-content">
+          <div class="d-flex justify-content-between align-items-start mb-3">
+            <div class="um-kpi-icon um-icon-red">
+              <i class="bi bi-shield-lock-fill"></i>
             </div>
-            <div class="icon-box bg-danger bg-opacity-10 text-danger">
-              <i class="bi bi-shield-lock"></i>
+            <div class="um-kpi-badge badge-red">
+              <i class="bi bi-star-fill me-1"></i>Admin
             </div>
           </div>
-          <div class="text-muted small mt-2">Staff / superusers</div>
+          <div class="um-kpi-label">Administrators</div>
+          <div class="um-kpi-value">{{ totalAdmins }}</div>
+          <div class="um-kpi-desc">Staff & superusers</div>
         </div>
       </div>
     </div>
 
+    <!-- New Users -->
     <div class="col-12 col-md-6 col-xl-3">
-      <div class="card border-0 shadow-sm rounded-4 kpi-card">
-        <div class="card-body p-4">
-          <div class="d-flex justify-content-between align-items-start">
-            <div>
-              <div class="text-muted small">New Users</div>
-              <div class="fw-bold fs-2">{{ newUsers7d }}</div>
+      <div class="um-kpi-card animate-fade-in" style="animation-delay: 0.4s;">
+        <div class="um-kpi-glow um-glow-yellow"></div>
+        <div class="um-kpi-content">
+          <div class="d-flex justify-content-between align-items-start mb-3">
+            <div class="um-kpi-icon um-icon-yellow">
+              <i class="bi bi-person-plus-fill"></i>
             </div>
-            <div class="icon-box bg-warning bg-opacity-10 text-warning">
-              <i class="bi bi-person-plus"></i>
+            <div class="um-kpi-badge badge-yellow">
+              <i class="bi bi-clock-fill me-1"></i>7 Days
             </div>
           </div>
-          <div class="text-muted small mt-2">Joined in last 7 days</div>
+          <div class="um-kpi-label">New Users</div>
+          <div class="um-kpi-value">{{ newUsers7d }}</div>
+          <div class="um-kpi-desc">Joined last week</div>
         </div>
       </div>
     </div>
 
   </div>
 
-  <!-- Filters -->
-  <div class="card border-0 shadow-sm rounded-4 mb-4">
-    <div class="card-body p-4">
-
+  <!-- Filters Card -->
+  <div class="um-filter-card animate-fade-in" style="animation-delay: 0.5s;">
+    <div class="um-filter-header">
+      <i class="bi bi-funnel-fill me-2"></i>
+      <span class="fw-semibold">Search & Filter</span>
+    </div>
+    
+    <div class="um-filter-body">
       <div class="row g-3 align-items-end">
+        
+        <!-- Search -->
         <div class="col-12 col-md-6 col-xl-5">
-          <label class="form-label small fw-semibold text-muted">Search</label>
-          <div class="input-group">
-            <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
-            <input class="form-control" placeholder="Search username / email / phone"
-                   [(ngModel)]="search" (input)="applyFilters()">
+          <label class="um-label">
+            <i class="bi bi-search me-1"></i> Search Users
+          </label>
+          <div class="um-search-wrapper">
+            <i class="bi bi-search um-search-icon"></i>
+            <input class="um-search-input" 
+                   placeholder="Username, email, or phone number..."
+                   [(ngModel)]="search" 
+                   (input)="applyFilters()">
+            <div class="um-search-underline"></div>
           </div>
         </div>
 
+        <!-- Role Filter -->
         <div class="col-6 col-md-3 col-xl-3">
-          <label class="form-label small fw-semibold text-muted">Role</label>
-          <select class="form-select" [(ngModel)]="roleFilter" (change)="applyFilters()">
-            <option value="all">All</option>
-            <option value="admin">Admin</option>
-            <option value="user">User</option>
+          <label class="um-label">
+            <i class="bi bi-shield-check me-1"></i> Role
+          </label>
+          <select class="um-select" [(ngModel)]="roleFilter" (change)="applyFilters()">
+            <option value="all">All Roles</option>
+            <option value="admin">Administrators</option>
+            <option value="user">Regular Users</option>
           </select>
         </div>
 
+        <!-- Sort -->
         <div class="col-6 col-md-3 col-xl-2">
-          <label class="form-label small fw-semibold text-muted">Sort</label>
-          <select class="form-select" [(ngModel)]="sortBy" (change)="applyFilters()">
-            <option value="latest">Latest</option>
-            <option value="oldest">Oldest</option>
-            <option value="name">Name</option>
+          <label class="um-label">
+            <i class="bi bi-sort-down me-1"></i> Sort By
+          </label>
+          <select class="um-select" [(ngModel)]="sortBy" (change)="applyFilters()">
+            <option value="latest">Latest First</option>
+            <option value="oldest">Oldest First</option>
+            <option value="name">Name (A-Z)</option>
           </select>
         </div>
 
+        <!-- Results Count -->
         <div class="col-12 col-xl-2 d-flex justify-content-xl-end">
-          <span class="badge rounded-pill text-bg-primary px-4 py-2">
-            Showing {{ filtered.length }}
-          </span>
+          <div class="um-result-badge">
+            <i class="bi bi-filter-circle me-2"></i>
+            <span class="fw-bold">{{ filtered.length }}</span>
+            <span class="ms-1">results</span>
+          </div>
         </div>
+        
       </div>
-
     </div>
   </div>
 
-  <!-- Error -->
-  <div *ngIf="errorMsg" class="alert alert-danger rounded-4">
-    <i class="bi bi-exclamation-triangle me-2"></i>{{ errorMsg }}
+  <!-- Error Message -->
+  <div *ngIf="errorMsg" class="um-alert animate-shake">
+    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+    {{ errorMsg }}
   </div>
 
-  <!-- Loading -->
-  <div *ngIf="loading" class="text-muted d-flex align-items-center gap-2 mb-3">
-    <span class="spinner-border spinner-border-sm"></span>
-    Loading users...
+  <!-- Loading State -->
+  <div *ngIf="loading" class="um-loading">
+    <div class="um-spinner"></div>
+    <p class="mt-3 text-muted">Loading users data...</p>
   </div>
 
-  <!-- Table -->
-  <div class="card border-0 shadow-sm rounded-4 overflow-hidden" *ngIf="!loading">
-    <div class="table-responsive um-table">
-      <table class="table table-hover align-middle mb-0">
-        <thead class="table-light">
+  <!-- Users Table -->
+  <div class="um-table-card animate-fade-in" style="animation-delay: 0.6s;" *ngIf="!loading">
+   <div class="um-table-wrapper">
+
+  <table class="um-table">
+
+        <thead>
           <tr>
-            <th>User</th>
-            <th>Email</th>
-            <th>Role</th>
-            <th class="text-end">Quotations</th>
-            <th class="text-end">Revenue</th>
-            <th>Joined</th>
-            <th>Last Login</th>
-            <th style="width:220px;" class="text-end">Actions</th>
+            <th>
+              <div class="um-th-content">
+                <i class="bi bi-person-badge me-2"></i>User
+              </div>
+            </th>
+            <th>
+              <div class="um-th-content">
+                <i class="bi bi-envelope me-2"></i>Email
+              </div>
+            </th>
+            <th>
+              <div class="um-th-content">
+                <i class="bi bi-shield me-2"></i>Role
+              </div>
+            </th>
+            <th class="text-end">
+              <div class="um-th-content justify-content-end">
+                <i class="bi bi-receipt me-2"></i>Quotations
+              </div>
+            </th>
+            <th class="text-end">
+              <div class="um-th-content justify-content-end">
+                <i class="bi bi-currency-rupee me-2"></i>Revenue
+              </div>
+            </th>
+            <th>
+              <div class="um-th-content">
+                <i class="bi bi-calendar-plus me-2"></i>Joined
+              </div>
+            </th>
+            <th>
+              <div class="um-th-content">
+                <i class="bi bi-clock-history me-2"></i>Last Login
+              </div>
+            </th>
+            <th class="text-end">
+              <div class="um-th-content justify-content-end">
+                <i class="bi bi-gear me-2"></i>Actions
+              </div>
+            </th>
           </tr>
         </thead>
 
         <tbody>
-          <!-- ✅ Pagination applied -->
-          <tr *ngFor="let u of pageRows; trackBy: trackById"
-              (click)="openUser(u)" class="click-row">
+<tr *ngFor="let u of pageRows; let i = index; trackBy: trackById"
+              (click)="openUser(u)" 
+              class="um-table-row"
+              [style.animation-delay]="(0.05 * i) + 's'">
 
-            <td class="fw-semibold">
-              <div class="d-flex align-items-center gap-2">
-                <div class="avatar">
+            <!-- User -->
+            <td>
+              <div class="um-user-cell">
+                <div class="um-avatar" [class.um-avatar-admin]="u.is_staff">
                   {{ (u.username || 'U')?.slice(0,1) | uppercase }}
+                  <div class="um-avatar-ring"></div>
                 </div>
-                <div>
-                  <div class="fw-bold">{{ u.username }}</div>
-                  <div class="text-muted small">#{{ u.id }}</div>
+                <div class="um-user-info">
+                  <div class="um-user-name">{{ u.username }}</div>
+                  <div class="um-user-id">#{{ u.id }}</div>
                 </div>
               </div>
             </td>
 
-            <td>{{ u.email || '—' }}</td>
-
+            <!-- Email -->
             <td>
-              <span class="badge rounded-pill px-3 py-2" [ngClass]="getRoleBadgeClass(u)">
+              <div class="um-email">{{ u.email || '—' }}</div>
+            </td>
+
+            <!-- Role -->
+            <td>
+              <span class="um-role-badge" [ngClass]="getRoleBadgeClass(u)">
+                <i class="bi" [ngClass]="u.is_staff ? 'bi-shield-fill-check' : 'bi-person-fill'"></i>
                 {{ getRoleLabel(u) }}
               </span>
             </td>
 
+            <!-- Quotations -->
             <td class="text-end">
-              {{ getUserStats(u).quotations }}
+              <div class="um-stat-value">{{ getUserStats(u).quotations }}</div>
             </td>
 
-            <td class="text-end fw-bold text-success">
-              ₹ {{ getUserStats(u).revenue }}
+            <!-- Revenue -->
+            <td class="text-end">
+              <div class="um-revenue">₹{{ getUserStats(u).revenue }}</div>
             </td>
 
-            <td class="text-muted small">{{ u.date_joined | date:'mediumDate' }}</td>
-            <td class="text-muted small">{{ u.last_login ? (u.last_login | date:'medium') : '—' }}</td>
+            <!-- Joined Date -->
+            <td>
+              <div class="um-date">{{ u.date_joined | date:'mediumDate' }}</div>
+            </td>
 
+            <!-- Last Login -->
+            <td>
+              <div class="um-date">{{ u.last_login ? (u.last_login | date:'medium') : '—' }}</div>
+            </td>
+
+            <!-- Actions -->
             <td class="text-end" (click)="$event.stopPropagation()">
-              <div class="d-flex gap-2 justify-content-end">
-                <button class="btn btn-outline-secondary btn-sm rounded-3" (click)="openUser(u)">
-                  <i class="bi bi-eye me-1"></i>View
+              <div class="um-actions">
+                <button class="um-btn um-btn-view" (click)="openUser(u)" title="View Details">
+                  <i class="bi bi-eye-fill"></i>
                 </button>
 
-                <button class="btn btn-outline-danger btn-sm rounded-3" (click)="toggleAdmin(u)">
-                  <i class="bi bi-shield me-1"></i>Role
+                <button class="um-btn um-btn-role" (click)="toggleAdmin(u)" title="Toggle Role">
+                  <i class="bi bi-shield-fill"></i>
                 </button>
 
-                <button class="btn btn-outline-primary btn-sm rounded-3" (click)="toggleActive(u)">
-                  <i class="bi bi-toggle2-on me-1"></i>Status
+                <button class="um-btn um-btn-status" (click)="toggleActive(u)" title="Toggle Status">
+                  <i class="bi bi-toggle-on"></i>
                 </button>
-                <button class="btn btn-outline-success btn-sm rounded-3"
-        (click)="viewUserQuotations(u)">
-  <i class="bi bi-receipt me-1"></i>Quotations
-</button>
 
+                <button class="um-btn um-btn-quotations" (click)="viewUserQuotations(u)" title="View Quotations">
+                  <i class="bi bi-receipt-cutoff"></i>
+                </button>
               </div>
             </td>
           </tr>
 
+          <!-- Empty State -->
           <tr *ngIf="filtered.length === 0">
-            <td colspan="8" class="text-center text-muted py-5">
-              <div class="display-6 mb-2"><i class="bi bi-inbox"></i></div>
-              <div class="fw-semibold">No users found</div>
-              <div class="small">Try changing search or filters.</div>
+            <td colspan="8">
+              <div class="um-empty-state">
+                <div class="um-empty-icon">
+                  <i class="bi bi-inbox"></i>
+                </div>
+                <h5 class="fw-bold mb-2">No Users Found</h5>
+                <p class="text-muted mb-0">Try adjusting your search or filter criteria</p>
+              </div>
             </td>
           </tr>
         </tbody>
-
       </table>
-    </div>
+      
+  </div>
+ <div class="um-pagination">
+
+  <button class="um-page-btn"
+          (click)="prevPage()"
+          [disabled]="currentPage === 1">
+    ← Previous
+  </button>
+
+  <div class="um-page-numbers">
+    <button class="um-page-number"
+            *ngFor="let p of pages"
+            (click)="goToPage(p)"
+            [class.active]="p === currentPage">
+      {{ p }}
+    </button>
   </div>
 
-  <!-- ✅ Pagination Controls -->
-  <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mt-3"
-       *ngIf="filtered.length > 0 && !loading">
+  <button class="um-page-btn"
+          (click)="nextPage()"
+          [disabled]="currentPage === totalPages">
+    Next →
+  </button>
 
-    <div class="text-muted small">
-      Page {{ page }} / {{ totalPages }}
-    </div>
+</div>
+ </div>
 
-    <div class="d-flex gap-2">
-      <button class="btn btn-outline-secondary btn-sm rounded-3"
-              [disabled]="page === 1"
-              (click)="goPage(page - 1)">
-        <i class="bi bi-chevron-left"></i>
-      </button>
 
-      <button class="btn btn-outline-secondary btn-sm rounded-3"
-              [disabled]="page === totalPages"
-              (click)="goPage(page + 1)">
-        <i class="bi bi-chevron-right"></i>
-      </button>
-    </div>
-  </div>
 
-  <!-- ✅ Right Drawer -->
-  <div *ngIf="showDrawer" class="um-drawer-backdrop" (click)="closeDrawer()"></div>
+  <!-- Drawer Backdrop -->
+  <div *ngIf="showDrawer" class="um-drawer-backdrop animate-fade-in" (click)="closeDrawer()"></div>
 
-  <aside *ngIf="showDrawer" class="um-drawer" (click)="$event.stopPropagation()">
-
-    <div class="d-flex justify-content-between align-items-start gap-2 p-4 border-bottom">
-      <div>
-        <div class="fw-bold fs-5">{{ selectedUser?.username }}</div>
-        <div class="text-muted small">{{ selectedUser?.email || '—' }}</div>
+  <!-- User Details Drawer -->
+  <aside *ngIf="showDrawer" class="um-drawer animate-slide-left" (click)="$event.stopPropagation()">
+    
+    <!-- Drawer Header -->
+    <div class="um-drawer-header">
+      <div class="um-drawer-user">
+        <div class="um-drawer-avatar" [class.um-drawer-avatar-admin]="selectedUser?.is_staff">
+          {{ (selectedUser?.username || 'U')?.slice(0,1) | uppercase }}
+        </div>
+        <div>
+          <div class="um-drawer-name">{{ selectedUser?.username }}</div>
+          <div class="um-drawer-email">{{ selectedUser?.email || '—' }}</div>
+        </div>
       </div>
-      <button class="btn btn-outline-secondary rounded-3" (click)="closeDrawer()">
+      <button class="um-drawer-close" (click)="closeDrawer()">
         <i class="bi bi-x-lg"></i>
       </button>
     </div>
 
-    <div class="p-4">
-
-      <div class="d-flex flex-wrap gap-2 mb-3">
-        <span class="badge rounded-pill px-3 py-2"
-              [ngClass]="selectedUser ? getRoleBadgeClass(selectedUser) : 'text-bg-secondary'">
+    <!-- Drawer Body -->
+    <div class="um-drawer-body">
+      
+      <!-- Badges -->
+      <div class="um-drawer-badges">
+        <span class="um-drawer-badge" [ngClass]="selectedUser ? getRoleBadgeClass(selectedUser) : 'badge-secondary'">
+          <i class="bi" [ngClass]="selectedUser?.is_staff ? 'bi-shield-fill-check' : 'bi-person-fill'"></i>
           {{ selectedUser ? getRoleLabel(selectedUser) : '—' }}
         </span>
 
-        <span class="badge rounded-pill text-bg-light border px-3 py-2">
-          Joined: {{ selectedUser?.date_joined | date:'mediumDate' }}
+        <span class="um-drawer-badge badge-light">
+          <i class="bi bi-calendar-event me-1"></i>
+          {{ selectedUser?.date_joined | date:'mediumDate' }}
         </span>
 
-        <span class="badge rounded-pill text-bg-light border px-3 py-2">
-          Last Login: {{ selectedUser?.last_login ? (selectedUser?.last_login | date:'medium') : '—' }}
+        <span class="um-drawer-badge badge-light">
+          <i class="bi bi-clock me-1"></i>
+          {{ selectedUser?.last_login ? (selectedUser?.last_login | date:'short') : 'Never' }}
         </span>
       </div>
 
-      <div class="row g-3 mb-4">
-        <div class="col-6">
-          <div class="mini-card">
-            <div class="text-muted small">Total Quotations</div>
-            <div class="fw-bold fs-4">{{ selectedStats?.quotations || 0 }}</div>
+      <!-- Stats Grid -->
+      <div class="um-drawer-stats">
+        <div class="um-drawer-stat">
+          <div class="um-drawer-stat-icon um-stat-blue">
+            <i class="bi bi-receipt-cutoff"></i>
           </div>
-        </div>
-        <div class="col-6">
-          <div class="mini-card">
-            <div class="text-muted small">Total Revenue</div>
-            <div class="fw-bold fs-4 text-success">₹ {{ selectedStats?.revenue || 0 }}</div>
-          </div>
-        </div>
-      </div>
-
-      <div class="fw-bold mb-2">Recent Quotations</div>
-
-      <div class="border rounded-4 overflow-hidden">
-        <div *ngFor="let q of selectedRecentQuotes"
-             class="p-3 border-bottom d-flex justify-content-between align-items-center">
           <div>
-            <div class="fw-semibold">Quotation #{{ q.id }}</div>
-            <div class="text-muted small">{{ q.created_at | date:'medium' }}</div>
+            <div class="um-drawer-stat-label">Total Quotations</div>
+            <div class="um-drawer-stat-value">{{ selectedStats?.quotations || 0 }}</div>
           </div>
-          <div class="fw-bold text-success">₹ {{ q.total_costing }}</div>
         </div>
 
-        <div *ngIf="selectedRecentQuotes.length === 0"
-             class="p-4 text-muted text-center small">
-          No quotations found for this user.
+        <div class="um-drawer-stat">
+          <div class="um-drawer-stat-icon um-stat-green">
+            <i class="bi bi-currency-rupee"></i>
+          </div>
+          <div>
+            <div class="um-drawer-stat-label">Total Revenue</div>
+            <div class="um-drawer-stat-value text-success">₹{{ selectedStats?.revenue || 0 }}</div>
+          </div>
         </div>
       </div>
 
-      <div class="d-flex gap-2 mt-4">
-        <button class="btn btn-outline-danger w-50 rounded-3" (click)="toggleAdmin(selectedUser!)">
-          <i class="bi bi-shield me-2"></i>Toggle Role
+      <!-- Recent Quotations -->
+      <div class="um-drawer-section">
+        <h6 class="um-drawer-section-title">
+          <i class="bi bi-clock-history me-2"></i>
+          Recent Quotations
+        </h6>
+
+        <div class="um-quotations-list">
+          <div *ngFor="let q of selectedRecentQuotes" class="um-quotation-item">
+            <div class="um-quotation-info">
+              <div class="um-quotation-id">Quotation #{{ q.id }}</div>
+              <div class="um-quotation-date">{{ q.created_at | date:'medium' }}</div>
+            </div>
+            <div class="um-quotation-amount">₹{{ q.total_costing }}</div>
+          </div>
+
+          <div *ngIf="selectedRecentQuotes.length === 0" class="um-quotation-empty">
+            <i class="bi bi-inbox me-2"></i>
+            No quotations found
+          </div>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="um-drawer-actions">
+        <button class="um-drawer-btn um-drawer-btn-danger" (click)="toggleAdmin(selectedUser!)">
+          <i class="bi bi-shield-fill-exclamation me-2"></i>
+          Toggle Role
         </button>
 
-        <button class="btn btn-outline-primary w-50 rounded-3" (click)="toggleActive(selectedUser!)">
-          <i class="bi bi-toggle2-on me-2"></i>Toggle Status
+        <button class="um-drawer-btn um-drawer-btn-primary" (click)="toggleActive(selectedUser!)">
+          <i class="bi bi-toggle-on me-2"></i>
+          Toggle Status
         </button>
       </div>
 
@@ -330,3 +468,5 @@
   </aside>
 
 </div>
+
+

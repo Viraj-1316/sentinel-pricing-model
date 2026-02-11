@@ -179,24 +179,32 @@
                         <td class="text-muted">{{ q.created_at | date:'medium' }}</td>
                         
                         <td class="text-center">
-                          <div class="d-flex justify-content-center gap-2">
-                            <button class="btn btn-outline-info btn-sm rounded-2 shadow-none" 
-                                    (click)="downloadPDF(q.id)" 
-                                    title="Download PDF">
-                              <i class="bi bi-file-pdf-fill"></i>
-                            </button>
-                            <button class="btn btn-outline-primary btn-sm rounded-2 shadow-none" 
-                                    (click)="editQuotation(q.id)" 
-                                    title="Edit">
-                              <i class="bi bi-pencil-square"></i>
-                            </button>
-                            <button class="btn btn-outline-danger btn-sm rounded-2 shadow-none" 
-                                    (click)="deleteQuotation(q.id)" 
-                                    title="Delete">
-                              <i class="bi bi-trash3-fill"></i>
-                            </button>
-                          </div>
-                        </td>
+  <div class="d-flex justify-content-center gap-2">
+
+    <button
+      class="btn btn-outline-info btn-sm rounded-2 shadow-none"
+      (click)="downloadPdf(q)"
+      title="Download PDF">
+      Download Pdf
+    </button>
+
+    <button
+      class="btn btn-outline-primary btn-sm rounded-2 shadow-none"
+      (click)="editQuotation(q.id)"
+      title="Edit">
+      <i class="bi bi-pencil-square"></i>
+    </button>
+
+    <button
+      class="btn btn-outline-danger btn-sm rounded-2 shadow-none"
+      (click)="deleteQuotation(q.id)"
+      title="Delete">
+      <i class="bi bi-trash"></i>
+    </button>
+
+  </div>
+</td>
+
                       </tr>
 
                       <tr *ngIf="recent.length === 0">

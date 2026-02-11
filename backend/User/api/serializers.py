@@ -5,6 +5,21 @@ from ..models import UserProfile
 from django.contrib.auth import get_user_model
 User = get_user_model()
 
+class MeSerializer(serializers.ModelSerializer):
+    role = serializers.SerializerMethodField()
+    phone_number = serializers.CharField(
+        source="userprofile.phone_number",
+        required=False,
+        allow_null=True
+    )
+
+    class Meta:
+        model = User
+        fields = ["username", "email", "phone_number", "role"]
+
+    def get_role(self, obj):
+        return "Admin" if obj.is_staff else "User"
+
 
 class registration_serializer(serializers.ModelSerializer):
     password2 = serializers.CharField(write_only=True)

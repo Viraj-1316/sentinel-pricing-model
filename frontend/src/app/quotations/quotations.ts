@@ -6,6 +6,8 @@ import { AuthService } from '../service/auth.service';
 import { ToasterService } from '../service/toaster.service';
 import { ConfirmdialogService } from '../service/confirmdialog.service';
 import { environment } from '../../environments/environment';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
+import { FormsModule } from '@angular/forms';
 export interface QuotationRow {
   id: number;
   cammera: number;
@@ -30,11 +32,17 @@ export interface AiFeature {
 @Component({
   selector: 'app-quotations',
   standalone: true,
-  imports: [CommonModule, HttpClientModule, RouterLink],
+  imports: [CommonModule, HttpClientModule, RouterLink,FormsModule],
   templateUrl: './quotations.html',
   styleUrl: './quotations.css',
 })
 export class Quotations implements OnInit {
+  showPdf = false;
+  pdfUrl: any;
+  showEmailModal = false;
+  otherEmail = '';  
+  quotationId!: number;
+  quotationData: any = null;
   loading = false;
   loadingMore = false;
   errorMsg: string | null = null;
@@ -73,27 +81,79 @@ export class Quotations implements OnInit {
     private http: HttpClient,
     private auth: AuthService,
     private toast: ToasterService,
-    private confirm: ConfirmdialogService
+    private confirm: ConfirmdialogService,
+    private sanitizer: DomSanitizer
   ) {}
 
   ngOnInit(): void {
     this.loadMeThenQuotations();
   }
 
+
+closePdf() {
+  this.showPdf = false;
+  document.body.style.overflow = '';
+}
+
+
+openSendEmailModal() {
+  this.showEmailModal = true;
+  this.otherEmail = '';
+  document.body.style.overflow = 'hidden';
+}
+closeEmailModal() {
+  this.showEmailModal = false;
+  document.body.style.overflow = '';
+}
+sendEmailToSelf() {
+  this.sendEmail({});
+}
+sendEmailToOther() {
+  if (!this.otherEmail) return;
+  this.sendEmail({ Email: this.otherEmail });
+}
+
+ sendEmail(payload: any) {
+  const id = this.quotationData.id;
+  const url = `${environment.apiBaseUrl}/pricing-Model/quotation/${id}/send-email/`;
+
+  this.loading = true;
+
+  this.http.post(url, payload).subscribe({
+    next: () => {
+      this.toast.success('Quotation email sent successfully');
+      this.loading = false;
+      this.closeEmailModal();
+    },
+    error: () => {
+      this.toast.error('Failed to send quotation email');
+      this.loading = false;
+    }
+  });
+}
+
   // ✅ Load user role then load quotations
-  loadMeThenQuotations() {
-    this.auth.getMe().subscribe({
-      next: (res: any) => {
-        this.username = res?.username || '';
-        this.isAdmin = !!(res?.is_staff || res?.is_superuser);
-        this.loadQuotations();
-      },
-      error: () => {
-        this.isAdmin = false;
-        this.loadQuotations();
-      },
-    });
-  }
+loadMeThenQuotations() {
+  this.auth.getMe().subscribe({
+    next: (res: any) => {
+
+      this.username = res?.username || '';
+
+      // ✅ CORRECT ADMIN CHECK
+      this.isAdmin = res?.role?.toLowerCase() === 'admin';
+
+      console.log("ROLE:", res?.role);
+      console.log("ADMIN:", this.isAdmin);
+
+      this.loadQuotations();
+    },
+    error: () => {
+      this.isAdmin = false;
+      this.loadQuotations();
+    },
+  });
+}
+
 
   // ✅ Fetch quotations
   loadQuotations() {
@@ -120,6 +180,9 @@ export class Quotations implements OnInit {
       },
     });
   }
+setActiveQuotation(q: QuotationRow) {
+  this.quotationData = q;
+}
 
   buildKpi() {
     this.totalQuotations = this.quotations.length;
@@ -127,6 +190,32 @@ export class Quotations implements OnInit {
     this.latestTotal = latest?.total_costing ?? null;
   }
 
+  viewQuotation() {
+  if (!this.quotationData?.id) return;
+
+  const id = this.quotationData.id;
+  const url = `${environment.apiBaseUrl}/pricing-Model/quotation/${id}/pdf/`;
+
+  this.loading = true;
+
+  this.http.get(url, { responseType: 'blob' }).subscribe({
+    next: (blob) => {
+      const file = new Blob([blob], { type: 'application/pdf' });
+      const objectUrl = URL.createObjectURL(file);
+
+      this.pdfUrl = this.sanitizer.bypassSecurityTrustResourceUrl(objectUrl);
+      this.showPdf = true;
+      this.loading = false;
+
+      // prevent background scroll
+      document.body.style.overflow = 'hidden';
+    },
+    error: () => {
+      this.toast.error('Failed to load PDF preview');
+      this.loading = false;
+    }
+  });
+}
   applyFilters() {
   let list = [...this.quotations];
 
@@ -255,18 +344,7 @@ export class Quotations implements OnInit {
   }
 
   // ✅ Email (NULL SAFE ✅ FIXED)
-  sendEmail(q: QuotationRow | null) {
-    if (!q) return;
-
-    const url = `${environment.apiBaseUrl}/pricing-Model/quotation/${q.id}/send-email/`;
-
-    this.toast.info(`Sending email for quotation #${q.id}...`);
-
-    this.http.post(url, {}).subscribe({
-      next: () => this.toast.success('Email sent successfully ✅'),
-      error: () => this.toast.error('Failed to send email ❌'),
-    });
-  }
+  
 
   // ✅ Admin Delete (NULL SAFE)
   async deleteQuotation(q: QuotationRow | null) {

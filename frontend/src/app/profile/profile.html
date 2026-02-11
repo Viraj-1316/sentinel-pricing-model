@@ -122,29 +122,44 @@
            [disabled]="!editMode"
            placeholder="Enter phone number">
   </div>
+<!-- Action Buttons -->
+<div class="col-12 mt-3 d-flex gap-2">
+
+  <!-- Edit Button -->
+  <button *ngIf="!editMode"
+          class="btn btn-primary rounded-pill px-4"
+          (click)="toggleEdit()">
+    <i class="bi bi-pencil me-2"></i>Edit Profile
+  </button>
+
+  <!-- Save Button -->
+  <button *ngIf="editMode"
+          class="btn btn-success rounded-pill px-4"
+          (click)="saveProfile()"
+          [disabled]="saving">
+    <span *ngIf="!saving">
+      <i class="bi bi-check-lg me-2"></i>Update Profile
+    </span>
+
+    <span *ngIf="saving">
+      <span class="spinner-border spinner-border-sm me-2"></span>
+      Saving...
+    </span>
+  </button>
+
+  <!-- Cancel Button -->
+  <button *ngIf="editMode"
+          class="btn btn-outline-secondary rounded-pill px-4"
+          (click)="toggleEdit()"
+          [disabled]="saving">
+    <i class="bi bi-x-lg me-2"></i>Cancel
+  </button>
 
 </div>
 
-      <!-- Admin quick section -->
-      <div *ngIf="isAdmin" class="card shadow-sm border-0 rounded-4 mt-4">
-        <div class="card-body p-4">
-          <h6 class="fw-bold mb-3"><i class="bi bi-lightning-charge me-2"></i>Admin Quick Actions</h6>
-          <div class="d-flex flex-wrap gap-2">
-            <a routerLink="/pricing" class="btn btn-outline-dark rounded-pill px-4">
-              <i class="bi bi-currency-rupee me-2"></i>Pricing Slabs
-            </a>
+</div>
 
-            <a routerLink="/ai-features" class="btn btn-outline-dark rounded-pill px-4">
-              <i class="bi bi-cpu me-2"></i>AI Features
-            </a>
-
-            <a routerLink="/all-quotations" class="btn btn-outline-dark rounded-pill px-4">
-              <i class="bi bi-file-earmark-text me-2"></i>All Quotations
-            </a>
-          </div>
-        </div>
-      </div>
-
+     
     </div>
 
   </div>

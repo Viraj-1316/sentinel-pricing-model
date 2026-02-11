@@ -1,50 +1,53 @@
-<div class="page-shell bg-light min-vh-100 py-5">
-  <div class="container">
-    
-    <div class="d-flex justify-content-between align-items-center mb-4 bg-white p-3 rounded-4 shadow-sm border border-white">
+<div class="page-shell bg-light min-vh-100 py-4">
+  <div class="container px-4">
+
+    <div class="premium-header d-flex justify-content-between align-items-center mb-4 bg-white p-3 rounded-4 shadow-sm">
       <div class="d-flex align-items-center gap-3">
-        <div class="bg-primary text-white d-flex align-items-center justify-content-center fw-bold rounded-3 shadow-sm" style="width: 48px; height: 48px; font-size: 1.2rem;">SP</div>
+        <div class="brand-pill bg-primary text-white d-flex align-items-center justify-content-center fw-bold rounded-3" style="width: 48px; height: 48px;">SP</div>
         <div>
-          <h5 class="fw-bold mb-0 text-dark">Commercial Quotation</h5>
-          <span class="text-muted small">Ref: #{{ quotationData?.id }} • Generated {{ quotationData?.created_at | date:'mediumDate' }}</span>
+          <h4 class="fw-bold mb-0">Quotation Summary</h4>
+          <small class="text-muted">Ref ID: #{{ quotationData?.id }} · Generated on {{ quotationData?.created_at | date:'mediumDate' }}</small>
         </div>
       </div>
-      <div>
-        <span class="badge bg-primary-subtle text-primary px-3 py-2 rounded-pill fw-bold border border-primary border-opacity-10">
-          Estimate: ₹ {{ quotationData?.total_costing | number }}
+      <div class="d-flex gap-2">
+        <span class="badge bg-success-subtle text-success fs-6 px-3 py-2 rounded-pill border border-success border-opacity-25">
+          <i class="bi bi-wallet2 me-2"></i>₹ {{ quotationData?.total_costing | number }}
         </span>
       </div>
     </div>
 
-    <div *ngIf="errorMsg" class="alert alert-danger rounded-4 border-0 shadow-sm mb-4">{{ errorMsg }}</div>
-    <div *ngIf="loading" class="text-center py-5"><div class="spinner-border text-primary opacity-50"></div></div>
+    <div *ngIf="errorMsg" class="alert alert-danger rounded-4 border-0 shadow-sm animate__animated animate__shakeX">{{ errorMsg }}</div>
+    <div *ngIf="loading" class="text-center py-5"><div class="spinner-border text-primary"></div></div>
 
-    <div class="row g-4" *ngIf="quotationData && !loading">
+    <div class="row gx-2" *ngIf="quotationData && !loading">
       
-      <div class="col-xl-8 col-lg-7 pe-lg-2">
-        <div class="card border-0 shadow-sm rounded-4 mb-4">
-          <div class="card-body p-4">
-            <h6 class="fw-bold mb-4 text-dark"><i class="bi bi-sliders2-vertical me-2 text-primary"></i>Solution Configuration</h6>
-            <div class="row align-items-center">
+      <div class="col-xl-8 col-lg-7 pe-2">
+        
+        <div class="card border-0 shadow-sm mb-4 overflow-hidden">
+          <div class="card-header bg-white py-3 border-bottom">
+            <h6 class="fw-bold mb-0 text-primary"><i class="bi bi-sliders me-2"></i>Adjust Components</h6>
+          </div>
+          <div class="card-body">
+            <div class="row align-items-center g-3">
               <div class="col-md-9">
                 <div class="d-flex flex-wrap gap-4">
-                  <div class="form-check custom-checkbox">
+                  <div class="form-check custom-check">
                     <input class="form-check-input" type="checkbox" [(ngModel)]="includeCPU" id="checkCPU">
-                    <label class="form-check-label fw-medium text-secondary" for="checkCPU">Compute (CPU)</label>
+                    <label class="form-check-label" for="checkCPU">Compute (CPU)</label>
                   </div>
-                  <div class="form-check custom-checkbox">
+                  <div class="form-check custom-check">
                     <input class="form-check-input" type="checkbox" [(ngModel)]="includeGPU" id="checkGPU">
-                    <label class="form-check-label fw-medium text-secondary" for="checkGPU">Acceleration (GPU)</label>
+                    <label class="form-check-label" for="checkGPU">Acceleration (GPU)</label>
                   </div>
-                  <div class="form-check custom-checkbox">
+                  <div class="form-check custom-check">
                     <input class="form-check-input" type="checkbox" [(ngModel)]="includeStorage" id="checkStorage">
-                    <label class="form-check-label fw-medium text-secondary" for="checkStorage">Storage Infrastructure</label>
+                    <label class="form-check-label" for="checkStorage">Infrastructure Storage</label>
                   </div>
                 </div>
               </div>
-              <div class="col-md-3">
-                <button class="btn btn-primary w-100 rounded-3 fw-bold py-2 shadow-sm" (click)="updateQuotation()">
-                  Update Pricing
+              <div class="col-md-3 text-end">
+                <button class="btn btn-primary w-100 rounded-3 shadow-sm fw-bold" (click)="updateQuotation()" [disabled]="loading">
+                  Apply Updates
                 </button>
               </div>
             </div>
@@ -52,148 +55,190 @@
         </div>
 
         <div class="row g-3 mb-4">
-          <div class="col" *ngFor="let metric of [
+          <div class="row g-3"> <div class="col" *ngFor="let metric of [
             {label: 'Cameras', val: quotationData?.cammera, icon: 'camera-video'},
             {label: 'CPU Cores', val: quotationData?.cpuCores_required, icon: 'cpu'},
             {label: 'RAM (GB)', val: quotationData?.ram_required, icon: 'memory'},
             {label: 'VRAM (GB)', val: quotationData?.vram_required, icon: 'gpu-card'},
-            {label: 'Retention', val: quotationData?.storage_days + ' Days', icon: 'calendar-check'}
+            {label: 'Storage Days', val: quotationData?.storage_days, icon: 'calendar-check'}
           ]">
-            <div class="card border-0 shadow-sm rounded-4 p-3 text-center metric-card">
-              <i class="bi bi-{{metric.icon}} text-primary opacity-50 fs-5 mb-2"></i>
-              <label class="text-uppercase text-muted fw-bold mb-1" style="font-size: 0.6rem; letter-spacing: 0.5px;">{{ metric.label }}</label>
-              <span class="fw-bold text-dark fs-5">{{ metric.val || 0 }}</span>
-            </div>
-          </div>
+    <div class="card border-0 shadow-sm rounded-4 p-3 text-center h-100">
+      <i class="bi bi-{{metric.icon}} text-primary fs-4 mb-2"></i>
+      <label class="small fw-bold text-uppercase text-muted d-block">{{ metric.label }}</label>
+      <span class="fw-bold fs-5">{{ metric.val || 0 }}</span>
+    </div>
+  </div>
+</div>
         </div>
 
         <div class="row g-3 mb-4">
           <div class="col-md-6" *ngIf="quotationData?.cpu">
-            <div class="card border-0 shadow-sm rounded-4 h-100 p-4 border-start border-4 border-primary">
-              <div class="d-flex justify-content-between mb-3">
-                <h6 class="fw-bold text-dark">Processor Unit</h6>
-                <span class="fw-bold text-dark">₹ {{ quotationData.cpu_cost | number }}</span>
-              </div>
-              <span class="badge bg-light text-primary border rounded-pill w-fit mb-2">{{ quotationData.cpu?.core_hardware }}</span>
-              <div class="small text-muted"><i class="bi bi-info-circle me-1"></i> {{ quotationData.cpu?.CPUcores }} Cores • {{ quotationData.cpu?.ram_required }}GB RAM</div>
-            </div>
-          </div>
-          <div class="col-md-6" *ngIf="quotationData?.gpu">
-            <div class="card border-0 shadow-sm rounded-4 h-100 p-4 border-start border-4 border-warning">
-              <div class="d-flex justify-content-between mb-3">
-                <h6 class="fw-bold text-dark">Graphics Unit</h6>
-                <span class="fw-bold text-dark">₹ {{ quotationData.gpu_cost | number }}</span>
-              </div>
-              <span class="badge bg-light text-warning border rounded-pill w-fit mb-2">{{ quotationData.gpu?.AI_Component }}</span>
-              <div class="small text-muted"><i class="bi bi-info-circle me-1"></i> {{ quotationData.gpu?.VRAM }}GB Dedicated Memory</div>
-            </div>
-          </div>
-        </div>
-
-        <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4" *ngIf="quotationData?.ai_features?.length">
-          <div class="card-header bg-white py-3 border-0 px-4">
-            <h6 class="fw-bold mb-0 text-dark">AI Capabilities</h6>
-          </div>
-          <div class="list-group list-group-flush">
-            <div class="list-group-item d-flex justify-content-between align-items-center px-4 py-3 border-light" *ngFor="let ai of quotationData.ai_features">
-              <div class="d-flex align-items-center">
-                <div class="bg-primary bg-opacity-10 text-primary rounded-3 p-2 me-3"><i class="bi bi-robot"></i></div>
-                <span class="fw-semibold text-dark">{{ ai.AI_feature }}</span>
-              </div>
-              <span class="fw-bold text-secondary">₹ {{ ai.costing | number }}</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="col-xl-4 col-lg-5">
-        <div class="card border-0 shadow-lg rounded-4 position-sticky" style="top: 2rem;">
-          <div class="card-body p-4">
-            <h5 class="fw-bold text-dark mb-4">Investment Summary</h5>
-            <div class="vstack gap-3 mb-4">
-              <div class="d-flex justify-content-between text-secondary border-bottom pb-2">
-                <span class="small">Hardware Bundle</span>
-                <span class="fw-bold text-dark">₹ {{ (quotationData?.cpu_cost + quotationData?.gpu_cost) | number }}</span>
-              </div>
-              <div class="d-flex justify-content-between text-secondary border-bottom pb-2">
-                <span class="small">AI Intelligence Suite</span>
-                <span class="fw-bold text-dark">₹ {{ quotationData?.ai_cost | number }}</span>
-              </div>
-              <div class="d-flex justify-content-between text-secondary border-bottom pb-2">
-                <span class="small">Infrastructure Storage</span>
-                <span class="fw-bold text-dark">₹ {{ quotationData?.storage_cost | number }}</span>
-              </div>
-              <div class="bg-light p-3 rounded-4 mt-2 border-0">
-                <div class="d-flex justify-content-between align-items-center">
+            <div class="card border-0 shadow-sm h-100 border-start border-4 border-primary">
+              <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start mb-3">
                   <div>
-                    <span class="d-block fw-bold text-dark">Annual License</span>
-                    <small class="text-muted">Term: {{ quotationData?.DurationU?.Duration }} Year(s)</small>
+                    <h6 class="fw-bold text-dark mb-1">Processor Unit</h6>
+                    <span class="badge bg-light text-primary border rounded-pill">{{ quotationData.cpu?.core_hardware }}</span>
                   </div>
-                  <span class="fw-bold text-primary">₹ {{ quotationData?.licenceCostU | number }}</span>
+                  <span class="fw-bold text-success">₹ {{ quotationData.cpu_cost | number }}</span>
+                </div>
+                <div class="d-flex gap-3 text-muted small">
+                  <span><i class="bi bi-cpu me-1"></i> {{ quotationData.cpu?.CPUcores }} Cores</span>
+                  <span><i class="bi bi-memory me-1"></i> {{ quotationData.cpu?.ram_required }} GB RAM</span>
                 </div>
               </div>
             </div>
+          </div>
 
-            <div class="bg-dark rounded-4 p-4 text-white shadow-sm mb-4" style="background: linear-gradient(135deg, #212529 0%, #000 100%);">
-              <small class="text-white-50 text-uppercase fw-bold mb-1 d-block" style="letter-spacing: 1px; font-size: 0.7rem;">Estimated Total</small>
-              <h2 class="display-6 fw-bold mb-0">₹ {{ quotationData?.total_costing | number }}</h2>
-            </div>
-
-            <div class="vstack gap-2">
-              <button class="btn btn-primary w-100 py-3 rounded-3 fw-bold" (click)="downloadPdf()" [disabled]="loading">
-                <i class="bi bi-file-earmark-pdf-fill me-2"></i> Download Formal PDF
-              </button>
-              <div class="d-flex gap-2">
-                <button class="btn btn-outline-secondary flex-fill py-2 rounded-3 fw-bold" (click)="viewQuotation()">
-                  <i class="bi bi-eye-fill me-1"></i> Preview
-                </button>
-                <button class="btn btn-outline-secondary flex-fill py-2 rounded-3 fw-bold" (click)="openSendEmailModal()">
-                  <i class="bi bi-send-fill me-1"></i> Share
-                </button>
+          <div class="col-md-6" *ngIf="quotationData?.gpu">
+            <div class="card border-0 shadow-sm h-100 border-start border-4 border-warning">
+              <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                  <div>
+                    <h6 class="fw-bold text-dark mb-1">Graphics Accelerator</h6>
+                    <span class="badge bg-light text-warning border rounded-pill">{{ quotationData.gpu?.AI_Component }}</span>
+                  </div>
+                  <span class="fw-bold text-success">₹ {{ quotationData.gpu_cost | number }}</span>
+                </div>
+                <div class="text-muted small">
+                  <span><i class="bi bi-gpu-card me-1"></i> {{ quotationData.gpu?.VRAM }} GB Dedicated VRAM</span>
+                </div>
               </div>
             </div>
-            <p class="text-center text-muted small mt-4 mb-0 opacity-75">
-              <i class="bi bi-calendar-check me-1"></i> Proposal valid for 15 days.
+          </div>
+        </div>
+
+        <div class="card border-0 shadow-sm mb-4" *ngIf="quotationData?.ai_features?.length">
+          <div class="card-body">
+            <h6 class="fw-bold mb-3 text-primary">AI Feature Modules</h6>
+            <div class="row g-3">
+              <div class="col-md-6" *ngFor="let ai of quotationData.ai_features">
+                <div class="p-3 bg-light rounded-4 d-flex justify-content-between align-items-center border">
+                  <div class="d-flex align-items-center">
+                    <div class="bg-primary bg-opacity-10 text-primary rounded-3 p-2 me-3"><i class="bi bi-robot"></i></div>
+                    <span class="fw-medium text-dark">{{ ai.AI_feature }}</span>
+                  </div>
+                  <span class="fw-bold text-muted small">₹ {{ ai.costing | number }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="col-xl-4 col-lg-5 ps-2">
+        <div class="card border-0 shadow-lg position-sticky" style="top: 2rem; border-top: 5px solid #0d6efd !important;">
+          <div class="card-body p-4">
+            <h5 class="fw-bold text-dark mb-4 d-flex align-items-center">
+              <i class="bi bi-receipt me-2 text-primary"></i>Final Investment
+            </h5>
+
+            <div class="d-flex flex-column gap-3 mb-4">
+              <div class="d-flex justify-content-between text-muted border-bottom pb-2">
+                <span>Hardware Bundle</span>
+                <span class="fw-bold text-dark">₹ {{ (quotationData?.cpu_cost + quotationData?.gpu_cost) | number }}</span>
+              </div>
+              <div class="d-flex justify-content-between text-muted border-bottom pb-2">
+                <span>AI Module Total</span>
+                <span class="fw-bold text-dark">₹ {{ quotationData?.ai_cost | number }}</span>
+              </div>
+              <div class="d-flex justify-content-between text-muted border-bottom pb-2">
+                <span>Storage Infrastructure</span>
+                <span class="fw-bold text-dark">₹ {{ quotationData?.storage_cost | number }}</span>
+              </div>
+              <div class="d-flex justify-content-between align-items-center bg-primary-subtle p-3 rounded-4 mt-2">
+                <div>
+                  <span class="d-block fw-bold text-primary">License Duration</span>
+                  <small class="text-primary opacity-75">Validity: {{ quotationData?.DurationU?.Duration }} Year(s)</small>
+                </div>
+                <span class="fw-bold text-primary fs-5">₹ {{ quotationData?.licenceCostU | number }}</span>
+              </div>
+            </div>
+
+            <div class="bg-dark rounded-4 p-4 text-white shadow-sm mb-4">
+              <small class="text-secondary text-uppercase ls-2 d-block mb-1">Total Estimated Cost</small>
+              <div class="d-flex align-items-baseline">
+                <h2 class="display-6 fw-bold text-info mb-0">₹ {{ quotationData?.total_costing | number }}</h2>
+              </div>
+            </div>
+
+           <div class="d-flex gap-2">
+  <button
+    class="btn btn-info flex-fill py-3 rounded-4 fw-bold text-dark shadow-sm hover-lift"
+    (click)="downloadPdf()">
+    <i class="bi bi-file-earmark-pdf-fill me-2"></i>
+    Download PDF
+  </button>
+
+  <button
+    class="btn btn-info flex-fill py-3 rounded-4 fw-bold text-dark shadow-sm hover-lift"
+    (click)="viewQuotation()">
+    <i class="bi bi-eye-fill me-2"></i>
+    View
+  </button>
+
+  <button
+    class="btn btn-info flex-fill py-3 rounded-4 fw-bold text-dark shadow-sm hover-lift"
+    (click)="openSendEmailModal()">
+    <i class="bi bi-send-fill me-2"></i>
+    Email
+  </button>
+</div>
+            <p class="text-center text-muted small mt-3 italic mb-0">
+              <i class="bi bi-info-circle me-1"></i> Quote valid for 15 days.
             </p>
           </div>
         </div>
       </div>
+
     </div>
   </div>
 </div>
-
-<div class="modal-overlay" *ngIf="showPdf" (click)="closePdf()">
+<div class="pdf-overlay" *ngIf="showPdf" (click)="closePdf()">
   <div class="pdf-container shadow-lg" (click)="$event.stopPropagation()">
-    <div class="d-flex justify-content-between align-items-center p-3 border-bottom bg-white">
+    <div class="d-flex justify-content-between align-items-center p-3 border-bottom bg-light">
       <h6 class="mb-0 fw-bold"><i class="bi bi-file-pdf text-danger me-2"></i>Quotation Preview</h6>
       <button class="btn-close" (click)="closePdf()"></button>
     </div>
-    <div class="flex-grow-1 bg-secondary bg-opacity-10">
+    <div class="flex-grow-1 bg-secondary bg-opacity-10 p-0">
       <iframe [src]="pdfUrl" class="w-100 h-100 border-0"></iframe>
     </div>
   </div>
 </div>
-
-<div class="modal-overlay" *ngIf="showEmailModal" (click)="closeEmailModal()">
+ 
+<div class="pdf-overlay" *ngIf="showEmailModal" (click)="closeEmailModal()">
   <div class="email-container shadow-lg" (click)="$event.stopPropagation()">
-    <div class="p-4 border-bottom d-flex justify-content-between align-items-center">
-      <h6 class="mb-0 fw-bold">Share via Email</h6>
+    <div class="d-flex justify-content-between align-items-center p-3 border-bottom">
+      <h6 class="mb-0 fw-bold">Send Quotation</h6>
       <button class="btn-close" (click)="closeEmailModal()"></button>
     </div>
-    <div class="p-4">
-      <button class="btn btn-outline-primary w-100 mb-3 py-2 fw-bold" (click)="sendEmailToSelf()">
-        <i class="bi bi-person-circle me-2"></i> Send to my email
+    <div class="p-3">
+      <div class="text-center mb-3">
+        <div class="bg-success bg-opacity-10 text-success rounded-circle d-inline-flex p-3 mb-3">
+            <i class="bi bi-send fs-3"></i>
+        </div>
+        <h5>Share Quote</h5>
+        <p class="text-muted small">Send this configuration to yourself or a client.</p>
+      </div>
+ 
+      <button class="btn btn-outline-primary w-100 mb-3 py-2" (click)="sendEmailToSelf()">
+
+        <i class="bi bi-person-circle me-2"></i> Send to myself
       </button>
-      <div class="position-relative text-center my-4">
+ 
+      <div class="position-relative text-center my-3">
         <hr class="text-muted">
-        <span class="position-absolute top-50 start-50 translate-middle bg-white px-3 text-muted small fw-bold">OR</span>
+        <span class="position-absolute top-50 start-50 translate-middle bg-white px-2 text-muted small">OR</span>
       </div>
-      <div class="mb-3">
-        <label class="form-label small fw-bold text-secondary">Client Email</label>
-        <input type="email" class="form-control rounded-3" placeholder="client@company.com" [(ngModel)]="otherEmail">
+ 
+      <div class="form-floating mb-3">
+        <input type="email" class="form-control" id="Email" placeholder="name@example.com" [(ngModel)]="otherEmail">
+        <label for="emailInput">Recipient Email</label>
       </div>
-      <button class="btn btn-dark w-100 py-2 fw-bold" [disabled]="!otherEmail || loading" (click)="sendEmailToOther()">
-        Send Proposal <i class="bi bi-arrow-right ms-2"></i>
+ 
+      <button class="btn btn-success w-100 py-2" [disabled]="!otherEmail" (click)="sendEmailToOther()">
+        Send Email <i class="bi bi-arrow-right ms-2"></i>
       </button>
     </div>
   </div>

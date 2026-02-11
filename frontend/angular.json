@@ -22,6 +22,11 @@
               {
                 "glob": "**/*",
                 "input": "public"
+              },
+              {
+                "glob": "**/*",
+                "input": "src/assets",
+                "output": "assets"
               }
             ],
             "styles": [
@@ -35,29 +40,25 @@
           },
           "configurations": {
             "production": {
-              
-                  "fileReplacements": [
-                      {
-                        "replace": "src/environments/environment.ts",
-                        "with": "src/environments/environment.prod.ts"
-                      }
-                    ],
-
-                  "budgets": [
-                    {
-                      "type": "initial",
-                      "maximumWarning": "500kB",
-                      "maximumError": "1MB"
-                    },
-                    {
-                      "type": "anyComponentStyle",
-                      "maximumWarning": "4kB",
-                      "maximumError": "8kB"
-                    }
-                  ],
-
-                  "outputHashing": "all"
-
+              "fileReplacements": [
+                {
+                  "replace": "src/environments/environment.ts",
+                  "with": "src/environments/environment.prod.ts"
+                }
+              ],
+              "budgets": [
+                {
+                  "type": "initial",
+                  "maximumWarning": "2mb",
+                  "maximumError": "5mb"
+                },
+                {
+                  "type": "anyComponentStyle",
+                  "maximumWarning": "20kb",
+                  "maximumError": "40kb"
+                }
+              ],
+              "outputHashing": "all"
             },
             "development": {
               "optimization": false,
@@ -94,6 +95,11 @@
               {
                 "glob": "**/*",
                 "input": "public"
+              },
+              {
+                "glob": "**/*",
+                "input": "src/assets",
+                "output": "assets"
               }
             ],
             "styles": [

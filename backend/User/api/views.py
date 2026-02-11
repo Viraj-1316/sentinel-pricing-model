@@ -13,15 +13,37 @@ from django.contrib.auth import get_user_model
 from User.models import EmailOTP
 from User.api.utils import generate_otp, hash_otp, verify_otp, send_otp_email, normalize_email
 User= get_user_model()
-@api_view(["GET"])
+from .serializers import MeSerializer
+
+@api_view(["GET", "PUT"])
 @permission_classes([IsAuthenticated])
 def me(request):
     user = request.user
-    return Response({
-        "username": user.username,
-        "is_staff": user.is_staff,
-        "is_superuser": user.is_superuser,
-    })
+
+    if request.method == "GET":
+        serializer = MeSerializer(user)
+        return Response(serializer.data)
+
+    elif request.method == "PUT":
+        serializer = MeSerializer(user, data=request.data, partial=True)
+
+        if serializer.is_valid():
+            data = serializer.validated_data
+
+            if "email" in data:
+                user.email = data["email"]
+                user.save()
+
+            phone = data.get("userprofile", {}).get("phone_number")
+            if phone is not None:
+                profile, _ = UserProfile.objects.get_or_create(user=user)
+                profile.phone_number = phone
+                profile.save()
+
+            return Response(MeSerializer(user).data)
+
+        return Response(serializer.errors, status=400)
+
 
 @api_view(['POST'])
 def user_registration(request):
@@ -84,13 +106,15 @@ class RegisterSendEmailOTP(APIView):
         except ValueError as e:
             return Response({"message": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
-        # ✅ check already registered
-        if User.objects.filter(username=email).exists():
-            return Response({"message": "Email already registered"}, status=status.HTTP_400_BAD_REQUEST)
+        # ✅ STRICT EMAIL CHECK
+        if User.objects.filter(email=email).exists():
+            return Response(
+                {"message": "Email already exists"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
         otp = generate_otp()
 
-        # ✅ reset old OTP
         EmailOTP.objects.update_or_create(
             email=email,
             defaults={
@@ -99,14 +123,12 @@ class RegisterSendEmailOTP(APIView):
             }
         )
 
-        # ✅ send email
         resp = send_otp_email(email, otp)
 
         return Response({
             "message": "OTP sent",
             "gateway_response": resp
         }, status=status.HTTP_200_OK)
-
 
 
 class RegisterVerifyEmailOTP(APIView):

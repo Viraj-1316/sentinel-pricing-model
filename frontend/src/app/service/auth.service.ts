@@ -11,10 +11,11 @@ export interface TokenResponse {
 
 export interface MeResponse {
   username: string;
-  is_staff: boolean;
-  is_superuser: boolean;
   email?: string;
+  phone_number?: string | null;
+  role?: string;                 // ✅ REQUIRED
 }
+
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
@@ -91,10 +92,11 @@ export class AuthService {
   }
 
   // ✅ Admin check
-  isAdmin(): boolean {
-    const me = this.meSubject.value;
-    return !!(me?.is_staff || me?.is_superuser);
-  }
+isAdmin(): boolean {
+  const me = this.meSubject.value;
+  return me?.role?.toLowerCase() === 'admin';
+}
+
 
   // ✅ Clear tokens + user
   clearTokens() {

@@ -180,30 +180,38 @@
 <td class="text-muted">{{ q.created_at | date:'medium' }}</td>
 <td>
 
-                  <div class="d-inline-flex gap-2 flex-nowrap actions-row">
+               <div class="d-inline-flex gap-2 flex-nowrap actions-row">
 
-                    <button class="btn btn-outline-secondary btn-sm rounded-3"
-                            (click)="openPreview(q)">
-                      <i class="bi bi-eye me-1"></i>View
-                    </button>
+  <!-- VIEW -->
+  <button
+    class="btn btn-outline-secondary btn-sm rounded-3"
+    (click)="setActiveQuotation(q); viewQuotation()">
+    <i class="bi bi-eye me-1"></i>View
+  </button>
 
-                    <button class="btn btn-success btn-sm rounded-3"
-                            (click)="downloadPdf(q)">
-                      <i class="bi bi-download me-1"></i>PDF
-                    </button>
+  <!-- PDF -->
+  <button
+    class="btn btn-success btn-sm rounded-3"
+    (click)="downloadPdf(q)">
+    <i class="bi bi-download me-1"></i>PDF
+  </button>
 
-                    <button class="btn btn-primary btn-sm rounded-3"
-                            (click)="sendEmail(q)">
-                      <i class="bi bi-envelope me-1"></i>Email
-                    </button>
+  <!-- EMAIL -->
+  <button
+    class="btn btn-primary btn-sm rounded-3"
+    (click)="setActiveQuotation(q); openSendEmailModal()">
+    <i class="bi bi-envelope me-1"></i>Email
+  </button>
 
-                    <button *ngIf="isAdmin"
-                            class="btn btn-outline-danger btn-sm rounded-3"
-                            (click)="deleteQuotation(q)">
-                      <i class="bi bi-trash me-1"></i>Delete
-                    </button>
+  <!-- DELETE (ADMIN ONLY) -->
+  <button *ngIf="isAdmin"
+    class="btn btn-outline-danger btn-sm rounded-3"
+    (click)="deleteQuotation(q)">
+    <i class="bi bi-trash me-1"></i>Delete
+  </button>
 
-                  </div>
+</div>
+
                 </td>
               </tr>
 
@@ -285,7 +293,7 @@
             <i class="bi bi-download me-1"></i> Download PDF
           </button>
 
-          <button class="btn btn-primary rounded-3" (click)="sendEmail(previewQuotation)">
+          <button class="btn btn-primary rounded-3" (click)="openSendEmailModal()">
             <i class="bi bi-envelope me-1"></i> Send Email
           </button>
         </div>
@@ -293,5 +301,53 @@
       </div>
     </div>
 
+  </div>
+</div>
+<div class="pdf-overlay" *ngIf="showPdf" (click)="closePdf()">
+  <div class="pdf-container shadow-lg" (click)="$event.stopPropagation()">
+    <div class="d-flex justify-content-between align-items-center p-3 border-bottom bg-light">
+      <h6 class="mb-0 fw-bold"><i class="bi bi-file-pdf text-danger me-2"></i>Quotation Preview</h6>
+      <button class="btn-close" (click)="closePdf()"></button>
+    </div>
+    <div class="flex-grow-1 bg-secondary bg-opacity-10 p-0">
+      <iframe [src]="pdfUrl" class="w-100 h-100 border-0"></iframe>
+    </div>
+  </div>
+</div>
+ 
+<div class="pdf-overlay" *ngIf="showEmailModal" (click)="closeEmailModal()">
+  <div class="email-container shadow-lg" (click)="$event.stopPropagation()">
+    <div class="d-flex justify-content-between align-items-center p-3 border-bottom">
+      <h6 class="mb-0 fw-bold">Send Quotation</h6>
+      <button class="btn-close" (click)="closeEmailModal()"></button>
+    </div>
+    <div class="p-3">
+      <div class="text-center mb-3">
+        <div class="bg-success bg-opacity-10 text-success rounded-circle d-inline-flex p-3 mb-3">
+            <i class="bi bi-send fs-3"></i>
+        </div>
+        <h5>Share Quote</h5>
+        <p class="text-muted small">Send this configuration to yourself or a client.</p>
+      </div>
+ 
+      <button class="btn btn-outline-primary w-100 mb-3 py-2" (click)="sendEmailToSelf()">
+
+        <i class="bi bi-person-circle me-2"></i> Send to myself
+      </button>
+ 
+      <div class="position-relative text-center my-3">
+        <hr class="text-muted">
+        <span class="position-absolute top-50 start-50 translate-middle bg-white px-2 text-muted small">OR</span>
+      </div>
+ 
+      <div class="form-floating mb-3">
+        <input type="email" class="form-control" id="Email" placeholder="name@example.com" [(ngModel)]="otherEmail">
+        <label for="emailInput">Recipient Email</label>
+      </div>
+ 
+      <button class="btn btn-success w-100 py-2" [disabled]="!otherEmail" (click)="sendEmailToOther()">
+        Send Email <i class="bi bi-arrow-right ms-2"></i>
+      </button>
+    </div>
   </div>
 </div>

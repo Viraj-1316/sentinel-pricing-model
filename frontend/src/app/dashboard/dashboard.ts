@@ -15,21 +15,25 @@ import {RouterOutlet} from '@angular/router';
 export class Dashboard implements OnInit {
   loading = true;
   isAdmin = false;
+  role: 'Admin' | 'User' = 'User';
 
   constructor(private auth: AuthService) {}
 
-  ngOnInit(): void {
-    // ✅ Call /me and decide role
-    this.auth.getMe().subscribe({
-      next: (res) => {
-        console.log('User info:', res);
-        this.isAdmin = res.is_staff || res.is_superuser;
-        this.loading = false;
-      },
-      error: () => {
-        this.isAdmin = false;
-        this.loading = false;
-      },
-    });
-  }
+ ngOnInit(): void {
+  this.auth.getMe().subscribe({
+    next: (res) => {
+      console.log('User info:', res);
+
+      // ✅ FIXED LOGIC
+      this.isAdmin = res.role?.toLowerCase() === 'admin';
+
+      this.loading = false;
+    },
+    error: () => {
+      this.isAdmin = false;
+      this.loading = false;
+    },
+  });
+}
+
 }

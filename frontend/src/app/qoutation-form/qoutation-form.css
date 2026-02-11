@@ -1,83 +1,116 @@
-/* Typography & Foundation */
+/* ======= LAYOUT & BACKGROUNDS ======= */
 .page-shell {
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
-  letter-spacing: -0.01em;
-  color: #344767;
+  min-height: 100vh;
+  background:
+    radial-gradient(1200px 600px at 10% 10%, rgba(59, 130, 246, 0.12), transparent 40%),
+    linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+  background-attachment: fixed;
 }
 
-/* Card Styling */
+.ls-1 { letter-spacing: 0.05em; }
+.ls-2 { letter-spacing: 0.15em; }
+
+/* ======= COMPONENT STYLING ======= */
 .card {
+  border-radius: 20px !important;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-.metric-card:hover {
-  transform: translateY(-4px);
-  background-color: #fff;
-  border-bottom: 3px solid #0d6efd !important;
+.metric-hover:hover {
+  transform: translateY(-5px);
+  background: #ffffff;
+  box-shadow: 0 15px 35px rgba(19, 60, 123, 0.1) !important;
 }
 
-.w-fit { width: fit-content; }
+.bg-primary-subtle {
+  background-color: #f0f7ff !important;
+}
+
+.bg-dark {
+  background-color: #1a1d21 !important;
+}
 
 /* Custom Checkbox */
-.custom-checkbox .form-check-input {
+.custom-check .form-check-input {
   width: 1.25em;
   height: 1.25em;
+  margin-top: 0.2em;
   border-radius: 6px;
   cursor: pointer;
-  border: 2px solid #e9ecef;
 }
 
-.custom-checkbox .form-check-input:checked {
-  background-color: #0d6efd;
-  border-color: #0d6efd;
+.custom-check .form-check-label {
+  font-weight: 500;
+  color: #475569;
+  cursor: pointer;
+  padding-left: 0.5rem;
 }
 
-/* Modal System */
-.modal-overlay {
+/* Animations & Effects */
+.hover-lift {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.hover-lift:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 20px rgba(0, 0, 0, 0.15) !important;
+}
+
+.italic { font-style: italic; }
+
+/* Floating Sidebar Adjustments */
+@media (min-width: 992px) {
+  .position-sticky {
+    z-index: 1020;
+  }
+}
+.pdf-overlay {
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.4);
-  backdrop-filter: blur(8px);
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(5px);
+  z-index: 1050;
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 9999;
+  animation: fadeIn 0.3s ease-in-out;
 }
-
-.pdf-container {
-  background: white;
-  width: 90%;
-  max-width: 1100px;
-  height: 90vh;
-  border-radius: 20px;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-}
-
+ 
+.pdf-container,
 .email-container {
   background: white;
-  width: 95%;
-  max-width: 400px;
-  border-radius: 24px;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 900px;
+  height: 85vh;
+  display: flex;
+  flex-direction: column;
   overflow: hidden;
+  animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
-
-/* Button & UI Polish */
-.btn-primary {
-  background: #0d6efd;
-  border: none;
+ 
+.email-container {
+  max-width: 450px;
+  height: auto;
 }
-
-.btn-outline-secondary {
-  border: 1px solid #dee2e6;
-  color: #67748e;
+ 
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
-
-.btn-outline-secondary:hover {
-  background-color: #f8f9fa;
-  color: #252f40;
+ 
+@keyframes slideUp {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+/* Force full-width layout */
+.container,
+.container-lg,
+.container-xl,
+.container-xxl {
+  max-width: 100% !important;
 }

@@ -4,6 +4,7 @@ import { Router, RouterLink } from '@angular/router';
 import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { AuthService } from '../service/auth.service';
 import { environment } from '../../environments/environment'; 
+import { ToasterService } from '../service/toaster.service';
 export interface Quotation {
   id: number;
   cammera: number;
@@ -38,6 +39,8 @@ export class UserDashboard implements OnInit {
   loading = true;
   errorMsg: string | null = null;
  
+  quotationId!: number;
+  quotationData: any = null;
   quotations: Quotation[] = [];
   recent: Quotation[] = [];
  
@@ -55,7 +58,8 @@ export class UserDashboard implements OnInit {
   constructor(
     private http: HttpClient,
     private router: Router,
-    private auth: AuthService
+    private auth: AuthService,
+    private toast: ToasterService
   ) {}
  
   ngOnInit(): void {
@@ -137,10 +141,35 @@ export class UserDashboard implements OnInit {
   /**
    * Opens the backend PDF view in a new browser tab
    */
-  downloadPDF(id: number): void {
-    const url = `${this.PDF_API}${id}/pdf/`;
-    window.open(url, '_blank');
-  }
+ downloadPdf(q: any) {
+  if (!q?.id) return;
+
+  const id = q.id;
+  const url = `${environment.apiBaseUrl}/pricing-Model/quotation/${id}/pdf/`;
+
+  this.toast.info(`Downloading PDF #${id}...`);
+
+  this.http.get(url, { responseType: 'blob' }).subscribe({
+    next: (blob) => {
+      console.log('download clicked');
+
+      const file = new Blob([blob], { type: 'application/pdf' });
+      const downloadURL = URL.createObjectURL(file);
+
+      const a = document.createElement('a');
+      a.href = downloadURL;
+      a.download = `quotation_${id}.pdf`;
+      a.click();
+
+      URL.revokeObjectURL(downloadURL);
+      this.toast.success(`PDF downloaded: #${id}`);
+    },
+    error: () => {
+      this.toast.error('Failed to download PDF');
+    }
+  });
+}
+
 
   // ========================= NAVIGATION HELPERS =========================
 

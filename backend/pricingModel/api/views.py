@@ -277,8 +277,12 @@ class pricingCalculate(generics.ListCreateAPIView):
                 
             # ---------- CPU / RAM ----------
             vram = int(0.6*aiEnabledCam1)
-            cpuCores_required = int(0.128 * cameras)
-            ram_required = int(0.256 * cameras)
+            if cameras < 61:
+                cpuCores_required = int(0.31 * cameras)
+                ram_required = int(0.5 * cameras)
+            else :
+                cpuCores_required = int(0.128 * cameras)
+                ram_required = int(0.256 * cameras)   
 
             # ---------- STORAGE COST ----------
             storage_used = cameras * storage_days

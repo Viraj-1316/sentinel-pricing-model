@@ -17,17 +17,22 @@ export class Sidebar implements OnInit {
 
   constructor(private auth: AuthService) {}
 
-  ngOnInit(): void {
-    this.auth.getMe().subscribe({
-      next: (res) => {
-        this.username = res.username;
-        this.isAdmin = res.is_staff || res.is_superuser; // ✅ main condition
-        console.log("✅ ADMIN:", this.isAdmin);
-      },
-      error: (err) => {
-        console.log("❌ /me failed", err);
-        this.isAdmin = false;
-      }
-    });
-  }
+ngOnInit(): void {
+  this.auth.getMe().subscribe({
+    next: (res) => {
+      this.username = res.username;
+
+      // ✅ FIXED LOGIC
+      this.isAdmin = res.role?.toLowerCase() === 'admin';
+
+      console.log("✅ ROLE:", res.role);
+      console.log("✅ ADMIN:", this.isAdmin);
+    },
+    error: (err) => {
+      console.log("❌ /me failed", err);
+      this.isAdmin = false;
+    }
+  });
+}
+
 }

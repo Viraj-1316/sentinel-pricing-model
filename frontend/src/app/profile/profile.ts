@@ -102,35 +102,56 @@ export class Profile implements OnInit {
     this.errorMsg = null;
   }
 
-  saveProfile() {
-    this.saving = true;
-    this.successMsg = null;
-    this.errorMsg = null;
+saveProfile() {
+  this.saving = true;
+  this.successMsg = null;
+  this.errorMsg = null;
 
-    // ✅ include phone_number if you want to update it too
-    const payload = {
-      email: this.profile.email,
-      phone_number: this.profile.phone_number,
-
-    };
-
-    this.http.put<UserProfile>(this.PROFILE_API, payload).subscribe({
-      next: (res) => {
-        this.saving = false;
-        this.successMsg = 'Profile updated successfully ✅';
-        this.editMode = false;
-
-        this.profile = { ...this.profile, ...res };
-
-        localStorage.setItem('email', this.profile.email || '');
-        localStorage.setItem('phone_number', this.profile.phone_number || '');
-      },
-      error: (err) => {
-        this.saving = false;
-        this.errorMsg = err?.error?.detail || 'Failed to update profile.';
-      },
-    });
+  // Basic frontend validation
+  if (!this.profile.email) {
+    this.saving = false;
+    this.errorMsg = 'Email is required.';
+    return;
   }
+
+  if (this.profile.phone_number && this.profile.phone_number.length !== 10) {
+    this.saving = false;
+    this.errorMsg = 'Phone number must be 10 digits.';
+    return;
+  }
+
+  const payload = {
+    email: this.profile.email,
+    phone_number: this.profile.phone_number,
+  };
+
+  // Use PUT if backend expects full update
+  this.http.put<UserProfile>(this.PROFILE_API, payload).subscribe({
+    next: (res) => {
+      this.saving = false;
+      this.successMsg = 'Profile updated successfully ✅';
+      this.editMode = false;
+
+      // Merge updated fields
+      this.profile = { ...this.profile, ...res };
+
+      // Sync localStorage
+      localStorage.setItem('email', this.profile.email || '');
+      localStorage.setItem('phone_number', this.profile.phone_number || '');
+    },
+    error: (err) => {
+      this.saving = false;
+
+      if (err.status === 400) {
+        this.errorMsg = 'Invalid data. Please check your inputs.';
+      } else if (err.status === 401) {
+        this.errorMsg = 'Session expired. Please login again.';
+      } else {
+        this.errorMsg = err?.error?.detail || 'Failed to update profile.';
+      }
+    },
+  });
+}
 
   goDashboard() {
     this.router.navigateByUrl('/dashboard');

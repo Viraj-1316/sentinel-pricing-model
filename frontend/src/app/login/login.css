@@ -410,3 +410,32 @@
   justify-content: center;
   align-items: center;
 }
+.brand-left {
+  position: relative;
+  z-index: 5;
+  text-align: center;
+  margin-top: 40px;
+}
+
+.brand-logo {
+  width: 96px;
+  height: auto;
+  margin-bottom: 12px;
+}
+
+.brand-title {
+  font-size: 32px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  color: #ffffff;
+  text-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+}
+.left-art {
+  position: relative;
+  flex: 1;
+  display: flex;
+  align-items: center;      /* vertical center */
+  justify-content: center;  /* horizontal center */
+  overflow: hidden;
+}
+
