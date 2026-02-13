@@ -1,32 +1,98 @@
-/* Color Palette */
-.bg-primary-subtle { background-color: #f0f7ff !important; }
-.bg-dark { background-color:#f0f7ff !important; }
-.text-info { color: #00e5ff !important; }
-.text-warning { color: #ffc107 !important; }
+/* =======================
+   COLOR PALETTE
+======================= */
 
-/* Dashboard Layers */
+.bg-primary-subtle {
+  background-color: #f0f7ff !important;
+}
+
+/* FIXED: keep dark actually dark */
+.bg-dark {
+  background-color: #0f172a !important;   /* deep slate / premium */
+}
+
+.text-info {
+  color: #00e5ff !important;
+}
+
+.text-warning {
+  color: #ffc107 !important;
+}
+
+
+/* =======================
+   DASHBOARD EFFECTS
+======================= */
+
 .bg-glass {
-  background: rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(10px);
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(12px);
+  border-radius: 1rem;
 }
 
-.highlight-warning { border-left: 4px solid #ffc107 !important; }
-.shadow-premium { box-shadow: 0 15px 35px rgba(0,0,0,0.3); }
+.highlight-warning {
+  border-left: 4px solid #ffc107 !important;
+}
 
-/* Interactive Elements */
-.transition-all { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
-.hover-lift:hover { transform: translateY(-3px); }
+.shadow-premium {
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.35);
+}
 
-/* Form Components */
-.border-2 { border-width: 2px !important; }
-.rounded-4 { border-radius: 1.25rem !important; }
-.border-dashed { border: 2px dashed #e2e8f0 !important; }
 
-.form-control:focus, .form-select:focus {
+/* =======================
+   INTERACTIONS
+======================= */
+
+.transition-all {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.hover-lift:hover {
+  transform: translateY(-3px);
+}
+
+
+/* =======================
+   FORM POLISH
+======================= */
+
+.border-2 {
+  border-width: 2px !important;
+}
+
+.rounded-4 {
+  border-radius: 1.25rem !important;
+}
+
+.border-dashed {
+  border: 2px dashed #e2e8f0 !important;
+}
+
+.form-control:focus,
+.form-select:focus {
   border-color: #3b82f6;
-  background-color: #fff;
-  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+  background-color: #ffffff;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.12);
 }
 
-.cursor-pointer { cursor: pointer; }
-.ls-2 { letter-spacing: 0.15em; }
+
+/* =======================
+   UTILITIES
+======================= */
+
+.cursor-pointer {
+  cursor: pointer;
+}
+
+.ls-2 {
+  letter-spacing: 0.15em;
+}
+
+
+/* =======================
+   SIDEBAR LAYOUT
+======================= */
+
+
+
+/* Optional: collapsed sidebar support */
