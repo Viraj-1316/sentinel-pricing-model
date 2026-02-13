@@ -150,9 +150,9 @@
               <div class="d-flex justify-content-between align-items-center bg-primary-subtle p-3 rounded-4 mt-2">
                 <div>
                   <span class="d-block fw-bold text-primary">License Duration</span>
-                  <small class="text-primary opacity-75">Validity: {{ quotationData?.DurationU?.Duration }} Year(s)</small>
+                  <small class="text-primary opacity-75">Validity: {{ quotationData?.licenceDetails?.Duration }} Year(s)</small>
                 </div>
-                <span class="fw-bold text-primary fs-5">₹ {{ quotationData?.licenceCostU | number }}</span>
+                <span class="fw-bold text-primary fs-5">₹ {{ quotationData?.licenceDetails?.costing }} </span>
               </div>
             </div>
 

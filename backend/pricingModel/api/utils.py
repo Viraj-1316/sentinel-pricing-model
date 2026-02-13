@@ -69,21 +69,21 @@ def generate_enterprise_quotation_pdf(quotation, username: str) -> bytes:
     # HEADER
     # ==========================
     elements.append(Paragraph("SENTINEL", title))
-    elements.append(Spacer(1, ₹12))
+    elements.append(Spacer(1, 12))
+
 
     info_table = Table(
-        [[
-            Paragraph("<b>Client</b><br/>Enterprise Customer", normal),
-            Paragraph(
-                f"<b>Quotation ID:</b> {quotation.id}<br/>"
-                f"<b>Date:</b> {quotation.created_at.strftime('%d-%m-%Y')}<br/>"
-                f"<b>Prepared By:</b> {username}",
-                normal
+                [[
+                    Paragraph("<b>Client</b><br/>Enterprise Customer", normal),
+                    Paragraph(
+                        f"<b>Quotation ID:</b> {quotation.id}<br/>"
+                        f"<b>Date:</b> {quotation.created_at.strftime('%d-%m-%Y')}<br/>"
+                        f"<b>Prepared By:</b> {username}",
+                        normal
+                    )
+                ]],
+                colWidths=[LEFT_COL, RIGHT_COL]
             )
-        ]],
-        colWidths=[LEFT_COL, RIGHT_COL]
-    )
-
     info_table.setStyle(TableStyle([
         ("BOX", (0, 0), (-1, -1), 0.75, colors.grey),
         ("PADDING", (0, 0), (-1, -1), 10),
@@ -254,6 +254,51 @@ def generate_enterprise_quotation_pdf(quotation, username: str) -> bytes:
     ]))
 
     elements.append(licence_table)
+# ==========================
+# AI FEATURE BREAKDOWN
+# ==========================
+    elements.append(Paragraph("AI Feature Breakdown", section))
+
+    ai_data = [["Sr No", "Feature", "Cost"]]
+
+    features = quotation.ai_features.all()
+
+    if features.exists():
+        for i, ai in enumerate(features, start=1):
+
+            try:
+                cost = ai.price.costing
+            except Exception:
+                cost = 0
+
+            ai_data.append([
+                i,
+                getattr(ai, "AI_feature", "—"),
+                f"₹ {cost}"
+            ])
+    else:
+        ai_data.append(["-", "No AI Features Selected", "-"])
+
+
+    ai_table = Table(
+        ai_data,
+        colWidths=[
+            PAGE_WIDTH * 0.10,
+            LEFT_COL - (PAGE_WIDTH * 0.10),
+            RIGHT_COL,
+        ]
+    )
+
+    ai_table.setStyle(TableStyle([
+        ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#198754")),
+        ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
+        ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+        ("GRID", (0, 0), (-1, -1), 0.5, colors.grey),
+        ("ALIGN", (-1, 1), (-1, -1), "RIGHT"),
+        ("PADDING", (0, 0), (-1, -1), 8),
+    ]))
+
+    elements.append(ai_table)
 
     # ==========================
     # GRAND TOTAL

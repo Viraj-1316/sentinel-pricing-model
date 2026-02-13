@@ -347,68 +347,91 @@ class pricingCalculate(generics.ListCreateAPIView):
                 return UserPricing.objects.filter(user_name=self.request.user).order_by('-created_at')
  
         def perform_create(self, serializer):
- 
-            # ---------- SAFE INPUT READING ----------
-            cameras = serializer.validated_data['cammera']
-            storage_days = serializer.validated_data.get('storage_days', 1)
-            ai_features = serializer.validated_data.get('ai_features', [])
-            aiEnabledCam = serializer.validated_data.get('aiEnabledCam')
-            licenceDuration = serializer.validated_data['Duration'] 
-            
+
+            # ---------- SAFE INPUT ----------
+            cameras = serializer.validated_data.get("cammera")
+            storage_days = serializer.validated_data.get("storage_days", 1)
+            ai_features = serializer.validated_data.get("ai_features", [])
+            aiEnabledCam = serializer.validated_data.get("aiEnabledCam")
+            duration_id = serializer.validated_data.get("DurationU")
+
             if not cameras:
                 raise ValidationError("Camera count is required")
- 
-            # ---------- INITIALIZE VARIABLES (VERY IMPORTANT) ----------
-            vram = 0
-            cpuCores_required = 0
-            ram_required = 0
-            
+
+            if not duration_id:
+                raise ValidationError("Licence duration is required")
+
+            # ---------- VALIDATE LICENCE ----------
+            license_component = Component.objects.filter(
+                id=duration_id,
+                category__name="licence"
+            ).first()
+
+            if not license_component:
+                raise ValidationError("Invalid licence selection")
+
+            try:
+                licence_cost = license_component.price.costing
+            except Price.DoesNotExist:
+                raise ValidationError("Licence price not configured")
+
             # ---------- STORAGE ----------
-            storage = Component.objects.filter(category__name='Storage').first()
+            storage = Component.objects.filter(category__name="Storage").first()
+
             if not storage:
                 raise ValidationError("Storage component not configured")
-            if not hasattr(storage, 'price'):
+
+            try:
+                storage_unit_cost = storage.price.costing
+            except Price.DoesNotExist:
                 raise ValidationError("Storage pricing not configured")
- 
-            # ---------- AI COST ----------
-            
+
+            # ---------- AI ENABLED CAMERAS ----------
             if aiEnabledCam:
-                aiEnabledCam = aiEnabledCam
-            else :
-                aiEnabledCam = cameras    
- 
-            if ai_features :
-                aiEnabledCam1 = aiEnabledCam
-            else:  
-                aiEnabledCam1 = 0
-                
-            # ---------- CPU / RAM ----------
-            vram = int(0.7*aiEnabledCam1)
+                ai_enabled_cams = aiEnabledCam
+            else:
+                ai_enabled_cams = cameras
+
+            ai_enabled_cams = int(ai_enabled_cams)
+
+            # If no AI features → disable AI load
+            if ai_features:
+                ai_load_cams = ai_enabled_cams
+            else:
+                ai_load_cams = 0
+
+            # ---------- REQUIREMENTS ----------
+            vram_required = int(0.7 * ai_load_cams)
+
             if cameras < 61:
                 cpuCores_required = int(0.31 * cameras)
                 ram_required = int(0.5 * cameras)
-            else :
-                cpuCores_required = int(0.250 * cameras)
-                ram_required = int(0.5 * cameras)   
+            else:
+                cpuCores_required = int(0.25 * cameras)
+                ram_required = int(0.5 * cameras)
 
-            # ---------- STORAGE COST ----------
+            # ---------- STORAGE CALCULATION ----------
             storage_used = cameras * storage_days
             storage_used_user = storage_used * 19
-            
-            # ---------- SAVE ----------
+
+            # ---------- SAVE CLEAN DATA ----------
             user_pricing = serializer.save(
                 user_name=self.request.user,
-                aiEnabledCam=aiEnabledCam1,
+
+                aiEnabledCam=ai_load_cams,
                 storage_days=storage_days,
                 storage_used_user=storage_used_user,
-                vram_required=vram,
+
+                vram_required=vram_required,
                 cpuCores_required=cpuCores_required,
                 ram_required=ram_required,
-                DurationU = licenceDuration
+
+                DurationU=license_component.id,     # ⭐ ALWAYS CLEAN
+                licenceCostU=licence_cost,          # ⭐ PREVENTS UI MISMATCH
             )
- 
+
             user_pricing.ai_features.set(ai_features)
- 
+
     
  
  
@@ -426,16 +449,19 @@ class pricingRecomendationview(generics.RetrieveUpdateDestroyAPIView):
  
     def perform_update(self, serializer):
         instance = self.get_object()
-        vramUser = instance.vram_required
         validated = serializer.validated_data
+
+        vramUser = instance.vram_required
+
         include_cpu = validated.get("include_cpu", instance.include_cpu)
         include_gpu = validated.get("include_gpu", instance.include_gpu)
         include_storage = validated.get("include_storage", instance.include_storage)
-        
+
         cpu = None
         cpu_cost = 0
+
+        # ---------- CPU ----------
         if include_cpu:
-            # ---------- CPU ----------
             cpu = Component.objects.filter(
                 category__name="Processor",
                 CPUcores__isnull=False,
@@ -445,111 +471,108 @@ class pricingRecomendationview(generics.RetrieveUpdateDestroyAPIView):
             if not cpu:
                 raise ValidationError("No CPU meets required core count")
 
-            cpu_price = Price.objects.filter(component=cpu).first()
-            if not cpu_price:
+            try:
+                cpu_cost = cpu.price.costing
+            except Price.DoesNotExist:
                 raise ValidationError(f"Price not configured for CPU: {cpu.core_hardware}")
-
-            cpu_cost = cpu_price.costing
 
         # ---------- GPU ----------
         gpu = None
         gpu_cost = 0
 
         if include_gpu and vramUser > 0:
-            if vramUser <= 48:
-                gpu = Component.objects.filter(
-                    category__name="Processor",
-                    VRAM__gt=0,
-                    VRAM__gte=vramUser
-                ).order_by("VRAM").first()
 
-                if not gpu:
-                    raise ValidationError("No GPU meets VRAM requirement")
+            gpu = Component.objects.filter(
+                category__name="Processor",
+                VRAM__isnull=False,
+                VRAM__gte=vramUser
+            ).order_by("VRAM").first()
 
-                # gpu_price = Price.objects.filter(component=gpu).first()
-                try:
-                    gpu_cost = gpu.price.costing
-                except Price.DoesNotExist:
-                    raise ValidationError("GPU price not configured")
+            if not gpu:
+                raise ValidationError("No GPU meets VRAM requirement")
 
-                # if not gpu_price:
-                #     raise ValidationError("GPU price not configured")
-
-                # gpu_cost = gpu_price.costing
-            else:
-                gpu_units = math.ceil(vramUser / 48)
-                gpu = Component.objects.filter(
-                    category__name="Processor",
-                    VRAM__isnull=False
-                ).order_by("-VRAM").first()
-
-                if not gpu:
-                    raise ValidationError("No GPU configured")
-
-                gpu_price = Price.objects.filter(component=gpu).first()
-                if not gpu_price:
-                    raise ValidationError("GPU price not configured")
-
-                gpu_cost = gpu_price.costing * gpu_units
+            try:
+                gpu_cost = gpu.price.costing
+            except Price.DoesNotExist:
+                raise ValidationError("GPU price not configured")
 
         # ---------- AI FEATURES ----------
         ai_cost = 0
         for ai in instance.ai_features.all():
             ai_price = Price.objects.filter(component=ai).first()
+
             if not ai_price:
                 raise ValidationError(f"Price not configured for AI feature: {ai.AI_feature}")
+
             ai_cost += ai_price.costing
 
+        # ---------- STORAGE ----------
         storage_cost = 0
+
         if include_storage:
-            # ---------- STORAGE ----------
-            storage = Component.objects.filter(category__name="Storage").first()
+            storage = Component.objects.filter(
+                category__name="Storage"
+            ).first()
+
             if not storage:
                 raise ValidationError("Storage component not configured")
 
             storage_price = Price.objects.filter(component=storage).first()
+
             if not storage_price:
                 raise ValidationError("Storage price not configured")
 
             storage_cost = (instance.storage_used_user / 19) * storage_price.costing
 
+        # ---------- LICENCE (FIXED) ----------
+        # ---------- LICENCE (TRULY FIXED) ----------
+        duration_id = serializer.validated_data.get("DurationU")
+
+        if duration_id is None:
+            duration_id = instance.DurationU
+
         license = Component.objects.filter(
+            id=duration_id,
             category__name="licence",
-            ).first()
-        
+        ).first()
+
         if not license:
-            raise ValidationError("licence component not configured")
-        
-        licensePrice = Price.objects.filter(component=license).first()
-        
-        if not licensePrice:
-            raise ValidationError("licence price not configured")
-        
-        licenseCost = licensePrice.costing
-        
+            raise ValidationError("Selected licence component not configured")
+
+        try:
+            licenseCost = license.price.costing
+        except Price.DoesNotExist:
+            raise ValidationError("Licence price not configured")
+
         # ---------- TOTAL ----------
+# ---------- TOTAL (FIXED) ----------
         total_cost = cpu_cost + gpu_cost + ai_cost + storage_cost + licenseCost
 
         serializer.save(
-            cpu=cpu,
-            gpu=gpu,
-            cpu_cost=cpu_cost,
-            gpu_cost=gpu_cost,
-            ai_cost=ai_cost,
-            storage_cost=storage_cost,
-            licenceCostU = licenseCost,
-            include_cpu = include_cpu,
-            include_gpu = include_gpu,
-            include_storage = include_storage,
-            total_costing=total_cost,
-            
-        )
+        cpu=cpu,
+        gpu=gpu,
+
+        cpu_cost=cpu_cost,
+        gpu_cost=gpu_cost,
+        ai_cost=ai_cost,
+        storage_cost=storage_cost,
+
+        DurationU=duration_id,        # ⭐⭐⭐ MISSING PIECE
+        licenceCostU=licenseCost,
+
+        include_cpu=include_cpu,
+        include_gpu=include_gpu,
+        include_storage=include_storage,
+
+        total_costing=total_cost,
+    )
 
         create_audit_log(
             self.request,
             "UPDATE_PRICING",
             f"Final pricing calculated. Total={total_cost}"
         )
+
  
  
 class UserQuotationList(generics.ListAPIView):

@@ -145,17 +145,17 @@ class ComponentDisplaySerializer(serializers.ModelSerializer):
 #             "include_storage",
 #             "created_at",
 #         ]         
-
 class UserFinalQuotationSerializer(serializers.ModelSerializer):
+
     cpu = ComponentDisplaySerializer(read_only=True)
     gpu = ComponentDisplaySerializer(read_only=True)
-    
-    # Nested serializer to show AI feature names and costs
     ai_features = AI_ENABLEDserializer(many=True, read_only=True)
-    
-    # SerializerMethodField to fetch the License object using the ID in DurationU
-    # This prevents the "int object has no attribute price" crash
-    DurationU = serializers.SerializerMethodField()
+
+    # ✅ WRITEABLE (THIS FIXES EVERYTHING)
+    DurationU = serializers.IntegerField(required=False)
+
+    # ✅ READABLE (UI display)
+    licenceDetails = serializers.SerializerMethodField()
 
     class Meta:
         model = UserPricing
@@ -165,8 +165,10 @@ class UserFinalQuotationSerializer(serializers.ModelSerializer):
             "cpuCores_required",
             "ram_required",
             "vram_required",
+
             "cpu",
             "gpu",
+
             "cpu_cost",
             "gpu_cost",
             "ai_cost",
@@ -174,23 +176,30 @@ class UserFinalQuotationSerializer(serializers.ModelSerializer):
             "storage_used_user",
             "storage_days",
             "total_costing",
+
             "ai_features",
+
             "DurationU",
+            "licenceDetails",
             "licenceCostU",
+
             "include_cpu",
             "include_gpu",
             "include_storage",
             "created_at",
         ]
 
-    def get_DurationU(self, obj):
-        # Since DurationU is an IntegerField storing an ID, we fetch the object manually
+    def get_licenceDetails(self, obj):
         if not obj.DurationU:
             return None
-        license_obj = Component.objects.filter(id=obj.DurationU).first()
-        if license_obj:
-            return licensePricingSerializer(license_obj).data
+
+        licence_obj = Component.objects.filter(id=obj.DurationU).first()
+
+        if licence_obj:
+            return licensePricingSerializer(licence_obj).data
+
         return None
+
 
 
 
