@@ -10,6 +10,8 @@ from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.pagesizes import A4
 from reportlab.lib import colors
 
+from pricingModel.models import Component
+
 
 def generate_enterprise_quotation_pdf(quotation, username: str) -> bytes:
     buffer = BytesIO()
@@ -25,7 +27,6 @@ def generate_enterprise_quotation_pdf(quotation, username: str) -> bytes:
 
     PAGE_WIDTH = A4[0] - doc.leftMargin - doc.rightMargin
 
-    # ✅ Canonical width system
     LEFT_COL = PAGE_WIDTH * 0.65
     RIGHT_COL = PAGE_WIDTH * 0.35
 
@@ -65,12 +66,10 @@ def generate_enterprise_quotation_pdf(quotation, username: str) -> bytes:
     )
 
     # ==========================
-    # HEADER (FIXED SPACING)
+    # HEADER
     # ==========================
     elements.append(Paragraph("SENTINEL", title))
-
-    # ✅ CRITICAL: prevents collision with next table
-    elements.append(Spacer(1, 12))
+    elements.append(Spacer(1, ₹12))
 
     info_table = Table(
         [[
@@ -99,26 +98,39 @@ def generate_enterprise_quotation_pdf(quotation, username: str) -> bytes:
     storage_days = getattr(quotation, "storage_days", 7)
     storage_cost = getattr(quotation, "storage_cost", 0)
 
-    cpu_name = getattr(quotation.cpu, "core_hardware", "CPU") if getattr(quotation, "cpu", None) else "—"
-
+    cpu_name = getattr(quotation.cpu, "core_hardware", "—") if getattr(quotation, "cpu", None) else "—"
     CPUcores = getattr(quotation.cpu, "CPUcores", "-") if getattr(quotation, "cpu", None) else "-"
-
     ram_required = getattr(quotation, "ram_required", "-")
     cpu_cost = getattr(quotation, "cpu_cost", 0)
 
-    gpu_name = getattr(quotation.gpu, "AI_Component", "GPU") if getattr(quotation, "gpu", None) else "—"
+    gpu_name = getattr(quotation.gpu, "AI_Component", "—") if getattr(quotation, "gpu", None) else "—"
     gpu_vram = getattr(quotation.gpu, "VRAM", "-") if getattr(quotation, "gpu", None) else "-"
     gpu_cost = getattr(quotation, "gpu_cost", 0)
 
-    # ✅ LICENCE COST (robust API-safe logic)
-    licence_cost = 0
-    if hasattr(quotation, "licenceCostU"):
-        licence_cost = quotation.licenceCostU
-    elif hasattr(quotation, "DurationU") and quotation.DurationU:
-        licence_cost = getattr(quotation.DurationU, "costing", 0)
-
     ai_cost = getattr(quotation, "ai_cost", 0)
     total_cost = getattr(quotation, "total_costing", 0)
+
+    # ==========================
+    # LICENCE FETCH (MODEL-CORRECT)
+    # ==========================
+    duration_value = "-"
+    licence_cost = getattr(quotation, "licenceCostU", 0)
+
+    if getattr(quotation, "DurationU", None):
+        licence_obj = Component.objects.filter(id=quotation.DurationU).first()
+
+        if licence_obj:
+            duration_value = getattr(licence_obj, "Duration", "-")
+
+            if hasattr(licence_obj, "price"):
+                licence_cost = licence_obj.price.costing
+
+    if duration_value != "-":
+        try:
+            years = int(duration_value)
+            duration_value = f"{years} Year" if years == 1 else f"{years} Years"
+        except Exception:
+            pass
 
     # ==========================
     # COST SUMMARY
@@ -149,7 +161,7 @@ def generate_enterprise_quotation_pdf(quotation, username: str) -> bytes:
     elements.append(summary_table)
 
     # ==========================
-    # CPU BREAKDOWN (FIXED WIDTH)
+    # CPU BREAKDOWN
     # ==========================
     elements.append(Paragraph("CPU Breakdown", section))
 
@@ -158,13 +170,7 @@ def generate_enterprise_quotation_pdf(quotation, username: str) -> bytes:
             ["CPU Model", "Cores", "RAM (GB)", "Cost"],
             [cpu_name, CPUcores, ram_required, f"₹ {cpu_cost}"],
         ],
-        colWidths=[
-    LEFT_COL * 0.50,   # CPU Model
-    LEFT_COL * 0.20,   # Cores
-    LEFT_COL * 0.30,   # RAM
-    RIGHT_COL          # Cost
-]
-
+        colWidths=[LEFT_COL * 0.5, LEFT_COL * 0.2, LEFT_COL * 0.3, RIGHT_COL]
     )
 
     cpu_table.setStyle(TableStyle([
@@ -187,11 +193,7 @@ def generate_enterprise_quotation_pdf(quotation, username: str) -> bytes:
             ["GPU Model", "VRAM (GB)", "Cost"],
             [gpu_name, gpu_vram, f"₹ {gpu_cost}"],
         ],
-        colWidths=[
-            LEFT_COL * 0.70,
-            LEFT_COL * 0.30,
-            RIGHT_COL
-        ]
+        colWidths=[LEFT_COL * 0.7, LEFT_COL * 0.3, RIGHT_COL]
     )
 
     gpu_table.setStyle(TableStyle([
@@ -207,42 +209,7 @@ def generate_enterprise_quotation_pdf(quotation, username: str) -> bytes:
     # ==========================
     # LICENCE BREAKDOWN
     # ==========================
-   # ==========================
-# LICENCE BREAKDOWN
-# ==========================
     elements.append(Paragraph("Licence Breakdown", section))
-
-    duration_value = "-"
-    licence_cost = 0
-
-    try:
-        # ✅ Fetch duration from Django FK
-        if getattr(quotation, "duration", None):
-            duration_value = getattr(quotation.duration, "duration", "-")
-
-        # ✅ Fetch licence cost safely
-        if getattr(quotation, "licenceCostU", None):
-            licence_cost = quotation.licenceCostU
-        elif getattr(quotation, "duration", None):
-            licence_cost = getattr(quotation.duration, "costing", 0)
-
-    except Exception:
-        duration_value = "-"
-        licence_cost = 0
-
-
-    # ✅ Human-friendly duration formatting
-    if duration_value != "-":
-        try:
-            duration_int = int(duration_value)
-            duration_value = (
-                f"{duration_int} Year"
-                if duration_int == 1
-                else f"{duration_int} Years"
-            )
-        except Exception:
-            pass
-
 
     licence_table = Table(
         [
@@ -261,41 +228,6 @@ def generate_enterprise_quotation_pdf(quotation, username: str) -> bytes:
     ]))
 
     elements.append(licence_table)
-
-    # ==========================
-    # AI FEATURES
-    # ==========================
-    elements.append(Paragraph("AI Feature Breakdown", section))
-
-    ai_data = [["Sr No", "Feature", "Cost"]]
-    features = quotation.ai_features.all()
-
-    if features.exists():
-        for i, ai in enumerate(features, start=1):
-            cost = ai.price.costing if hasattr(ai, "price") else 0
-            ai_data.append([i, ai.AI_feature, f"₹ {cost}"])
-    else:
-        ai_data.append(["-", "No AI features selected", "-"])
-
-    ai_table = Table(
-        ai_data,
-        colWidths=[
-            PAGE_WIDTH * 0.10,
-            LEFT_COL - (PAGE_WIDTH * 0.10),
-            RIGHT_COL,
-        ]
-    )
-
-    ai_table.setStyle(TableStyle([
-        ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#198754")),
-        ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
-        ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
-        ("GRID", (0, 0), (-1, -1), 0.5, colors.grey),
-        ("ALIGN", (-1, 1), (-1, -1), "RIGHT"),
-        ("PADDING", (0, 0), (-1, -1), 8),
-    ]))
-
-    elements.append(ai_table)
 
     # ==========================
     # GRAND TOTAL
@@ -318,9 +250,6 @@ def generate_enterprise_quotation_pdf(quotation, username: str) -> bytes:
 
     elements.append(total_table)
 
-    # ==========================
-    # FOOTER
-    # ==========================
     elements.append(Paragraph(
         "This quotation is system generated and valid for 15 days.<br/>"
         "Taxes applicable as per government norms.",
@@ -328,6 +257,7 @@ def generate_enterprise_quotation_pdf(quotation, username: str) -> bytes:
     ))
 
     doc.build(elements)
+
     pdf = buffer.getvalue()
     buffer.close()
 
