@@ -353,7 +353,7 @@ class pricingCalculate(generics.ListCreateAPIView):
             storage_days = serializer.validated_data.get('storage_days', 1)
             ai_features = serializer.validated_data.get('ai_features', [])
             aiEnabledCam = serializer.validated_data.get('aiEnabledCam')
-            licenceDuration = serializer.validated_data['DurationU'] 
+            licenceDuration = serializer.validated_data['Duration'] 
             
             if not cameras:
                 raise ValidationError("Camera count is required")
