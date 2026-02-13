@@ -19,6 +19,7 @@ from rest_framework.response import Response
 from pricingModel.api.tasks import send_quotation_email_task
 from pricingModel.api.utils import generate_enterprise_quotation_pdf
 from io import BytesIO
+from rest_framework import status
 from rest_framework import filters
 from pricingModel.api.audit import create_audit_log   
 from pricingModel.api.serializers import (
@@ -67,38 +68,144 @@ class AdminQuatationDetail(generics.RetrieveDestroyAPIView):
     serializer_class = AdminQuotationSerializer
     permission_classes = [IsAuthenticated, IsAdminUser]
           
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework import status
+from django.contrib.auth.models import User
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def toggle_user_role(request, user_id):
+
+    # ✅ Only admin or superuser
+    if not request.user.is_staff and not request.user.is_superuser:
+        return Response(
+            {"detail": "Permission denied"},
+            status=status.HTTP_403_FORBIDDEN
+        )
+
+    try:
+        target_user = User.objects.get(id=user_id)
+    except User.DoesNotExist:
+        return Response(
+            {"detail": "User not found"},
+            status=status.HTTP_404_NOT_FOUND
+        )
+
+    # ❌ Never touch superuser
+    if target_user.is_superuser:
+        return Response(
+            {"detail": "Cannot modify superuser"},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    # ❌ Admin cannot modify another admin
+    if request.user.is_staff and not request.user.is_superuser:
+        if target_user.is_staff:
+            return Response(
+                {"detail": "Admin cannot modify another admin"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+    # ❌ Cannot modify self
+    if request.user.id == target_user.id:
+        return Response(
+            {"detail": "You cannot change your own role"},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    # 🔁 TOGGLE ROLE
+    target_user.is_staff = not target_user.is_staff
+    target_user.save(update_fields=['is_staff'])
+
+    role = "Admin" if target_user.is_staff else "User"
+
+    return Response({
+        "detail": f"User {target_user.username} role changed to {role} ✅",
+        "is_staff": target_user.is_staff
+    }, status=status.HTTP_200_OK)
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def toggle_user_status(request, user_id):
+
+    # Only admin or superuser
+    if not request.user.is_staff and not request.user.is_superuser:
+        return Response(
+            {"detail": "Permission denied"},
+            status=status.HTTP_403_FORBIDDEN
+        )
+
+    try:
+        user = User.objects.get(id=user_id)
+    except User.DoesNotExist:
+        return Response(
+            {"detail": "User not found"},
+            status=status.HTTP_404_NOT_FOUND
+        )
+
+    # Never disable superuser
+    if user.is_superuser:
+        return Response(
+            {"detail": "Cannot disable superuser"},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    # Cannot disable yourself
+    if request.user.id == user.id:
+        return Response(
+            {"detail": "You cannot disable your own account"},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    # Toggle active
+    user.is_active = not user.is_active
+    user.save(update_fields=['is_active'])
+
+    state = "activated" if user.is_active else "deactivated"
+
+    return Response({
+        "detail": f"User {user.username} {state} ✅",
+        "is_active": user.is_active
+    })
+
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def send_quotation_email(request, pk):
- 
-    quotation = UserPricing.objects.filter(
-        pk=pk,
-        user_name=request.user
-    ).first()
- 
+
+    qs = UserPricing.objects.filter(pk=pk)
+
+    # 🔐 Non-admins can only access their own quotations
+    if not request.user.is_staff and not request.user.is_superuser:
+        qs = qs.filter(user_name=request.user)
+
+    quotation = qs.first()
+
     if not quotation:
         return Response({"detail": "Quotation not found"}, status=404)
- 
+
     print("REQUEST DATA:", request.data)
     print("USER EMAIL:", request.user.email)
- 
-    # ✅ FIX: read email from payload OR user
+
     to_email = (
         request.data.get("Email")
         or request.data.get("email")
         or request.user.email
     )
- 
+
     if not to_email:
         return Response({"detail": "Email is required"}, status=400)
- 
+
     send_quotation_email_task.delay(
         quotation.id,
         request.user.username,
         to_email
     )
- 
+
     return Response({"detail": "Email sending started ✅"})
+
  
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
@@ -277,12 +384,8 @@ class pricingCalculate(generics.ListCreateAPIView):
                 
             # ---------- CPU / RAM ----------
             vram = int(0.6*aiEnabledCam1)
-            if cameras < 61:
-                cpuCores_required = int(0.31 * cameras)
-                ram_required = int(0.5 * cameras)
-            else :
-                cpuCores_required = int(0.128 * cameras)
-                ram_required = int(0.256 * cameras)   
+            cpuCores_required = int(0.128 * cameras)
+            ram_required = int(0.256 * cameras)
 
             # ---------- STORAGE COST ----------
             storage_used = cameras * storage_days
@@ -574,16 +677,7 @@ class  processorUnitDetail(generics.RetrieveUpdateDestroyAPIView):
         instance.delete()
         
         
-class AdminAuditLogsView(generics.ListAPIView):
-    serializer_class = AuditLogSerializer
-    permission_classes = [IsAuthenticated, IsAdminUser]
  
-    def get_queryset(self):
-        return UserPricing.objects.filter(
-            user_name=self.request.user
-            
-        ).order_by('-created_at')
-        
         
 class AdminAuditLogsView(generics.ListAPIView):
     serializer_class = AuditLogSerializer

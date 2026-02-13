@@ -23,6 +23,8 @@ from pricingModel.api.views import (
     AdminQuatationDetail,
     processorUnit,
     processorUnitDetail,
+    toggle_user_role,
+    toggle_user_status
 )
 
 urlpatterns = [
@@ -105,10 +107,20 @@ urlpatterns = [
     path('admin/quotations/', AdminAllQuotationsView.as_view(), name='admin-quotations'),
     path('admin/quotations/<int:pk>/', AdminQuatationDetail.as_view(), name='admin-quotations-detail'),
     
-    path('admin/quotations/<int:pk>/', AdminQuatationDetail.as_view(), name='admin-quotation-detail'),
-    
-    path('admin/quotations/<int:pk>/', AdminQuatationDetail.as_view(), name='admin-quotation-detail'),
-    
+
     path('admin/audit-logs/', AdminAuditLogsView.as_view(), name='admin-audit-logs'),
+    # urls.py
+path(
+        'admin/users/<int:user_id>/toggle-role/',
+        toggle_user_role,
+        name='toggle-user-role'
+    ),
+path(
+  "admin/users/<int:user_id>/toggle-status/",
+  toggle_user_status,
+  name="toggle-user-status"
+)
+
+
 
 ]
