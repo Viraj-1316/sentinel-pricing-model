@@ -99,52 +99,18 @@ class ComponentDisplaySerializer(serializers.ModelSerializer):
             "AI_Component",
             "ram_required",
         ]
+
+class licensePricingSerializer(serializers.ModelSerializer):
+    
+    costing = serializers.IntegerField(source='price.costing')
+    class Meta:
         
-# class UserFinalQuotationSerializer(serializers.ModelSerializer):
-#     cpu = ComponentDisplaySerializer(read_only=True)
-#     gpu = ComponentDisplaySerializer(read_only=True)
-
-#     ai_features = AI_ENABLEDserializer(many=True, read_only=True)
-
-#     ai_feature_ids = serializers.PrimaryKeyRelatedField(
-#         many=True,
-#         queryset=Component.objects.filter(category__name="AI"),
-#         write_only=True,
-#         required=False
-#     )
-
-#     all_ai_features = serializers.SerializerMethodField()
-
-#     class Meta:
-#         model = UserPricing
-#         fields = [
-#             "id",
-#             "cammera",
-
-#             "cpuCores_required",
-#             "ram_required",
-#             "vram_required",
-
-#             "cpu",
-#             "gpu",
-
-#             "cpu_cost",
-#             "gpu_cost",
-#             "ai_cost",
-#             "storage_cost",
-#             "storage_used_user",
-#             "total_costing",
-
-#             "ai_features",
-            
-#             # Licence Duration
-#             "DurationU",
-#             "licenceCostU",
-#             "include_cpu",
-#             "include_gpu",
-#             "include_storage",
-#             "created_at",
-#         ]         
+       model = Component
+       fields = [
+           'id',
+           'Duration',
+           'costing'
+       ]         
 class UserFinalQuotationSerializer(serializers.ModelSerializer):
 
     cpu = ComponentDisplaySerializer(read_only=True)
@@ -228,17 +194,7 @@ class componentDetailSerializer(serializers.ModelSerializer):
         model = Component
         fields = "__all__"
 
-class licensePricingSerializer(serializers.ModelSerializer):
-    
-    costing = serializers.IntegerField(source='price.costing')
-    class Meta:
-        
-       model = Component
-       fields = [
-           'id',
-           'Duration',
-           'costing'
-       ]        
+       
   
 class storagePricingSerializer(serializers.ModelSerializer):
     costing = serializers.IntegerField(source='price.costing')

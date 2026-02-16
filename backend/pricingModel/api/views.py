@@ -345,60 +345,53 @@ class pricingCalculate(generics.ListCreateAPIView):
                 return UserPricing.objects.all()
             else:
                 return UserPricing.objects.filter(user_name=self.request.user).order_by('-created_at')
- 
+        
         def perform_create(self, serializer):
 
-            # ---------- SAFE INPUT ----------
             cameras = serializer.validated_data.get("cammera")
             storage_days = serializer.validated_data.get("storage_days", 1)
             ai_features = serializer.validated_data.get("ai_features", [])
             aiEnabledCam = serializer.validated_data.get("aiEnabledCam")
+<<<<<<< HEAD
             duration_id = serializer.validated_data.get("DurationU")
+=======
+
+            licence_id = serializer.validated_data.get("DurationU")
+>>>>>>> 5f96ffb (changes saved)
 
             if not cameras:
                 raise ValidationError("Camera count is required")
 
+<<<<<<< HEAD
             if not duration_id:
                 raise ValidationError("Licence duration is required")
+=======
+            if not licence_id:
+                raise ValidationError("Licence is required")
+>>>>>>> 5f96ffb (changes saved)
 
-            # ---------- VALIDATE LICENCE ----------
+            # ✅ convert ID → Component
             license_component = Component.objects.filter(
+<<<<<<< HEAD
                 id=duration_id,
+=======
+                id=licence_id,
+>>>>>>> 5f96ffb (changes saved)
                 category__name="licence"
             ).first()
 
             if not license_component:
-                raise ValidationError("Invalid licence selection")
+                raise ValidationError("Invalid licence selected")
 
             try:
                 licence_cost = license_component.price.costing
             except Price.DoesNotExist:
                 raise ValidationError("Licence price not configured")
 
-            # ---------- STORAGE ----------
-            storage = Component.objects.filter(category__name="Storage").first()
+            # ---------- AI CAMERA LOGIC ----------
+            ai_enabled_cams = aiEnabledCam if aiEnabledCam else cameras
 
-            if not storage:
-                raise ValidationError("Storage component not configured")
-
-            try:
-                storage_unit_cost = storage.price.costing
-            except Price.DoesNotExist:
-                raise ValidationError("Storage pricing not configured")
-
-            # ---------- AI ENABLED CAMERAS ----------
-            if aiEnabledCam:
-                ai_enabled_cams = aiEnabledCam
-            else:
-                ai_enabled_cams = cameras
-
-            ai_enabled_cams = int(ai_enabled_cams)
-
-            # If no AI features → disable AI load
-            if ai_features:
-                ai_load_cams = ai_enabled_cams
-            else:
-                ai_load_cams = 0
+            ai_load_cams = ai_enabled_cams if ai_features else 0
 
             # ---------- REQUIREMENTS ----------
             vram_required = int(0.7 * ai_load_cams)
@@ -410,27 +403,31 @@ class pricingCalculate(generics.ListCreateAPIView):
                 cpuCores_required = int(0.25 * cameras)
                 ram_required = int(0.5 * cameras)
 
-            # ---------- STORAGE CALCULATION ----------
+            # ---------- STORAGE ----------
             storage_used = cameras * storage_days
             storage_used_user = storage_used * 19
 
-            # ---------- SAVE CLEAN DATA ----------
+            # ---------- SAVE ----------
             user_pricing = serializer.save(
                 user_name=self.request.user,
-
                 aiEnabledCam=ai_load_cams,
                 storage_days=storage_days,
                 storage_used_user=storage_used_user,
-
                 vram_required=vram_required,
                 cpuCores_required=cpuCores_required,
                 ram_required=ram_required,
+<<<<<<< HEAD
 
                 DurationU=license_component.id,     # ⭐ ALWAYS CLEAN
                 licenceCostU=licence_cost,          # ⭐ PREVENTS UI MISMATCH
+=======
+                licence=license_component,   # ✅ SAVE OBJECT
+                licenceCostU=licence_cost,
+>>>>>>> 5f96ffb (changes saved)
             )
 
             user_pricing.ai_features.set(ai_features)
+
 
     
  
@@ -525,27 +522,17 @@ class pricingRecomendationview(generics.RetrieveUpdateDestroyAPIView):
             storage_cost = (instance.storage_used_user / 19) * storage_price.costing
 
         # ---------- LICENCE (FIXED) ----------
-        # ---------- LICENCE (TRULY FIXED) ----------
-        duration_id = serializer.validated_data.get("DurationU")
-
-        if duration_id is None:
-            duration_id = instance.DurationU
-
-        license = Component.objects.filter(
-            id=duration_id,
-            category__name="licence",
-        ).first()
+        license = instance.licence
 
         if not license:
-            raise ValidationError("Selected licence component not configured")
+            raise ValidationError("Licence not selected")
 
         try:
             licenseCost = license.price.costing
         except Price.DoesNotExist:
             raise ValidationError("Licence price not configured")
 
-        # ---------- TOTAL ----------
-# ---------- TOTAL (FIXED) ----------
+
         total_cost = cpu_cost + gpu_cost + ai_cost + storage_cost + licenseCost
 
         serializer.save(
@@ -556,8 +543,6 @@ class pricingRecomendationview(generics.RetrieveUpdateDestroyAPIView):
         gpu_cost=gpu_cost,
         ai_cost=ai_cost,
         storage_cost=storage_cost,
-
-        DurationU=duration_id,        # ⭐⭐⭐ MISSING PIECE
         licenceCostU=licenseCost,
 
         include_cpu=include_cpu,
