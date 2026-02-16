@@ -212,29 +212,22 @@ def generate_enterprise_quotation_pdf(quotation, username: str) -> bytes:
     elements.append(Paragraph("Licence Breakdown", section))
 
     duration_value = "-"
-    licence_cost = 0
+    licence_cost = getattr(quotation, "licenceCostU", 0)
 
-    try:
-       duration_value = getattr(quotation, "DurationU", "-")
-       licence_cost = getattr(quotation, "licenceCostU", 0)
+    if getattr(quotation, "DurationU", None):
 
+        licence_obj = Component.objects.filter(id=quotation.DurationU).first()
 
-    except Exception:
-        duration_value = "-"
-        licence_cost = 0
+        if licence_obj:
+            duration_value = getattr(licence_obj, "Duration", "-")
 
-
-    # ✅ Human-friendly duration formatting
     if duration_value != "-":
         try:
-            duration_int = int(duration_value)
-            duration_value = (
-                f"{duration_int} Year"
-                if duration_int == 1
-                else f"{duration_int} Years"
-            )
-        except Exception:
+            years = int(duration_value)
+            duration_value = f"{years} Year" if years == 1 else f"{years} Years"
+        except:
             pass
+
 
 
     licence_table = Table(
