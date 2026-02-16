@@ -352,31 +352,17 @@ class pricingCalculate(generics.ListCreateAPIView):
             storage_days = serializer.validated_data.get("storage_days", 1)
             ai_features = serializer.validated_data.get("ai_features", [])
             aiEnabledCam = serializer.validated_data.get("aiEnabledCam")
-<<<<<<< HEAD
             duration_id = serializer.validated_data.get("DurationU")
-=======
-
-            licence_id = serializer.validated_data.get("DurationU")
->>>>>>> 5f96ffb (changes saved)
 
             if not cameras:
                 raise ValidationError("Camera count is required")
 
-<<<<<<< HEAD
             if not duration_id:
                 raise ValidationError("Licence duration is required")
-=======
-            if not licence_id:
-                raise ValidationError("Licence is required")
->>>>>>> 5f96ffb (changes saved)
 
             # ✅ convert ID → Component
             license_component = Component.objects.filter(
-<<<<<<< HEAD
                 id=duration_id,
-=======
-                id=licence_id,
->>>>>>> 5f96ffb (changes saved)
                 category__name="licence"
             ).first()
 
@@ -416,14 +402,9 @@ class pricingCalculate(generics.ListCreateAPIView):
                 vram_required=vram_required,
                 cpuCores_required=cpuCores_required,
                 ram_required=ram_required,
-<<<<<<< HEAD
 
                 DurationU=license_component.id,     # ⭐ ALWAYS CLEAN
                 licenceCostU=licence_cost,          # ⭐ PREVENTS UI MISMATCH
-=======
-                licence=license_component,   # ✅ SAVE OBJECT
-                licenceCostU=licence_cost,
->>>>>>> 5f96ffb (changes saved)
             )
 
             user_pricing.ai_features.set(ai_features)
