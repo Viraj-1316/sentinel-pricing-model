@@ -16,39 +16,39 @@ export class UserRequirements implements OnInit {
   includeGPU = true;
   includeAI = true;
   includeStorage = true;
-
+ 
   form!: FormGroup;
-
+ 
   loading = false;
   costCalculated = false;
   errorMsg = '';
-
+ 
   requirements: any = null;
   storageInTB = 0;
-
+ 
   aiFeatures: any[] = [];
   selectedFeatures: any[] = [];
   aiCamMoreThanTotal = false;
  
   // Store backend license data
-  DurationU: any[] = []; 
+  DurationU: any[] = [];
   
   private AI_FEATURES_API = `${environment.apiBaseUrl}/pricing-Model/ai-feature/`;
   private CALCULATE_API = `${environment.apiBaseUrl}/pricing-Model/Pricingcalculation/`;
   private LICENSE_API = `${environment.apiBaseUrl}/pricing-Model/processorUnit/`;
-
+ 
   constructor(
     private fb: FormBuilder,
     private router: Router,
     private http: HttpClient
   ) {}
-
+ 
   ngOnInit(): void {
     this.initForm();
     this.loadAiFeatures();
     this.loadLicenseDurations();
   }
-
+ 
   private initForm(): void {
     this.form = this.fb.group({
       cammera: [null],
@@ -59,11 +59,11 @@ export class UserRequirements implements OnInit {
       storage_used_user: [null]
     });
   }
-
+ 
   getFeatureName(id: number): string {
     return this.aiFeatures.find(f => f.id === id)?.AI_feature || '';
   }
-
+ 
   loadAiFeatures(): void {
     this.http.get<any[]>(this.AI_FEATURES_API).subscribe({
       next: (res) => {
@@ -74,7 +74,7 @@ export class UserRequirements implements OnInit {
       }
     });
   }
-
+ 
   loadLicenseDurations(): void {
     this.http.get<any[]>(this.LICENSE_API).subscribe({
       next: (res) => this.DurationU = res || [],
@@ -83,27 +83,27 @@ export class UserRequirements implements OnInit {
       }
     });
   }
-
+ 
   calculateCost(): void {
     this.errorMsg = '';
     this.loading = true;
-
+ 
     const cam = Number(this.form.value.cammera);
     const days = Number(this.form.value.storage_days);
     const aiCam = Number(this.form.value.aiEnabledCam || 0);
-
+ 
     if (cam <= 0 || days <= 0) {
       this.errorMsg = 'Please enter valid camera count and storage days';
       this.loading = false;
       return;
     }
-
+ 
     this.aiCamMoreThanTotal = aiCam > cam;
     if (this.aiCamMoreThanTotal) {
       this.loading = false;
       return;
     }
-
+ 
     this.http.post<any>(this.CALCULATE_API, this.form.value).subscribe({
       next: (res) => {
         this.requirements = res;
@@ -120,7 +120,7 @@ export class UserRequirements implements OnInit {
       }
     });
   }
-
+ 
   clearQuotation(): void {
     this.form.reset({
       cammera: null,
@@ -130,7 +130,7 @@ export class UserRequirements implements OnInit {
       DurationU: null,
       storage_used_user: null
     });
-
+ 
     this.selectedFeatures = [];
     this.requirements = null;
     this.costCalculated = false;
@@ -138,21 +138,21 @@ export class UserRequirements implements OnInit {
     this.errorMsg = '';
     this.storageInTB = 0;
   }
-
+ 
   goToQuotationForm(): void {
     if (!this.costCalculated || !this.requirements?.id) return;
-
+ 
     const API_URL = `${environment.apiBaseUrl}/pricing-Model/Pricingcalculation/${this.requirements.id}/`;
-
+ 
     const payload = {
       include_cpu: this.includeCPU,
       include_gpu: this.includeGPU,
       include_ai: this.includeAI,
       include_storage: this.includeStorage
     };
-
+ 
     this.loading = true;
-
+ 
     this.http.patch<any>(API_URL, payload).subscribe({
       next: (res) => {
         this.loading = false;
@@ -165,14 +165,14 @@ export class UserRequirements implements OnInit {
       }
     });
   }
-
+ 
   onback(): void {
     this.router.navigate(['/dashboard']);
   }
-
+ 
   onToggleFeature(id: number, event: any): void {
     const selectedIds: number[] = this.form.value.ai_features || [];
-
+ 
     if (event.target.checked) {
       const feature = this.aiFeatures.find(f => f.id === id);
       if (feature && !selectedIds.includes(id)) {
@@ -185,7 +185,7 @@ export class UserRequirements implements OnInit {
       this.removeFeature(id);
     }
   }
-
+ 
   removeFeature(id: number): void {
     this.selectedFeatures = this.selectedFeatures.filter(f => f.id !== id);
     const updatedIds = (this.form.value.ai_features as number[]).filter(fid => fid !== id);

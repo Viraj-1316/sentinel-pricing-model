@@ -99,12 +99,12 @@ def generate_enterprise_quotation_pdf(quotation, username: str) -> bytes:
     storage_cost = getattr(quotation, "storage_cost", 0)
 
     cpu_name = getattr(quotation.cpu, "core_hardware", "—") if getattr(quotation, "cpu", None) else "—"
-    CPUcores = getattr(quotation.cpu, "CPUcores", "-") if getattr(quotation, "cpu", None) else "-"
-    ram_required = getattr(quotation, "ram_required", "-")
+    CPUcores = getattr(quotation.cpu, "CPUcores", 0) if getattr(quotation, "cpu", None) else "-"
+    ram_required = getattr(quotation, "ram_required", 0)
     cpu_cost = getattr(quotation, "cpu_cost", 0)
 
     gpu_name = getattr(quotation.gpu, "AI_Component", "—") if getattr(quotation, "gpu", None) else "—"
-    gpu_vram = getattr(quotation.gpu, "VRAM", "-") if getattr(quotation, "gpu", None) else "-"
+    gpu_vram = getattr(quotation.gpu, "VRAM", 0) if getattr(quotation, "gpu", None) else "-"
     gpu_cost = getattr(quotation, "gpu_cost", 0)
 
     ai_cost = getattr(quotation, "ai_cost", 0)
@@ -120,7 +120,7 @@ def generate_enterprise_quotation_pdf(quotation, username: str) -> bytes:
         licence_obj = Component.objects.filter(id=quotation.DurationU).first()
 
         if licence_obj:
-            duration_value = getattr(licence_obj, "Duration", "-")
+            duration_value = getattr(licence_obj, "Duration", 0)
 
             if hasattr(licence_obj, "price"):
                 licence_cost = licence_obj.price.costing

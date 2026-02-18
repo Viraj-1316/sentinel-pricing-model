@@ -4,7 +4,7 @@ import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { ReactiveFormsModule, FormBuilder, Validators, FormGroup } from '@angular/forms';
 import { ToasterService } from '../service/toaster.service';
 import { environment } from '../../environments/environment';
-type TabKey = 'category' | 'ai' | 'hardware' | 'storage' | 'licence';
+type TabKey = 'category' | 'ai' | 'hardware' | 'storage' | 'licence' | 'configuration';
 type HardwareTab = 'cpu' | 'gpu';
 
 @Component({
@@ -17,6 +17,10 @@ export class Pricelist implements OnInit {
   // Navigation State
   tab: TabKey = 'category';
   hardwareTab: HardwareTab = 'cpu';
+
+  configurationForm: FormGroup;
+  configurationList: any[] = [];
+  editingConfigId: number | null = null;
 
   // Data Lists
   categoryList: any[] = [];
@@ -41,7 +45,8 @@ export class Pricelist implements OnInit {
     ai: `${this.BASE_URL}/ai-feature/`,
     hardware: `${this.BASE_URL}/cameraPricing/`,
     storage: `${this.BASE_URL}/storage-costing/`,
-    licence: `${this.BASE_URL}/processorUnit/`
+    licence: `${this.BASE_URL}/processorUnit/`,
+    systemConfig: `${this.BASE_URL}/hardware-config/`,
   };
 
   // Forms
@@ -52,13 +57,28 @@ export class Pricelist implements OnInit {
   storageForm: FormGroup;
   licenceForm: FormGroup;
 
-  constructor(private http: HttpClient, private fb: FormBuilder, private toast: ToasterService) {
+  constructor(
+    private http: HttpClient,
+    private fb: FormBuilder,
+    private toast: ToasterService,
+  ) {
     this.categoryForm = this.fb.group({ name: ['', Validators.required] });
-    this.aiForm = this.fb.group({ AI_feature: ['', Validators.required], costing: [0, Validators.required] });
-    
+    this.aiForm = this.fb.group({
+      AI_feature: ['', Validators.required],
+      costing: [0, Validators.required],
+    });
+
+    this.configurationForm = this.fb.group({
+      cores_required1: [0, [Validators.required, Validators.min(0)]],
+      cores_required2: [0, [Validators.required, Validators.min(0)]],
+      ram_required1: [0, [Validators.required, Validators.min(0)]],
+      VRAM_required: [0, [Validators.required, Validators.min(0)]],
+      costing: [0, [Validators.required, Validators.min(0)]],
+    });
+
     this.cpuForm = this.fb.group({
-      min_cammera: [1, Validators.required],
-      max_cammera: [null],
+      // min_cammera: [1, Validators.required],
+      // max_cammera: [null],
       core_hardware: ['', Validators.required],
       CPUcores: [1, Validators.required],
       ram_required: [1, Validators.required],
@@ -66,8 +86,8 @@ export class Pricelist implements OnInit {
     });
 
     this.gpuForm = this.fb.group({
-      min_cammeraA: [1, Validators.required],
-      max_cammeraA: [null],
+      // min_cammeraA: [1, Validators.required],
+      // max_cammeraA: [null],
       AI_Component: ['', Validators.required],
       VRAM: ['', Validators.required],
       costing: [0, Validators.required],
@@ -80,25 +100,73 @@ export class Pricelist implements OnInit {
     });
 
     this.licenceForm = this.fb.group({
-    Duration: ['', Validators.required], // Matches 'Duration' in Serializer
-    costing: [0, [Validators.required, Validators.min(0)]] // Matches 'costing'
-  });
-  
+      Duration: ['', Validators.required], // Matches 'Duration' in Serializer
+      costing: [0, [Validators.required, Validators.min(0)]], // Matches 'costing'
+    });
   }
 
-  ngOnInit(): void { this.loadCurrentTab(); }
-
-  setTab(tab: TabKey) { this.tab = tab; this.resetStates(); this.loadCurrentTab(); }
-  setHardwareTab(tab: HardwareTab) { this.hardwareTab = tab; this.resetStates(); }
+  ngOnInit(): void {
+    this.loadCurrentTab();
+  }
 
   resetStates() {
-    this.editingCategoryId = this.editingAiId = this.editingCpuId = this.editingGpuId = this.editingStorageId = this.editingLicenceId = null;
+    // 1. CRITICAL: Include editingConfigId in the reset chain
+    this.editingCategoryId =
+      this.editingAiId =
+      this.editingCpuId =
+      this.editingGpuId =
+      this.editingStorageId =
+      this.editingLicenceId =
+      this.editingConfigId =
+        null; // Reset the configuration edit ID
+
+    // 2. Reset all forms
     this.categoryForm.reset();
-    this.aiForm.reset({costing: 0});
-    this.cpuForm.reset({min_cammera: 1, CPUcores: 1, ram_required: 1, costing: 0});
-    this.gpuForm.reset({min_cammeraA: 1, costing: 0});
-    this.storageForm.reset({storage_per_cam: 0, storage_perDay: 0, costing: 0});
-    this.licenceForm.reset({costing: 0});
+    this.aiForm.reset({ costing: 0 });
+    this.cpuForm.reset({ CPUcores: 1, ram_required: 1, costing: 0 });
+    this.gpuForm.reset({ costing: 0 });
+    this.storageForm.reset({ storage_per_cam: 0, storage_perDay: 0, costing: 0 });
+    this.licenceForm.reset({ costing: 0 });
+
+    // 3. CRITICAL: Reset the configurationForm
+    this.configurationForm.reset({
+      cores_required1: 0,
+      cores_required2: 0,
+      ram_required1: 0,
+      VRAM_required: 0,
+      costing: 0, // Default to 0 so the form stays valid if cost is not in HTML
+    });
+  }
+
+  setTab(tab: TabKey) {
+    this.tab = tab;
+    this.resetStates();
+    this.loadCurrentTab();
+  }
+  setHardwareTab(tab: HardwareTab) {
+    this.hardwareTab = tab;
+    this.resetStates();
+  }
+
+  // 2. Define the missing loadConfigList method
+  loadConfigList() {
+    this.http.get<any[]>(this.API.systemConfig).subscribe({
+      next: (res) => {
+        this.configurationList = res; // Populate the list for the HTML table
+      },
+      error: (err) => console.error('Error loading hardware configurations', err),
+    });
+  }
+
+  // Define form initialization for the hardware fields
+  private initConfigurationForm() {
+    this.configurationForm = this.fb.group({
+      cores_required1: [0, Validators.required],
+      cores_required2: [0, Validators.required],
+      ram_required1: [0, Validators.required],
+      VRAM_required: [0, Validators.required],
+      costing: [0, Validators.required],
+    });
   }
 
   loadCurrentTab() {
@@ -107,75 +175,183 @@ export class Pricelist implements OnInit {
     else if (this.tab === 'hardware') this.loadHardware();
     else if (this.tab === 'storage') this.loadStorage();
     else if (this.tab === 'licence') this.loadLicence();
+    else if (this.tab === 'configuration') this.loadConfigList();
   }
 
   private save(api: string, id: number | null, data: any, refreshFn: () => void, msg: string) {
     const req = id ? this.http.patch(`${api}${id}/`, data) : this.http.post(api, data);
-    req.subscribe(() => { this.toast.success(msg); this.resetStates(); refreshFn(); });
+    req.subscribe(() => {
+      this.toast.success(msg);
+      this.resetStates();
+      refreshFn();
+    });
   }
 
   // CATEGORY
-  loadCategories() { this.http.get<any[]>(this.API.category).subscribe(res => this.categoryList = res); }
-  saveCategory() { this.save(this.API.category, this.editingCategoryId, this.categoryForm.value, () => this.loadCategories(), 'Category Saved'); }
-  editCategory(c: any) { this.editingCategoryId = c.id; this.categoryForm.patchValue(c); }
-  deleteCategory(id: number) { this.http.delete(`${this.API.category}${id}/`).subscribe(() => this.loadCategories()); }
+  loadCategories() {
+    this.http.get<any[]>(this.API.category).subscribe((res) => (this.categoryList = res));
+  }
+  saveCategory() {
+    this.save(
+      this.API.category,
+      this.editingCategoryId,
+      this.categoryForm.value,
+      () => this.loadCategories(),
+      'Category Saved',
+    );
+  }
+  editCategory(c: any) {
+    this.editingCategoryId = c.id;
+    this.categoryForm.patchValue(c);
+  }
+  deleteCategory(id: number) {
+    this.http.delete(`${this.API.category}${id}/`).subscribe(() => this.loadCategories());
+  }
 
   // AI
-  loadAi() { this.http.get<any[]>(this.API.ai).subscribe(res => this.aiList = res); }
-  saveAi() { this.save(this.API.ai, this.editingAiId, this.aiForm.value, () => this.loadAi(), 'AI Feature Saved'); }
-  editAi(a: any) { this.editingAiId = a.id; this.aiForm.patchValue(a); }
-  deleteAi(id: number) { this.http.delete(`${this.API.ai}${id}/`).subscribe(() => this.loadAi()); }
+  loadAi() {
+    this.http.get<any[]>(this.API.ai).subscribe((res) => (this.aiList = res));
+  }
+  saveAi() {
+    this.save(
+      this.API.ai,
+      this.editingAiId,
+      this.aiForm.value,
+      () => this.loadAi(),
+      'AI Feature Saved',
+    );
+  }
+  editAi(a: any) {
+    this.editingAiId = a.id;
+    this.aiForm.patchValue(a);
+  }
+  deleteAi(id: number) {
+    this.http.delete(`${this.API.ai}${id}/`).subscribe(() => this.loadAi());
+  }
 
   // HARDWARE (Standard & AI Enhanced)
   loadHardware() {
-    this.http.get<any[]>(this.API.hardware).subscribe(res => {
-      this.cpuList = res.filter(x => x.core_hardware);
-      this.gpuList = res.filter(x => x.AI_Component);
+    this.http.get<any[]>(this.API.hardware).subscribe((res) => {
+      this.cpuList = res.filter((x) => x.core_hardware);
+      this.gpuList = res.filter((x) => x.AI_Component);
     });
   }
-  saveCpu() { this.save(this.API.hardware, this.editingCpuId, this.cpuForm.value, () => this.loadHardware(), 'CPU Config Saved'); }
-  saveGpu() { this.save(this.API.hardware, this.editingGpuId, this.gpuForm.value, () => this.loadHardware(), 'GPU Config Saved'); }
-  editCpu(c: any) { this.editingCpuId = c.id; this.cpuForm.patchValue(c); }
-  editGpu(g: any) { this.editingGpuId = g.id; this.gpuForm.patchValue(g); }
-  deleteCpu(id: number) { this.http.delete(`${this.API.hardware}${id}/`).subscribe(() => this.loadHardware()); }
+  saveCpu() {
+    this.save(
+      this.API.hardware,
+      this.editingCpuId,
+      this.cpuForm.value,
+      () => this.loadHardware(),
+      'CPU Config Saved',
+    );
+  }
+  saveGpu() {
+    this.save(
+      this.API.hardware,
+      this.editingGpuId,
+      this.gpuForm.value,
+      () => this.loadHardware(),
+      'GPU Config Saved',
+    );
+  }
+  editCpu(c: any) {
+    this.editingCpuId = c.id;
+    this.cpuForm.patchValue(c);
+  }
+  editGpu(g: any) {
+    this.editingGpuId = g.id;
+    this.gpuForm.patchValue(g);
+  }
+  deleteCpu(id: number) {
+    this.http.delete(`${this.API.hardware}${id}/`).subscribe(() => this.loadHardware());
+  }
   // THIS WAS MISSING:
-  deleteGpu(id: number) { this.deleteCpu(id); }
+  deleteGpu(id: number) {
+    this.deleteCpu(id);
+  }
 
   // STORAGE
-  loadStorage() { this.http.get<any[]>(this.API.storage).subscribe(res => this.storageList = res); }
-  saveStorage() { this.save(this.API.storage, this.editingStorageId, this.storageForm.value, () => this.loadStorage(), 'Storage Saved'); }
-  editStorage(s: any) { this.editingStorageId = s.id; this.storageForm.patchValue(s); }
-  deleteStorage(id: number) { this.http.delete(`${this.API.storage}${id}/`).subscribe(() => this.loadStorage()); }
+  loadStorage() {
+    this.http.get<any[]>(this.API.storage).subscribe((res) => (this.storageList = res));
+  }
+  saveStorage() {
+    this.save(
+      this.API.storage,
+      this.editingStorageId,
+      this.storageForm.value,
+      () => this.loadStorage(),
+      'Storage Saved',
+    );
+  }
+  editStorage(s: any) {
+    this.editingStorageId = s.id;
+    this.storageForm.patchValue(s);
+  }
+  deleteStorage(id: number) {
+    this.http.delete(`${this.API.storage}${id}/`).subscribe(() => this.loadStorage());
+  }
 
   // LICENCE
   // Load Licences
-loadLicence() {
-  this.http.get<any[]>(this.API.licence).subscribe(res => {
-    this.licenceList = res;
-  });
-}
+  loadLicence() {
+    this.http.get<any[]>(this.API.licence).subscribe((res) => {
+      this.licenceList = res;
+    });
+  }
 
-// Save or Update Licence
-saveLicence() {
-  const data = this.licenceForm.value;
-  const req = this.editingLicenceId 
-    ? this.http.patch(`${this.API.licence}${this.editingLicenceId}/`, data)
-    : this.http.post(this.API.licence, data);
+  // Save or Update Licence
+  saveLicence() {
+    const data = this.licenceForm.value;
+    const req = this.editingLicenceId
+      ? this.http.patch(`${this.API.licence}${this.editingLicenceId}/`, data)
+      : this.http.post(this.API.licence, data);
 
-  req.subscribe(() => {
-    this.toast.success('Licence saved successfully');
-    this.resetStates();
-    this.loadLicence();
-  });
-}
+    req.subscribe(() => {
+      this.toast.success('Licence saved successfully');
+      this.resetStates();
+      this.loadLicence();
+    });
+  }
 
-// Edit Licence
-editLicence(l: any) {
-  this.editingLicenceId = l.id;
-  this.licenceForm.patchValue({
-    Duration: l.Duration,
-    costing: l.costing
-  });
-}
-  deleteLicence(id: number) { this.http.delete(`${this.API.licence}${id}/`).subscribe(() => this.loadLicence()); }
+  // Edit Licence
+  editLicence(l: any) {
+    this.editingLicenceId = l.id;
+    this.licenceForm.patchValue({
+      Duration: l.Duration,
+      costing: l.costing,
+    });
+  }
+  deleteLicence(id: number) {
+    this.http.delete(`${this.API.licence}${id}/`).subscribe(() => this.loadLicence());
+  }
+
+  saveConfiguration() {
+    this.save(
+      this.API.systemConfig,
+      this.editingConfigId,
+      this.configurationForm.value,
+      () => this.loadConfigList(),
+      this.editingConfigId ? 'Configuration Updated' : 'Configuration Saved',
+    );
+  }
+
+  editConfiguration(config: any) {
+    this.editingConfigId = config.id;
+    this.configurationForm.patchValue({
+      cores_required1: config.cores_required1,
+      cores_required2: config.cores_required2,
+      ram_required1: config.ram_required1,
+      VRAM_required: config.VRAM_required,
+      costing: config.costing || 0,
+    });
+  }
+
+  deleteConfiguration(id: number) {
+    if (confirm('Are you sure you want to delete this configuration?')) {
+      this.http.delete(`${this.API.systemConfig}${id}/`).subscribe(() => {
+        this.toast.success('Configuration Deleted');
+        this.loadConfigList();
+      });
+    }
+  }
 }

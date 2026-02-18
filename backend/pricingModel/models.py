@@ -18,8 +18,8 @@ class Component(models.Model):
 
     
     # ---- Camera pricing without ai model----
-    min_cammera = models.IntegerField(null=True, blank=True)
-    max_cammera = models.IntegerField(null=True, blank=True)
+    # min_cammera = models.IntegerField(null=True, blank=True)
+    # max_cammera = models.IntegerField(null=True, blank=True)
     core_hardware = models.CharField(max_length=100, null=True, blank=True)
     CPUcores = models.PositiveIntegerField(null=True, blank=True)
     ram_required = models.PositiveIntegerField(
@@ -33,8 +33,8 @@ class Component(models.Model):
     AI_feature = models.CharField(max_length=100, null=True, blank=True)
 
     # ---- Camera pricing with ai model ----
-    min_cammeraA = models.IntegerField(null=True, blank=True)
-    max_cammeraA = models.IntegerField(null=True, blank=True)
+    # min_cammeraA = models.IntegerField(null=True, blank=True)
+    # max_cammeraA = models.IntegerField(null=True, blank=True)
     AI_Component = models.CharField(max_length=100, null=True, blank=True)
     VRAM = models.PositiveIntegerField(null=True, blank=True)
 
@@ -46,30 +46,38 @@ class Component(models.Model):
     # ---- Licence ----
     Duration = models.IntegerField(default=1)
     
+    cores_required1 = models.FloatField(null =True, blank=True)
+    cores_required2 = models.FloatField(null =True, blank=True)
+    ram_required1 = models.FloatField(null =True, blank=True)
+    VRAM_required = models.FloatField(null =True, blank=True)
     class Meta:
-        ordering = ["min_cammera"]
+        ordering = ["CPUcores"]
 
     def __str__(self):
         try:
-            if self.category and self.category.name.lower() == "ai":
-                return self.AI_feature or "AI Component"
+            if self.category:
+                category = self.category.name.lower()
 
-            if self.category and self.category.name.lower() == "camera":
-                min_cam = self.min_cammera or 0
-                max_cam = self.max_cammera or "∞"
-                return f"{min_cam} - {max_cam} cameras"
+                if category == "ai":
+                    return self.AI_feature or "AI Component"
 
-            if self.category and self.category.name.lower() == "storage":
-                return f"{self.storage_perDay or 0} GB/day Storage"
+                if category == "storage":
+                    return f"{self.storage_perDay or 0} GB/day Storage"
 
-            if self.category and self.category.name.lower() == "processor":
-                return f"{self.core_hardware or self.AI_Component}"
-            
-            if self.category and self.category.name.lower() == "licence":
-                return f"{self.Duartion}"
+                if category == "processor":
+                    return self.core_hardware or self.AI_Component or "Processor"
+
+                if category == "licence":
+                    return f"{self.Duration or 0} Year Licence"
+
+                if category == "cpu_gpu_config":
+                    return f"Cores:{self.cores_required or 0} | RAM:{self.ram_required1 or 0} | VRAM:{self.VRAM_required or 0}"
+
+            return f"Component #{self.id}"
 
         except Exception:
             return f"Component #{self.id}"
+
         
 
 class Price(models.Model):
@@ -108,6 +116,8 @@ class UserPricing(models.Model):
         default=0
     )
 
+    # congigDetails = models.ForeignKey(Component, on_delete=models.SET_NULL, related_name='config')
+    
     # ---------- REQUIREMENTS (SYSTEM GENERATED) ----------
     vram_required = models.PositiveIntegerField(default=0)
     cpuCores_required = models.PositiveIntegerField(default=0)

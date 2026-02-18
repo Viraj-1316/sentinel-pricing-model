@@ -219,10 +219,10 @@ class processorSerializer(serializers.ModelSerializer):
     
         fields = [
             "id",
-            "min_cammeraA",
-            "max_cammeraA",
-            "min_cammera",
-            "max_cammera",
+            # "min_cammeraA",
+            # "max_cammeraA",
+            # "min_cammera",
+            # "max_cammera",
             "core_hardware", 
             "CPUcores",
             "VRAM",
@@ -245,4 +245,16 @@ class AuditLogSerializer(serializers.ModelSerializer):
             "ip_address",
             "user_agent",
             "created_at",
+        ]
+
+class configuration(serializers.ModelSerializer):
+    
+    class Meta:
+        model = Component
+        fields = [
+            "id",
+            "cores_required1",
+            "cores_required2",
+            "ram_required1",
+            "VRAM_required"
         ]

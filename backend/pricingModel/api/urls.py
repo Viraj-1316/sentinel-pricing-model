@@ -24,11 +24,16 @@ from pricingModel.api.views import (
     processorUnit,
     processorUnitDetail,
     toggle_user_role,
-    toggle_user_status
+    toggle_user_status,
+    setConfig,
+    setConfigRUD
 )
 
 urlpatterns = [
+    path('hardware-config/', setConfig.as_view()),
     
+    path('hardware-config/<int:pk>/', setConfigRUD.as_view()),
+
      path(
         'cameraPricing/',
         cameraSlabsCS.as_view(),
@@ -119,7 +124,7 @@ path(
   "admin/users/<int:user_id>/toggle-status/",
   toggle_user_status,
   name="toggle-user-status"
-)
+),
 
 
 
