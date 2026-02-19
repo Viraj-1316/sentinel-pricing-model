@@ -409,15 +409,19 @@ class pricingCalculate(generics.ListCreateAPIView):
                 ai_load_cams = 0
  
             # ---------- REQUIREMENTS ----------
-            vram_required = int(vram_required1 * ai_load_cams)
- 
+            vram_calculation = int(vram_required1 * ai_load_cams)
+            vram_required = int(vram_calculation * 1.10 + 3)
+
             if cameras < 61:
-                cpuCores_required = int(cores_required1 * cameras)
-                ram_required = int(ram_required1 * cameras)
+                cpuCores_calculation = int(cores_required1 * cameras)
             else:
-                cpuCores_required = int(cores_required2 * cameras)
-                ram_required = int(ram_required1 * cameras)
- 
+                cpuCores_calculation = int(cores_required2 * cameras)
+
+            cpuCores_required = int(cpuCores_calculation * 1.10)
+
+            ram_calculation = int(ram_required1 * cameras)
+            ram_required = int(ram_calculation * 1.10)
+
             # ---------- STORAGE CALCULATION ----------
             storage_used = cameras * storage_days
             storage_used_user = storage_used * 19
