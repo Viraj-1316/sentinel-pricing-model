@@ -362,6 +362,7 @@ class pricingCalculate(generics.ListCreateAPIView):
             vram_required1 = configDetail.VRAM_required
             cores_required1 = configDetail.cores_required1
             cores_required2 = configDetail.cores_required2
+            camera_for_intel = int((20*0.8)/cores_required1)
             
             if not cameras:
                 raise ValidationError("Camera count is required")
@@ -412,7 +413,7 @@ class pricingCalculate(generics.ListCreateAPIView):
             vram_calculation = int(vram_required1 * ai_load_cams)
             vram_required = int(vram_calculation * 1.10 + 3)
 
-            if cameras < 61:
+            if cameras < camera_for_intel:
                 cpuCores_calculation = int(cores_required1 * cameras)
             else:
                 cpuCores_calculation = int(cores_required2 * cameras)
