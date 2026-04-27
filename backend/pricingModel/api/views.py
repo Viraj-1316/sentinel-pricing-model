@@ -21,7 +21,18 @@ from pricingModel.api.utils import generate_enterprise_quotation_pdf
 from io import BytesIO
 from rest_framework import status
 from rest_framework import filters
-from pricingModel.api.audit import create_audit_log   
+from pricingModel.api.audit import create_audit_log 
+from ..services.hardware_advisor import get_hardware_recommendation
+# from ..services.indiaMart import fetch_indiamart_price                                         
+# from ..services.product_price import fetch_price
+from dotenv import load_dotenv
+import os
+import math
+
+load_dotenv()
+
+OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
+
 from pricingModel.api.serializers import (
     AI_ENABLEDserializer,
     licensePricingSerializer,
@@ -410,18 +421,18 @@ class pricingCalculate(generics.ListCreateAPIView):
                 ai_load_cams = 0
  
             # ---------- REQUIREMENTS ----------
-            vram_calculation = int(vram_required1 * ai_load_cams)
-            vram_required = int(vram_calculation * 1.10 + 3)
+            vram_calculation = math.ceil(float(vram_required1 * ai_load_cams))
+            vram_required = math.ceil(float(vram_calculation * 1.10 + 3))
 
             if cameras < camera_for_intel:
-                cpuCores_calculation = int(cores_required1 * cameras)
+                cpuCores_calculation = math.ceil(float(cores_required1 * cameras))
             else:
-                cpuCores_calculation = int(cores_required2 * cameras)
+                cpuCores_calculation = math.ceil(float(cores_required2 * cameras))
 
-            cpuCores_required = int(cpuCores_calculation * 1.10)
+            cpuCores_required = math.ceil(float(cpuCores_calculation * 1.10))
 
-            ram_calculation = int(ram_required1 * cameras)
-            ram_required = int(ram_calculation * 1.10)
+            ram_calculation = math.ceil(float(ram_required1 * cameras))
+            ram_required = math.ceil(float(ram_calculation * 1.10))
 
             # ---------- STORAGE CALCULATION ----------
             storage_used = cameras * storage_days
@@ -447,7 +458,7 @@ class pricingCalculate(generics.ListCreateAPIView):
  
     
  
- 
+
 class pricingRecomendationview(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = UserFinalQuotationSerializer
     permission_classes = [IsAuthenticated]
@@ -458,133 +469,280 @@ class pricingRecomendationview(generics.RetrieveUpdateDestroyAPIView):
                 return UserPricing.objects.all()
             else:
                 return UserPricing.objects.filter(user_name=self.request.user).order_by('-created_at')
- 
- 
+    
     def perform_update(self, serializer):
         instance = self.get_object()
         validated = serializer.validated_data
- 
-        vramUser = instance.vram_required
- 
+
         include_cpu = validated.get("include_cpu", instance.include_cpu)
         include_gpu = validated.get("include_gpu", instance.include_gpu)
         include_storage = validated.get("include_storage", instance.include_storage)
+
+        # ================= AI RECOMMENDATION =================
+
+        if instance.ai_cpu_recommendation:
+            ai_advice = {
+                "cpu_recommendation": instance.ai_cpu_recommendation,
+                "gpu_recommendation": instance.ai_gpu_recommendation,
+                "gpu_count": instance.ai_gpu_count or 1,
+                "gpu_vram_per_unit": instance.ai_gpu_vram,
+                "total_gpu_vram": instance.ai_total_vram,
+                "system_tier": instance.ai_system_tier,
+                "ram_recommendation": instance.ai_ram_recommendation,
+                "cpu_count": instance.ai_cpu_count or 1,
+            }
+        else:
+            ai_advice = get_hardware_recommendation(
+                vram_required=instance.vram_required,
+                cpu_cores_required=instance.cpuCores_required,
+                ram_required=instance.ram_required,
+                api_key=OPENROUTER_API_KEY
+            ) or {}
+
+        # Safety fallback
+        if not ai_advice:
+            ai_advice = {}
+
+        cpu_name = ai_advice.get("cpu_recommendation")
+        gpu_name = ai_advice.get("gpu_recommendation")
+        gpu_count = ai_advice.get("gpu_count", 1)
+        cpu_count = ai_advice.get("cpu_count", 1)
+        ai_gpu_vram = ai_advice.get("gpu_vram_per_unit")
+        ai_total_vram = ai_advice.get("total_gpu_vram")
+
+        # ================= PRICING =================
         
-        cpu = None
-        cpu_cost = 0
- 
-        # ---------- CPU ----------
-        if include_cpu:
-            cpu = Component.objects.filter(
-                category__name="Processor",
-                ram_required__isnull=False,
-                CPUcores__isnull = False,
-                CPUcores__gte = instance.cpuCores_required,
-                ram_required__gte=instance.ram_required 
-            ).order_by("ram_required").first()
- 
-            if not cpu:
-                raise ValidationError("No CPU meets required core count")
- 
-            try:
-                cpu_cost = cpu.price.costing
-            except Price.DoesNotExist:
-                raise ValidationError(f"Price not configured for CPU: {cpu.core_hardware}")
- 
-        # ---------- GPU ----------
-        gpu = None
-        gpu_cost = 0
- 
-        if include_gpu and vramUser > 0:
- 
-            gpu = Component.objects.filter(
-                category__name="Processor",
-                VRAM__isnull=False,
-                VRAM__gte=vramUser
-            ).order_by("VRAM").first()
- 
-            if not gpu:
-                raise ValidationError("No GPU meets VRAM requirement")
- 
-            try:
-                gpu_cost = gpu.price.costing
-            except Price.DoesNotExist:
-                raise ValidationError("GPU price not configured")
- 
-        # ---------- AI FEATURES ----------
+        cpu_price = ai_advice.get("cpu_price", 0)
+        gpu_price_single = ai_advice.get("gpu_price", 0)
+
+        cpu_total_price = cpu_price * cpu_count
+        gpu_total_price = gpu_price_single * gpu_count
+
+        # apply include flags
+        if not include_cpu:
+            cpu_total_price = 0
+
+        if not include_gpu:
+            gpu_total_price = 0
+        
+        if not ai_advice.get("cpu_recommendation"):
+            raise ValidationError("AI hardware recommendation failed")    
+
+        # ================= AI FEATURES =================
+
         ai_cost = 0
         for ai in instance.ai_features.all():
             ai_price = Price.objects.filter(component=ai).first()
- 
+
             if not ai_price:
                 raise ValidationError(f"Price not configured for AI feature: {ai.AI_feature}")
- 
+
             ai_cost += ai_price.costing
- 
-        # ---------- STORAGE ----------
+
+        # ================= STORAGE =================
+
         storage_cost = 0
- 
+
         if include_storage:
-            storage = Component.objects.filter(
-                category__name="Storage"
-            ).first()
- 
+            storage = Component.objects.filter(category__name="Storage").first()
+
             if not storage:
                 raise ValidationError("Storage component not configured")
- 
+
             storage_price = Price.objects.filter(component=storage).first()
- 
+
             if not storage_price:
                 raise ValidationError("Storage price not configured")
- 
+
             storage_cost = (instance.storage_used_user / 19) * storage_price.costing
- 
-        # ---------- LICENCE (TRULY FIXED) ----------
-        duration_id = serializer.validated_data.get("DurationU")
- 
-        if duration_id is None:
-            duration_id = instance.DurationU
- 
+
+        # ================= LICENSE =================
+
+        duration_id = validated.get("DurationU", instance.DurationU)
+
         license = Component.objects.filter(
             id=duration_id,
             category__name="licence",
         ).first()
- 
+
         if not license:
             raise ValidationError("Selected licence component not configured")
- 
-        try:
-            licenseCost = license.price.costing
-        except Price.DoesNotExist:
-            raise ValidationError("Licence price not configured")
- 
-        # ---------- TOTAL ----------
-        total_cost = cpu_cost + gpu_cost + ai_cost + storage_cost + licenseCost
- 
+
+        licenseCost = license.price.costing
+
+        # ================= TOTAL =================
+
+        total_cost = (
+            cpu_total_price +
+            gpu_total_price +
+            ai_cost +
+            storage_cost +
+            licenseCost
+        )
+
         serializer.save(
-        cpu=cpu,
-        gpu=gpu,
- 
-        cpu_cost=cpu_cost,
-        gpu_cost=gpu_cost,
-        ai_cost=ai_cost,
-        storage_cost=storage_cost,
- 
-        DurationU=duration_id,        # ⭐⭐⭐ MISSING PIECE
-        licenceCostU=licenseCost,
- 
-        include_cpu=include_cpu,
-        include_gpu=include_gpu,
-        include_storage=include_storage,
- 
-        total_costing=total_cost,
-    )
- 
+            cpu_cost=cpu_total_price,
+            gpu_cost=gpu_total_price,
+            ai_cost=ai_cost,
+            storage_cost=storage_cost,
+            DurationU=duration_id,
+            licenceCostU=licenseCost,
+            include_cpu=include_cpu,
+            include_gpu=include_gpu,
+            include_storage=include_storage,
+            total_costing=total_cost,
+
+            # AI fields
+            ai_system_tier=ai_advice.get("system_tier"),
+            ai_cpu_recommendation=cpu_name,
+            ai_gpu_recommendation=gpu_name,
+            ai_gpu_count=gpu_count,
+            ai_cpu_count=cpu_count,
+            ai_ram_recommendation=ai_advice.get("ram_recommendation"),
+            ai_gpu_vram=ai_gpu_vram,
+            ai_total_vram=ai_total_vram,
+        )
+
         create_audit_log(
             self.request,
             "UPDATE_PRICING",
             f"Final pricing calculated. Total={total_cost}"
         )
+ 
+#     def perform_update(self, serializer):
+#         instance = self.get_object()
+
+#         # ✅ get request data safely
+#         validated = serializer.validated_data
+
+#         include_cpu = validated.get("include_cpu", instance.include_cpu)
+#         include_gpu = validated.get("include_gpu", instance.include_gpu)
+#         include_storage = validated.get("include_storage", instance.include_storage)
+
+#         # ================= AI RECOMMENDATION =================
+
+#         if instance.ai_cpu_recommendation:
+#             ai_advice = {
+#                 "cpu_recommendation": instance.ai_cpu_recommendation,
+#                 "gpu_recommendation": instance.ai_gpu_recommendation,
+#                 "gpu_count": instance.ai_gpu_count,
+#                 "gpu_vram_per_unit": instance.ai_gpu_vram,      
+#                 "total_gpu_vram": instance.ai_total_vram,  
+#                 "system_tier": instance.ai_system_tier,
+#                 "ram_recommendation": instance.ai_ram_recommendation,
+#                 "cpu_count" : instance.ai_cpu_count,
+#             }
+#         else:
+#             ai_advice = get_hardware_recommendation(
+#                 vram_required=instance.vram_required,
+#                 cpu_cores_required=instance.cpuCores_required,
+#                 ram_required=instance.ram_required,
+#                 api_key=OPENROUTER_API_KEY
+#             )
+
+#             print(ai_advice)
+
+#         print("AI ADVICE:", ai_advice)
+
+#         # ================= PRICING =================
+
+#         cpu_name = ai_advice.get("cpu_recommendation")
+#         gpu_name = ai_advice.get("gpu_recommendation")
+#         gpu_count = ai_advice.get("gpu_count", 1)
+#         cpu_count = ai_advice.get("cpu_count", 1)
+#         ai_gpu_vram = ai_advice.get("gpu_vram_per_unit")
+#         ai_total_vram = ai_advice.get("total_gpu_vram")
+
+#         cpu_price = fetch_indiamart_price(cpu_name)
+#         cpu_total_price = cpu_price * cpu_count
+#         gpu_price_single = fetch_indiamart_price(gpu_name)
+#         gpu_total_price = gpu_price_single * gpu_count
+
+#         # apply include flags
+#         if not include_cpu:
+#             cpu_price = 0
+
+#         if not include_gpu:
+#             gpu_total_price = 0
+
+#         # ================= AI FEATURES =================
+
+#         ai_cost = 0
+#         for ai in instance.ai_features.all():
+#             ai_price = Price.objects.filter(component=ai).first()
+
+#             if not ai_price:
+#                 raise ValidationError(f"Price not configured for AI feature: {ai.AI_feature}")
+
+#             ai_cost += ai_price.costing
+
+#         # ================= STORAGE =================
+
+#         storage_cost = 0
+
+#         if include_storage:
+#             storage = Component.objects.filter(category__name="Storage").first()
+
+#             if not storage:
+#                 raise ValidationError("Storage component not configured")
+
+#             storage_price = Price.objects.filter(component=storage).first()
+
+#             if not storage_price:
+#                 raise ValidationError("Storage price not configured")
+
+#             storage_cost = (instance.storage_used_user / 19) * storage_price.costing
+
+#         # ================= LICENSE =================
+
+#         duration_id = validated.get("DurationU", instance.DurationU)
+
+#         license = Component.objects.filter(
+#             id=duration_id,
+#             category__name="licence",
+#         ).first()
+
+#         if not license:
+#             raise ValidationError("Selected licence component not configured")
+
+#         try:
+#             licenseCost = license.price.costing
+#         except Price.DoesNotExist:
+#             raise ValidationError("Licence price not configured")
+
+#         # ================= TOTAL =================
+
+#         total_cost = cpu_price + gpu_total_price + ai_cost + storage_cost + licenseCost
+
+#         serializer.save(
+#             cpu_cost=cpu_total_price,
+#             gpu_cost=gpu_total_price,
+#             ai_cost=ai_cost,
+#             storage_cost=storage_cost,
+#             DurationU=duration_id,
+#             licenceCostU=licenseCost,
+#             include_cpu=include_cpu,
+#             include_gpu=include_gpu,
+#             include_storage=include_storage,
+#             total_costing=total_cost,
+
+#             # AI fields
+#             ai_system_tier=ai_advice.get("system_tier"),
+#             ai_cpu_recommendation=ai_advice.get("cpu_recommendation"),
+#             ai_gpu_recommendation=ai_advice.get("gpu_recommendation"),
+#             ai_gpu_count=ai_advice.get("gpu_count"),
+#             ai_cpu_count=ai_advice.get("cpu_count"),
+#             ai_ram_recommendation=ai_advice.get("ram_recommendation"),
+#             ai_gpu_vram=ai_gpu_vram,
+#             ai_total_vram=ai_total_vram,
+#         )
+
+#         create_audit_log(
+#             self.request,
+#             "UPDATE_PRICING",
+#             f"Final pricing calculated. Total={total_cost}"
+#         )
+
  
  
  

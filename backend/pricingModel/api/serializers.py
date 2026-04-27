@@ -30,10 +30,18 @@ class AdminQuotationSerializer(serializers.ModelSerializer):
             "username",
             "cammera",
             "ai_features",
+            'ai_system_tier',
+            'ai_cpu_recommendation',
+            'ai_gpu_recommendation',
+            'ai_gpu_count',
+            'ai_cpu_count',
+            'ai_ram_recommendation',
+            "ai_gpu_vram",
+            "ai_total_vram",
             "ai_cost",
             "cpu_cost",
             "gpu_cost",
-             "storage_cost",
+            "storage_cost",
             "total_costing",
             "ai_features",
             "created_at",
@@ -113,8 +121,6 @@ class licensePricingSerializer(serializers.ModelSerializer):
        ]         
 class UserFinalQuotationSerializer(serializers.ModelSerializer):
 
-    cpu = ComponentDisplaySerializer(read_only=True)
-    gpu = ComponentDisplaySerializer(read_only=True)
     ai_features = AI_ENABLEDserializer(many=True, read_only=True)
 
     # ✅ WRITEABLE (THIS FIXES EVERYTHING)
@@ -131,10 +137,6 @@ class UserFinalQuotationSerializer(serializers.ModelSerializer):
             "cpuCores_required",
             "ram_required",
             "vram_required",
-
-            "cpu",
-            "gpu",
-
             "cpu_cost",
             "gpu_cost",
             "ai_cost",
@@ -152,6 +154,12 @@ class UserFinalQuotationSerializer(serializers.ModelSerializer):
             "include_cpu",
             "include_gpu",
             "include_storage",
+            'ai_system_tier',
+            'ai_cpu_recommendation',
+            'ai_gpu_recommendation',
+            'ai_gpu_count',
+            'ai_cpu_count',
+            'ai_ram_recommendation',
             "created_at",
         ]
 

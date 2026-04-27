@@ -90,9 +90,7 @@ class Price(models.Model):
 
    
 class UserPricing(models.Model):
-    include_cpu = models.BooleanField(default=True)
-    include_gpu = models.BooleanField(default=True)
-    # include_ai = models.BooleanField(default=True)
+    
     include_storage = models.BooleanField(default=True)
     user_name = models.ForeignKey(
         User,
@@ -135,23 +133,6 @@ class UserPricing(models.Model):
 
     total_costing = models.PositiveIntegerField(default=0)
 
-    # ---------- AUTO SELECTED HARDWARE ----------
-    cpu = models.ForeignKey(
-        Component,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name="cpu_usages"
-    )
-
-    gpu = models.ForeignKey(
-        Component,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name="gpu_usages"
-    )
-
     # ---------- Licence -----------
     
     licence = models.ForeignKey(
@@ -170,6 +151,15 @@ class UserPricing(models.Model):
     include_gpu = models.BooleanField(default=True)
     include_storage = models.BooleanField(default=True)
     # include_ai = models.BooleanField(default=True)
+
+    ai_system_tier = models.CharField(max_length=100, null=True, blank=True)
+    ai_cpu_recommendation = models.CharField(max_length=200, null=True, blank=True)
+    ai_gpu_recommendation = models.CharField(max_length=200, null=True, blank=True)
+    ai_cpu_count = models.IntegerField(null=True, blank=True)
+    ai_gpu_count = models.IntegerField(null=True, blank=True)
+    ai_ram_recommendation = models.CharField(max_length=100, null=True, blank=True)
+    ai_gpu_vram = models.IntegerField(null=True, blank=True)
+    ai_total_vram = models.IntegerField(null=True, blank=True)
 
     def __str__(self):
         return f"{self.user_name.username} - ₹{self.total_costing}"

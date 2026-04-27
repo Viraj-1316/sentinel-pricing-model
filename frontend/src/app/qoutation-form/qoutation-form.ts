@@ -21,6 +21,24 @@ export interface QuotationRow {
   // admin fields
   username?: string;
   Email?: string;
+  include_cpu?: boolean;
+  include_gpu?: boolean;
+  include_storage?: boolean;
+  cpu?: {
+    core_hardware?: string;
+    CPUcores?: number;
+    ram_required?: number;
+  } | null;
+  gpu?: {
+    AI_Component?: string;
+    VRAM?: number;
+  } | null;
+  ai_system_tier?: string;
+  ai_cpu_recommendation?: string;
+  ai_gpu_recommendation?: string;
+  ai_gpu_count?: number;
+  ai_cpu_count?: number;
+  ai_ram_recommendation?: string | number;
 }
 export interface AiFeature {
   id: number;
@@ -33,11 +51,9 @@ export interface AiFeature {
   standalone: true,
   imports: [CommonModule, HttpClientModule, FormsModule],
   templateUrl: './qoutation-form.html',
-  styleUrl: './qoutation-form.css'
+  styleUrl: './qoutation-form.css',
 })
-
 export class QoutationForm implements OnInit {
- 
   quotationId!: number;
   quotationData: any = null;
   loading = false;
@@ -49,90 +65,86 @@ export class QoutationForm implements OnInit {
   includeGPU = true;
   // includeAI = true;
   includeStorage = true;
-showPdf = false;
-pdfUrl: any;
-showEmailModal = false;
-otherEmail = '';
+  showPdf = false;
+  pdfUrl: any;
+  showEmailModal = false;
+  otherEmail = '';
 
-viewQuotation() {
-  if (!this.quotationData?.id) return;
+  viewQuotation() {
+    if (!this.quotationData?.id) return;
 
-  const id = this.quotationData.id;
-  const url = `${environment.apiBaseUrl}/pricing-Model/quotation/${id}/pdf/`;
+    const id = this.quotationData.id;
+    const url = `${environment.apiBaseUrl}/pricing-Model/quotation/${id}/pdf/`;
 
-  this.loading = true;
+    this.loading = true;
 
-  this.http.get(url, { responseType: 'blob' }).subscribe({
-    next: (blob) => {
-      const file = new Blob([blob], { type: 'application/pdf' });
-      const objectUrl = URL.createObjectURL(file);
+    this.http.get(url, { responseType: 'blob' }).subscribe({
+      next: (blob) => {
+        const file = new Blob([blob], { type: 'application/pdf' });
+        const objectUrl = URL.createObjectURL(file);
 
-      this.pdfUrl = this.sanitizer.bypassSecurityTrustResourceUrl(objectUrl);
-      this.showPdf = true;
-      this.loading = false;
+        this.pdfUrl = this.sanitizer.bypassSecurityTrustResourceUrl(objectUrl);
+        this.showPdf = true;
+        this.loading = false;
 
-      // prevent background scroll
-      document.body.style.overflow = 'hidden';
-    },
-    error: () => {
-      this.toast.error('Failed to load PDF preview');
-      this.loading = false;
-    }
-  });
-}
+        // prevent background scroll
+        document.body.style.overflow = 'hidden';
+      },
+      error: () => {
+        this.toast.error('Failed to load PDF preview');
+        this.loading = false;
+      },
+    });
+  }
 
+  closePdf() {
+    this.showPdf = false;
+    document.body.style.overflow = '';
+  }
 
-closePdf() {
-  this.showPdf = false;
-  document.body.style.overflow = '';
-}
+  openSendEmailModal() {
+    this.showEmailModal = true;
+    this.otherEmail = '';
+    document.body.style.overflow = 'hidden';
+  }
+  closeEmailModal() {
+    this.showEmailModal = false;
+    document.body.style.overflow = '';
+  }
+  sendEmailToSelf() {
+    this.sendEmail({});
+  }
+  sendEmailToOther() {
+    if (!this.otherEmail) return;
+    this.sendEmail({ Email: this.otherEmail });
+  }
 
+  private sendEmail(payload: any) {
+    const id = this.quotationData.id;
+    const url = `${environment.apiBaseUrl}/pricing-Model/quotation/${id}/send-email/`;
 
-openSendEmailModal() {
-  this.showEmailModal = true;
-  this.otherEmail = '';
-  document.body.style.overflow = 'hidden';
-}
-closeEmailModal() {
-  this.showEmailModal = false;
-  document.body.style.overflow = '';
-}
-sendEmailToSelf() {
-  this.sendEmail({});
-}
-sendEmailToOther() {
-  if (!this.otherEmail) return;
-  this.sendEmail({ Email: this.otherEmail });
-}
+    this.loading = true;
 
-private sendEmail(payload: any) {
-  const id = this.quotationData.id;
-  const url = `${environment.apiBaseUrl}/pricing-Model/quotation/${id}/send-email/`;
+    this.http.post(url, payload).subscribe({
+      next: () => {
+        this.toast.success('Quotation email sent successfully');
+        this.loading = false;
+        this.closeEmailModal();
+      },
+      error: () => {
+        this.toast.error('Failed to send quotation email');
+        this.loading = false;
+      },
+    });
+  }
 
-  this.loading = true;
-
-  this.http.post(url, payload).subscribe({
-    next: () => {
-      this.toast.success('Quotation email sent successfully');
-      this.loading = false;
-      this.closeEmailModal();
-    },
-    error: () => {
-      this.toast.error('Failed to send quotation email');
-      this.loading = false;
-    }
-  });
-}
-
-  private API =
-    `${environment.apiBaseUrl}/pricing-Model/Pricingcalculation`;
+  private API = `${environment.apiBaseUrl}/pricing-Model/Pricingcalculation`;
 
   constructor(
     private route: ActivatedRoute,
     private http: HttpClient,
     private toast: ToasterService,
-    private sanitizer: DomSanitizer
-
+    private sanitizer: DomSanitizer,
   ) {}
 
   ngOnInit(): void {
@@ -146,72 +158,107 @@ private sendEmail(payload: any) {
     this.fetchQuotation();
   }
 
+  shouldShowCpuCard(): boolean {
+    return !!(this.quotationData?.cpu || this.quotationData?.ai_cpu_recommendation);
+  }
+
+  shouldShowGpuCard(): boolean {
+    return !!(this.quotationData?.gpu || this.quotationData?.ai_gpu_recommendation);
+  }
+
+  getCpuName(): string {
+    return (
+      this.quotationData?.cpu?.core_hardware || this.quotationData?.ai_cpu_recommendation || 'N/A'
+    );
+  }
+
+  getGpuName(): string {
+    return (
+      this.quotationData?.gpu?.AI_Component || this.quotationData?.ai_gpu_recommendation || 'N/A'
+    );
+  }
+
+  getCpuUnits(): number {
+    return Number(this.quotationData?.ai_cpu_count ?? 0);
+  }
+
+  getGpuUnits(): number {
+    return Number(this.quotationData?.ai_gpu_count ?? 0);
+  }
+
+  getCpuRamText(): string {
+    const ram = this.quotationData?.cpu?.ram_required ?? this.quotationData?.ai_ram_recommendation;
+    if (ram === null || ram === undefined || ram === '') {
+      return 'N/A';
+    }
+    return `${ram} GB RAM`;
+  }
+
   // ================= FETCH =================
   fetchQuotation(): void {
     this.loading = true;
 
-    this.http.get<any>(`${this.API}/${this.quotationId}/`)
-      .subscribe({
-   next: (res) => {
-  this.quotationData = res;
+    this.http.get<any>(`${this.API}/${this.quotationId}/`).subscribe({
+      next: (res) => {
+        this.quotationData = res;
+        this.includeCPU = !!res?.include_cpu;
+        this.includeGPU = !!res?.include_gpu;
+        this.includeStorage = !!res?.include_storage;
 
-  // Clear stale objects if disabled
-  if (!this.includeCPU) {
-    this.quotationData.cpu = null;
-    this.quotationData.cpu_cost = 0;
+        // Clear stale objects if disabled
+        if (!this.includeCPU) {
+          this.quotationData.cpu = null;
+          this.quotationData.cpu_cost = 0;
+        }
+
+        if (!this.includeGPU) {
+          this.quotationData.gpu = null;
+          this.quotationData.gpu_cost = 0;
+        }
+
+        this.loading = false;
+      },
+    });
+  }
+  downloadPdf() {
+    if (!this.quotationData?.id) return;
+
+    const id = this.quotationData.id;
+    const url = `${environment.apiBaseUrl}/pricing-Model/quotation/${id}/pdf/`;
+
+    this.toast.info(`Downloading PDF #${id}...`);
+
+    this.http.get(url, { responseType: 'blob' }).subscribe({
+      next: (blob) => {
+        const file = new Blob([blob], { type: 'application/pdf' });
+        const downloadURL = window.URL.createObjectURL(file);
+
+        const a = document.createElement('a');
+        a.href = downloadURL;
+        a.download = `quotation_${id}.pdf`;
+        a.click();
+
+        window.URL.revokeObjectURL(downloadURL);
+        this.toast.success(`PDF downloaded: #${id}`);
+      },
+      error: () => {
+        this.toast.error('Failed to download PDF');
+      },
+    });
   }
 
-  if (!this.includeGPU) {
-    this.quotationData.gpu = null;
-    this.quotationData.gpu_cost = 0;
-  }
-
-  this.loading = false;
-}}
-);
-  }
- downloadPdf() {
-  if (!this.quotationData?.id) return;
-
-  const id = this.quotationData.id;
-  const url = `${environment.apiBaseUrl}/pricing-Model/quotation/${id}/pdf/`;
-
-  this.toast.info(`Downloading PDF #${id}...`);
-
-  this.http.get(url, { responseType: 'blob' }).subscribe({
-    next: (blob) => {
-      const file = new Blob([blob], { type: 'application/pdf' });
-      const downloadURL = window.URL.createObjectURL(file);
-
-      const a = document.createElement('a');
-      a.href = downloadURL;
-      a.download = `quotation_${id}.pdf`;
-      a.click();
-
-      window.URL.revokeObjectURL(downloadURL);
-      this.toast.success(`PDF downloaded: #${id}`);
-    },
-    error: () => {
-      this.toast.error('Failed to download PDF');
-    },
-  });
-}
-
- // ================= UPDATE =================
+  // ================= UPDATE =================
   updateQuotation(): void {
     const payload = {
       include_cpu: this.includeCPU,
       include_gpu: this.includeGPU,
       // include_ai: this.includeAI,
-      include_storage: this.includeStorage
+      include_storage: this.includeStorage,
     };
 
     this.loading = true;
 
-    this.http.patch<any>(
-      `${this.API}/${this.quotationId}/`,
-      payload
-    ).subscribe({
+    this.http.patch<any>(`${this.API}/${this.quotationId}/`, payload).subscribe({
       next: (res) => {
         this.quotationData = res;
         this.loading = false;
@@ -219,8 +266,7 @@ private sendEmail(payload: any) {
       error: () => {
         this.errorMsg = 'Failed to update quotation';
         this.loading = false;
-      }
+      },
     });
   }
 }
- 

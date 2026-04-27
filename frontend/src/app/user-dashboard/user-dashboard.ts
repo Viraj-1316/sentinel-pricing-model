@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { AuthService } from '../service/auth.service';
-import { environment } from '../../environments/environment'; 
+import { environment } from '../../environments/environment';
 import { ToasterService } from '../service/toaster.service';
 export interface Quotation {
   id: number;
@@ -27,8 +27,14 @@ export interface Quotation {
   cpuName: string;
   gpuName: string;
   aiFeatureNames: string;
+
+  // legacy/fallback recommendation fields
+  ai_cpu_recommendation?: string;
+  ai_gpu_recommendation?: string;
+  ai_cpu_count?: number;
+  ai_gpu_count?: number;
 }
- 
+
 @Component({
   selector: 'app-user-dashboard',
   standalone: true,
@@ -38,16 +44,16 @@ export interface Quotation {
 export class UserDashboard implements OnInit {
   loading = true;
   errorMsg: string | null = null;
- 
+
   quotationId!: number;
   quotationData: any = null;
   quotations: Quotation[] = [];
   recent: Quotation[] = [];
- 
+
   totalQuotations = 0;
   latestTotal: number | null = null;
   lastActivity: string | null = null;
- 
+
   notifications: { title: string; message: string; time: string }[] = [];
 
   // API Endpoints
@@ -59,9 +65,9 @@ export class UserDashboard implements OnInit {
     private http: HttpClient,
     private router: Router,
     private auth: AuthService,
-    private toast: ToasterService
+    private toast: ToasterService,
   ) {}
- 
+
   ngOnInit(): void {
     this.loadDashboard();
   }
@@ -75,14 +81,21 @@ export class UserDashboard implements OnInit {
 
     this.http.get<any[]>(this.QUOTATION_API).subscribe({
       next: (res) => {
-        this.quotations = (res ?? []).map(q => ({
+        this.quotations = (res ?? []).map((q) => ({
           ...q,
-          cpuName: q.cpu?.core_hardware ?? q.cpu?.name ?? q.cpu?.CPU ?? '—',
-          gpuName: q.gpu?.AI_Component ?? q.gpu?.name ?? q.gpu?.GPU ?? '—',
-          aiFeatureNames: Array.isArray(q.ai_features) && q.ai_features.length > 0
-            ? q.ai_features.map((a: any) => a.AI_feature ?? a.name ?? '—').join(', ')
-            : '—',
-          storage_used_user: q.storage_used_user ?? null
+          cpuName: this.buildHardwareLabel(
+            q.cpu?.core_hardware ?? q.cpu?.name ?? q.cpu?.CPU ?? q.ai_cpu_recommendation,
+            q.ai_cpu_count,
+          ),
+          gpuName: this.buildHardwareLabel(
+            q.gpu?.AI_Component ?? q.gpu?.name ?? q.gpu?.GPU ?? q.ai_gpu_recommendation,
+            q.ai_gpu_count,
+          ),
+          aiFeatureNames:
+            Array.isArray(q.ai_features) && q.ai_features.length > 0
+              ? q.ai_features.map((a: any) => a.AI_feature ?? a.name ?? '—').join(', ')
+              : '—',
+          storage_used_user: q.storage_used_user ?? null,
         }));
 
         this.totalQuotations = this.quotations.length;
@@ -97,7 +110,7 @@ export class UserDashboard implements OnInit {
           this.lastActivity = null;
         }
 
-        this.notifications = this.recent.map(q => ({
+        this.notifications = this.recent.map((q) => ({
           title: 'Quotation Generated',
           message: `Quotation #${q.id} generated (₹${q.total_costing})`,
           time: new Date(q.created_at).toLocaleString(),
@@ -109,6 +122,17 @@ export class UserDashboard implements OnInit {
         this.loading = false;
       },
     });
+  }
+
+  private buildHardwareLabel(name?: string, unitCount?: number): string {
+    if (!name) return '—';
+
+    const count = Number(unitCount ?? 0);
+    if (count > 0) {
+      return `${name} (x${count})`;
+    }
+
+    return name;
   }
 
   // ========================= ACTION METHODS =========================
@@ -124,59 +148,58 @@ export class UserDashboard implements OnInit {
    * Deletes a quotation from the backend and updates local arrays instantly
    */
   deleteQuotation(id: number): void {
-  if (confirm('Are you sure you want to permanently delete this quotation?')) {
-    this.http.delete(`${this.DELETE_API}${id}/`).subscribe({
-      next: () => {
-        // 1. Alert the user
-        alert('Quotation deleted successfully.');
-        this.loadDashboard();
-      },
-      error: (err) => {
-        console.error('Delete error:', err);
-        this.errorMsg = 'Failed to delete quotation.';
-      }
-    });
+    if (confirm('Are you sure you want to permanently delete this quotation?')) {
+      this.http.delete(`${this.DELETE_API}${id}/`).subscribe({
+        next: () => {
+          // 1. Alert the user
+          alert('Quotation deleted successfully.');
+          this.loadDashboard();
+        },
+        error: (err) => {
+          console.error('Delete error:', err);
+          this.errorMsg = 'Failed to delete quotation.';
+        },
+      });
+    }
   }
-}
   /**
    * Opens the backend PDF view in a new browser tab
    */
- downloadPdf(q: any) {
-  if (!q?.id) return;
+  downloadPdf(q: any) {
+    if (!q?.id) return;
 
-  const id = q.id;
-  const url = `${environment.apiBaseUrl}/pricing-Model/quotation/${id}/pdf/`;
+    const id = q.id;
+    const url = `${environment.apiBaseUrl}/pricing-Model/quotation/${id}/pdf/`;
 
-  this.toast.info(`Downloading PDF #${id}...`);
+    this.toast.info(`Downloading PDF #${id}...`);
 
-  this.http.get(url, { responseType: 'blob' }).subscribe({
-    next: (blob) => {
-      console.log('download clicked');
+    this.http.get(url, { responseType: 'blob' }).subscribe({
+      next: (blob) => {
+        console.log('download clicked');
 
-      const file = new Blob([blob], { type: 'application/pdf' });
-      const downloadURL = URL.createObjectURL(file);
+        const file = new Blob([blob], { type: 'application/pdf' });
+        const downloadURL = URL.createObjectURL(file);
 
-      const a = document.createElement('a');
-      a.href = downloadURL;
-      a.download = `quotation_${id}.pdf`;
-      a.click();
+        const a = document.createElement('a');
+        a.href = downloadURL;
+        a.download = `quotation_${id}.pdf`;
+        a.click();
 
-      URL.revokeObjectURL(downloadURL);
-      this.toast.success(`PDF downloaded: #${id}`);
-    },
-    error: () => {
-      this.toast.error('Failed to download PDF');
-    }
-  });
-}
-
+        URL.revokeObjectURL(downloadURL);
+        this.toast.success(`PDF downloaded: #${id}`);
+      },
+      error: () => {
+        this.toast.error('Failed to download PDF');
+      },
+    });
+  }
 
   // ========================= NAVIGATION HELPERS =========================
 
   goToGenerate(): void {
     this.router.navigateByUrl('/user-requirements');
   }
- 
+
   goToQuotations(): void {
     this.router.navigateByUrl('/quotations');
   }

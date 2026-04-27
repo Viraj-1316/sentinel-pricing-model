@@ -93,18 +93,22 @@ def generate_enterprise_quotation_pdf(quotation, username: str) -> bytes:
     elements.append(info_table)
 
     # ==========================
-    # SAFE DATA FETCH
+    # SAFE DATA FETCH (FIXED)
     # ==========================
+
     storage_days = getattr(quotation, "storage_days", 7)
     storage_cost = getattr(quotation, "storage_cost", 0)
 
-    cpu_name = getattr(quotation.cpu, "core_hardware", "—") if getattr(quotation, "cpu", None) else "—"
-    CPUcores = getattr(quotation.cpu, "CPUcores", 0) if getattr(quotation, "cpu", None) else "-"
-    ram_required = getattr(quotation, "ram_required", 0)
-    cpu_cost = getattr(quotation, "cpu_cost", 0)
+    # AI recommendations are STRINGS in DB
+    cpu_name = getattr(quotation, "ai_cpu_recommendation", "—")
+    gpu_name = getattr(quotation, "ai_gpu_recommendation", "—")
 
-    gpu_name = getattr(quotation.gpu, "AI_Component", "—") if getattr(quotation, "gpu", None) else "—"
-    gpu_vram = getattr(quotation.gpu, "VRAM", 0) if getattr(quotation, "gpu", None) else "-"
+    CPUcores = getattr(quotation, "cpuCores_required", 0)
+    ram_required = getattr(quotation, "ai_ram_recommendation", 0)
+
+    gpu_vram = getattr(quotation, "ai_gpu_vram", 0)
+
+    cpu_cost = getattr(quotation, "cpu_cost", 0)
     gpu_cost = getattr(quotation, "gpu_cost", 0)
 
     ai_cost = getattr(quotation, "ai_cost", 0)
